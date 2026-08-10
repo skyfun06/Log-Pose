@@ -1,0 +1,115 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.formulaire {
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  border-radius: 14px;
+  background: #f1e1bc;
+  border: 2px solid #7a5a2e;
+  color: #3b2a18;
+}
+
+.formTitre {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+}
+
+.champLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.champ {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #b99b5e;
+  background: #fff8e8;
+  color: #3b2a18;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.ligneHoraires {
+  display: flex;
+  gap: 12px;
+}
+
+.ligneHoraires .champLabel {
+  flex: 1;
+}
+
+.joursCases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.jourCase {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #b99b5e;
+  background: rgba(185, 155, 94, 0.15);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.erreur {
+  margin: 0;
+  color: #b33a2e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.boutonValider,
+.boutonAnnuler {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.boutonValider {
+  background: #3b2a18;
+  color: #f1e1bc;
+}
+
+.boutonValider:hover {
+  background: #4a3520;
+}
+
+.boutonAnnuler {
+  background: transparent;
+  color: #3b2a18;
+  border: 1px solid #7a5a2e;
+}

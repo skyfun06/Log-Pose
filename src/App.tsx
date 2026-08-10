@@ -21,9 +21,13 @@ function App() {
     totalIles,
     logPose,
     missions,
+    blocsPlanning,
     ajouterGain,
     validerMission,
     echouerMission,
+    ajouterBloc,
+    modifierBloc,
+    supprimerBloc,
   } = useGameState();
 
   const fondStyle = currentIle.backgroundImage
@@ -66,7 +70,12 @@ function App() {
           </div>
         </main>
       ) : (
-        <PlanningPage />
+        <PlanningPage
+          blocs={blocsPlanning}
+          onAjouter={ajouterBloc}
+          onModifier={modifierBloc}
+          onSupprimer={supprimerBloc}
+        />
       )}
 
       <BottomBar bounty={bounty} />
