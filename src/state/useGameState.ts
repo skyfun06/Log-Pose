@@ -1,14 +1,24 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { iles } from '../data/iles';
 import { missionsInitiales } from '../data/missions';
-import type { BlocPlanning, JourSemaine, Mission } from '../types';
+import type { BlocPlanning, JourSemaine, Mission, StatutMission } from '../types';
 
 const STORAGE_KEY = 'log-pose-state';
 
 const TOUS_LES_JOURS: JourSemaine[] = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
+const JOUR_INDEX: JourSemaine[] = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
 
 function heure(h: number): string {
   return `${String(h).padStart(2, '0')}:00`;
+}
+
+function jourSemaineActuel(): JourSemaine {
+  return JOUR_INDEX[new Date().getDay()];
+}
+
+function dateDuJour(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 const blocsPlanningInitiaux: BlocPlanning[] = missionsInitiales.map((m, i) => ({
@@ -24,16 +34,18 @@ interface GameState {
   prime: number;
   currentIslandId: number;
   logPose: Record<number, number>;
-  missions: Mission[];
   blocsPlanning: BlocPlanning[];
+  statutsMissions: Record<string, StatutMission>;
+  dateStatuts: string;
 }
 
 const defaultState: GameState = {
   prime: 0,
   currentIslandId: iles[0].id,
   logPose: {},
-  missions: missionsInitiales,
   blocsPlanning: blocsPlanningInitiaux,
+  statutsMissions: {},
+  dateStatuts: dateDuJour(),
 };
 
 function loadState(): GameState {
@@ -48,8 +60,9 @@ function loadState(): GameState {
           ? parsed.currentIslandId
           : defaultState.currentIslandId,
       logPose: parsed.logPose ?? defaultState.logPose,
-      missions: parsed.missions ?? defaultState.missions,
       blocsPlanning: parsed.blocsPlanning ?? defaultState.blocsPlanning,
+      statutsMissions: parsed.statutsMissions ?? defaultState.statutsMissions,
+      dateStatuts: parsed.dateStatuts ?? defaultState.dateStatuts,
     };
   } catch {
     return defaultState;
@@ -63,6 +76,27 @@ export function useGameState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
+  useEffect(() => {
+    const today = dateDuJour();
+    if (state.dateStatuts !== today) {
+      setState((prev) => ({ ...prev, statutsMissions: {}, dateStatuts: today }));
+    }
+  }, [state.dateStatuts]);
+
+  const missions = useMemo<Mission[]>(() => {
+    const jour = jourSemaineActuel();
+    return state.blocsPlanning
+      .filter((b) => b.jours.includes(jour))
+      .slice()
+      .sort((a, b) => a.heureDebut.localeCompare(b.heureDebut))
+      .map((b) => ({
+        id: b.id,
+        texte: b.titre,
+        questWeight: b.questWeight,
+        statut: state.statutsMissions[b.id] ?? 'pending',
+      }));
+  }, [state.blocsPlanning, state.statutsMissions]);
+
   const ajouterGain = useCallback((montant: number) => {
     if (!Number.isFinite(montant) || montant <= 0) return;
     setState((prev) => ({ ...prev, prime: prev.prime + montant }));
@@ -70,19 +104,18 @@ export function useGameState() {
 
   const validerMission = useCallback((id: string) => {
     setState((prev) => {
-      const mission = prev.missions.find((m) => m.id === id);
-      if (!mission || mission.statut === 'done') return prev;
+      if (prev.statutsMissions[id] === 'done') return prev;
+      const bloc = prev.blocsPlanning.find((b) => b.id === id);
+      if (!bloc) return prev;
 
-      const missions = prev.missions.map((m) =>
-        m.id === id ? { ...m, statut: 'done' as const } : m,
-      );
+      const statutsMissions = { ...prev.statutsMissions, [id]: 'done' as const };
 
       let logPose = prev.logPose;
       let currentIslandId = prev.currentIslandId;
 
-      if (mission.questWeight > 0) {
+      if (bloc.questWeight > 0) {
         const current = prev.logPose[prev.currentIslandId] ?? 0;
-        const next = Math.min(100, current + mission.questWeight);
+        const next = Math.min(100, current + bloc.questWeight);
         logPose = { ...prev.logPose, [prev.currentIslandId]: next };
 
         if (next >= 100) {
@@ -94,16 +127,14 @@ export function useGameState() {
         }
       }
 
-      return { ...prev, missions, logPose, currentIslandId };
+      return { ...prev, statutsMissions, logPose, currentIslandId };
     });
   }, []);
 
   const echouerMission = useCallback((id: string) => {
     setState((prev) => ({
       ...prev,
-      missions: prev.missions.map((m) =>
-        m.id === id ? { ...m, statut: 'failed' as const } : m,
-      ),
+      statutsMissions: { ...prev.statutsMissions, [id]: 'failed' as const },
     }));
   }, []);
 
@@ -122,10 +153,15 @@ export function useGameState() {
   }, []);
 
   const supprimerBloc = useCallback((id: string) => {
-    setState((prev) => ({
-      ...prev,
-      blocsPlanning: prev.blocsPlanning.filter((b) => b.id !== id),
-    }));
+    setState((prev) => {
+      const statutsMissions = { ...prev.statutsMissions };
+      delete statutsMissions[id];
+      return {
+        ...prev,
+        blocsPlanning: prev.blocsPlanning.filter((b) => b.id !== id),
+        statutsMissions,
+      };
+    });
   }, []);
 
   const bounty = state.prime * 1000;
@@ -138,7 +174,7 @@ export function useGameState() {
     currentIle,
     totalIles: iles.length,
     logPose: logPoseActuel,
-    missions: state.missions,
+    missions,
     blocsPlanning: state.blocsPlanning,
     ajouterGain,
     validerMission,
