@@ -1,9 +1,15 @@
 .carte {
   background: #f1e1bc;
-  border: 1px solid #b99b5e;
+  border: 2px solid #7a5a2e;
   border-radius: 12px;
-  padding: 18px 20px;
+  padding: 20px 24px;
   color: #3b2a18;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .entete {

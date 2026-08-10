@@ -39,20 +39,22 @@ function App() {
       />
 
       <main className={styles.contenu}>
-        <WantedPoster
-          nom={NOM_JOUEUR}
-          bounty={bounty}
-          prime={prime}
-          onAjouterGain={ajouterGain}
-        />
-
-        <div className={styles.colonneDroite}>
-          <LogPoseCard quete={currentIle.quete} progression={logPose} />
-          <MissionsCard
-            missions={missions}
-            onValider={validerMission}
-            onEchouer={echouerMission}
+        <div className={styles.ligne}>
+          <WantedPoster
+            nom={NOM_JOUEUR}
+            bounty={bounty}
+            prime={prime}
+            onAjouterGain={ajouterGain}
           />
+
+          <div className={styles.colonneDroite}>
+            <LogPoseCard quete={currentIle.quete} progression={logPose} />
+            <MissionsCard
+              missions={missions}
+              onValider={validerMission}
+              onEchouer={echouerMission}
+            />
+          </div>
         </div>
       </main>
 

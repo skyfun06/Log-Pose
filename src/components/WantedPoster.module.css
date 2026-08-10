@@ -1,25 +1,30 @@
 .colonne {
-  --photo-top: 30%;
-  --photo-left: 50%;
-  --photo-width: 46%;
-  --photo-height: 32%;
+  /* Case photo : coïncide avec le cadre imprimé sous "WANTED" (mesuré sur affiche-wanted.png) */
+  --photo-top: 22%;
+  --photo-left: 14%;
+  --photo-width: 72%;
+  --photo-height: 39%;
+  --photo-icone-taille: 60%;
 
-  --nom-top: 63%;
+  /* Nom : dans la bande vide juste sous "DEAD OR ALIVE" */
+  --nom-top: 73%;
   --nom-left: 50%;
-  --nom-width: 84%;
-  --nom-taille: 15px;
+  --nom-width: 80%;
+  --nom-taille: 13px;
 
-  --prime-top: 84%;
+  /* Prime : plus bas dans la même bande vide, avant le petit texte / "MARINE" */
+  --prime-top: 81.5%;
   --prime-left: 50%;
-  --prime-taille: 22px;
-  --prime-sub-taille: 12px;
+  --prime-taille: 28px;
+  --prime-sub-taille: 10px;
 
-  width: 240px;
+  width: 600px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 16px;
 }
 
 .affiche {
@@ -40,7 +45,6 @@
   left: var(--photo-left);
   width: var(--photo-width);
   height: var(--photo-height);
-  transform: translate(-50%, -50%);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -49,9 +53,15 @@
 }
 
 .photoPlaceholder {
-  font-size: 40%;
-  line-height: 1;
+  width: var(--photo-icone-taille);
+  height: var(--photo-icone-taille);
   color: #6b5a3a;
+}
+
+.photoPlaceholder svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .photo {
@@ -87,11 +97,21 @@
 }
 
 .montantPrime {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12em;
   font-family: 'Cormorant', serif;
   font-weight: 700;
   font-size: var(--prime-taille);
   color: #3b2a18;
   white-space: nowrap;
+}
+
+.berryIcone {
+  height: 0.8em;
+  width: auto;
+  display: block;
 }
 
 .montantEuros {
@@ -163,10 +183,10 @@
   border: 1px solid #b99b5e;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .colonne {
     width: 100%;
-    max-width: 320px;
+    max-width: 360px;
     margin: 0 auto;
   }
 }

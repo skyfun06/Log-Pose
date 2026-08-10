@@ -12,6 +12,7 @@ interface WantedPosterProps {
 export function WantedPoster({ nom, bounty, prime, onAjouterGain }: WantedPosterProps) {
   const [ouvert, setOuvert] = useState(false);
   const [valeur, setValeur] = useState('');
+  const [berryDispo, setBerryDispo] = useState(true);
 
   const bountyFormate = bounty.toLocaleString('fr-FR');
   const primeFormatee = prime.toLocaleString('fr-FR');
@@ -41,14 +42,29 @@ export function WantedPoster({ nom, bounty, prime, onAjouterGain }: WantedPoster
             }}
           />
           <span className={styles.photoPlaceholder} aria-hidden="true">
-            👤
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="8" r="4.5" />
+              <path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7v1H4v-1z" />
+            </svg>
           </span>
         </div>
 
         <div className={styles.nom}>{nom}</div>
 
         <div className={styles.zonePrime}>
-          <div className={styles.montantPrime}>฿ {bountyFormate}</div>
+          <div className={styles.montantPrime}>
+            {berryDispo ? (
+              <img
+                src="/assets/berry.png"
+                alt="Berry"
+                className={styles.berryIcone}
+                onError={() => setBerryDispo(false)}
+              />
+            ) : (
+              <span aria-hidden="true">฿</span>
+            )}
+            {bountyFormate}
+          </div>
           <div className={styles.montantEuros}>{primeFormatee} €</div>
         </div>
       </div>
