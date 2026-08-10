@@ -1,0 +1,21 @@
+.page {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px;
+  color: #3b2a18;
+}
+
+.titre {
+  margin: 0 0 8px;
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  color: #f1e1bc;
+}
+
+.texte {
+  margin: 0;
+  font-family: 'Cormorant', serif;
+  font-size: 18px;
+  color: #f1e1bc;
+}

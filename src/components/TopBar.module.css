@@ -35,6 +35,34 @@
   white-space: nowrap;
 }
 
+.onglets {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.onglet {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(241, 225, 188, 0.4);
+  background: transparent;
+  color: #f1e1bc;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.onglet:hover {
+  border-color: #e7c57a;
+}
+
+.ongletActif {
+  background: #c08a2e;
+  border-color: #c08a2e;
+  color: #2c1e12;
+}
+
 .points {
   display: flex;
   gap: 8px;
