@@ -1,0 +1,47 @@
+.bar {
+  padding: 12px 20px;
+  background: #2c1e12;
+  border-top: 2px solid #b99b5e;
+  color: #f1e1bc;
+}
+
+.ligneTexte {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.icone {
+  font-size: 18px;
+}
+
+.label {
+  font-weight: 600;
+  color: #e7c57a;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pourcentage {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.barreFond {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(241, 225, 188, 0.15);
+  overflow: hidden;
+  border: 1px solid rgba(185, 155, 94, 0.6);
+}
+
+.barreRemplie {
+  height: 100%;
+  background: #b33a2e;
+  transition: width 0.3s ease;
+}

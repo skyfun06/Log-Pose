@@ -1,0 +1,46 @@
+.carte {
+  background: #f1e1bc;
+  border: 1px solid #b99b5e;
+  border-radius: 12px;
+  padding: 18px 20px;
+  color: #3b2a18;
+}
+
+.entete {
+  margin: 0 0 10px;
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quete {
+  margin: 0 0 14px;
+  font-family: 'Cormorant', serif;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.barreFond {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(59, 42, 24, 0.15);
+  overflow: hidden;
+  border: 1px solid #b99b5e;
+}
+
+.barreRemplie {
+  height: 100%;
+  background: #b33a2e;
+  transition: width 0.3s ease;
+}
+
+.pourcentage {
+  margin-top: 6px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.8;
+}

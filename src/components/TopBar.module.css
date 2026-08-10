@@ -1,0 +1,65 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  background: #2c1e12;
+  color: #f1e1bc;
+  border-bottom: 2px solid #b99b5e;
+}
+
+.gauche {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.icone {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.repere {
+  font-weight: 600;
+  color: #e7c57a;
+  white-space: nowrap;
+}
+
+.titre {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.points {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.point {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(241, 225, 188, 0.25);
+  border: 1px solid rgba(241, 225, 188, 0.4);
+}
+
+.pointActif {
+  background: #c08a2e;
+  border-color: #c08a2e;
+}
+
+@media (max-width: 640px) {
+  .bar {
+    flex-wrap: wrap;
+  }
+
+  .titre {
+    display: none;
+  }
+}

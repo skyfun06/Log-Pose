@@ -1,0 +1,110 @@
+.carte {
+  background: #f1e1bc;
+  border: 1px solid #b99b5e;
+  border-radius: 12px;
+  padding: 18px 20px;
+  color: #3b2a18;
+}
+
+.entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.titre {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+}
+
+.compteur {
+  font-weight: 700;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(185, 155, 94, 0.15);
+}
+
+.icone {
+  flex-shrink: 0;
+}
+
+.texte {
+  flex: 1;
+  font-size: 15px;
+  min-width: 0;
+}
+
+.texteValide {
+  text-decoration: line-through;
+  color: #8a7a5c;
+}
+
+.texteEchoue {
+  text-decoration: line-through;
+  color: #b33a2e;
+}
+
+.badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e7c57a;
+  color: #2c1e12;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.boutonValider,
+.boutonEchouer {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.boutonValider {
+  background: #3f8a4c;
+  color: #fff;
+}
+
+.boutonEchouer {
+  background: #b33a2e;
+  color: #fff;
+}
+
+.boutonValider:disabled,
+.boutonEchouer:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

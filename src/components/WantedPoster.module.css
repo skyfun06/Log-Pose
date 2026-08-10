@@ -1,0 +1,172 @@
+.colonne {
+  --photo-top: 30%;
+  --photo-left: 50%;
+  --photo-width: 46%;
+  --photo-height: 32%;
+
+  --nom-top: 63%;
+  --nom-left: 50%;
+  --nom-width: 84%;
+  --nom-taille: 15px;
+
+  --prime-top: 84%;
+  --prime-left: 50%;
+  --prime-taille: 22px;
+  --prime-sub-taille: 12px;
+
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.affiche {
+  position: relative;
+  width: 100%;
+}
+
+.cadre {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.zonePhoto {
+  position: absolute;
+  top: var(--photo-top);
+  left: var(--photo-left);
+  width: var(--photo-width);
+  height: var(--photo-height);
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #d9c8a1;
+}
+
+.photoPlaceholder {
+  font-size: 40%;
+  line-height: 1;
+  color: #6b5a3a;
+}
+
+.photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nom {
+  position: absolute;
+  top: var(--nom-top);
+  left: var(--nom-left);
+  width: var(--nom-width);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: var(--nom-taille);
+  color: #3b2a18;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.zonePrime {
+  position: absolute;
+  top: var(--prime-top);
+  left: var(--prime-left);
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.montantPrime {
+  font-family: 'Cormorant', serif;
+  font-weight: 700;
+  font-size: var(--prime-taille);
+  color: #3b2a18;
+  white-space: nowrap;
+}
+
+.montantEuros {
+  font-family: 'Cormorant', serif;
+  font-size: var(--prime-sub-taille);
+  color: #6b5a3a;
+  white-space: nowrap;
+}
+
+.boutonGain {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #b99b5e;
+  background: #3b2a18;
+  color: #f1e1bc;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boutonGain:hover {
+  background: #4a3520;
+}
+
+.formulaire {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #3b2a18;
+  border: 1px solid #b99b5e;
+}
+
+.champ {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #b99b5e;
+  background: #f1e1bc;
+  color: #3b2a18;
+  font-size: 14px;
+}
+
+.actionsFormulaire {
+  display: flex;
+  gap: 8px;
+}
+
+.boutonValider,
+.boutonAnnuler {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.boutonValider {
+  background: #e7c57a;
+  color: #2c1e12;
+}
+
+.boutonAnnuler {
+  background: transparent;
+  color: #f1e1bc;
+  border: 1px solid #b99b5e;
+}
+
+@media (max-width: 640px) {
+  .colonne {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+}
