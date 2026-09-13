@@ -29,4 +29,4 @@ export interface BlocPlanning {
   questWeight: number;
 }
 
-export type Vue = 'carte' | 'planning';
+export type Vue = 'carte' | 'planning' | 'going-merry';

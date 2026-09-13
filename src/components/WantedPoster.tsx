@@ -69,6 +69,19 @@ export function WantedPoster({ nom, bounty, prime, onAjouterGain }: WantedPoster
         </div>
       </div>
 
+      <div className={styles.atouts}>
+        {[10, 50, 100].map((montant) => (
+          <button
+            key={montant}
+            type="button"
+            className={styles.atout}
+            onClick={() => onAjouterGain(montant)}
+          >
+            +{montant} €
+          </button>
+        ))}
+      </div>
+
       {ouvert ? (
         <form className={styles.formulaire} onSubmit={handleSubmit}>
           <input
@@ -100,7 +113,7 @@ export function WantedPoster({ nom, bounty, prime, onAjouterGain }: WantedPoster
         </form>
       ) : (
         <button className={styles.boutonGain} onClick={() => setOuvert(true)}>
-          + ajouter un gain
+          + montant libre
         </button>
       )}
     </aside>

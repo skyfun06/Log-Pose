@@ -9,27 +9,32 @@
   /* Nom : dans la bande vide juste sous "DEAD OR ALIVE" */
   --nom-top: 73%;
   --nom-left: 50%;
-  --nom-width: 80%;
-  --nom-taille: 13px;
+  --nom-width: 84%;
+  --nom-taille: 5.5cqw;
 
   /* Prime : plus bas dans la même bande vide, avant le petit texte / "MARINE" */
   --prime-top: 81.5%;
   --prime-left: 50%;
-  --prime-taille: 28px;
-  --prime-sub-taille: 10px;
+  --prime-taille: 11.5cqw;
+  --prime-sub-taille: 3.8cqw;
 
-  width: 600px;
+  /* Largeur fluide : bornée par la hauteur d'écran (tient sur un portable HD)
+     et plafonnée pour ne pas exploser sur un écran 2K. Ratio affiche = 0.738.
+     Le terme soustrait réserve la place des atouts + bouton sous l'affiche. */
+  width: clamp(300px, min(38vw, (100svh - 440px) * 0.738), 600px);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .affiche {
   position: relative;
   width: 100%;
+  /* Conteneur de référence pour dimensionner le texte de l'affiche (cqw). */
+  container-type: inline-size;
 }
 
 .cadre {
@@ -49,7 +54,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #d9c8a1;
+  background: radial-gradient(120% 120% at 50% 30%, #e2d1a8, #cbb888 70%, #b8a475);
+  box-shadow: inset 0 3px 12px rgba(59, 42, 24, 0.4), inset 0 -2px 6px rgba(59, 42, 24, 0.25);
 }
 
 .photoPlaceholder {
@@ -79,10 +85,13 @@
   width: var(--nom-width);
   transform: translate(-50%, -50%);
   text-align: center;
-  font-family: 'Playfair Display', serif;
-  font-weight: 700;
+  font-family: var(--font-engraved);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   font-size: var(--nom-taille);
-  color: #3b2a18;
+  color: #2c1e12;
+  text-shadow: 0 1px 0 rgba(255, 248, 232, 0.5), 0 -1px 1px rgba(59, 42, 24, 0.25);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -101,17 +110,21 @@
   align-items: center;
   justify-content: center;
   gap: 0.12em;
-  font-family: 'Cormorant', serif;
-  font-weight: 700;
+  font-family: var(--font-engraved);
+  font-weight: 800;
   font-size: var(--prime-taille);
-  color: #3b2a18;
+  line-height: 1;
+  color: #2c1e12;
+  text-shadow: 0 1px 0 rgba(255, 248, 232, 0.45);
   white-space: nowrap;
 }
 
 .berryIcone {
-  height: 0.8em;
+  height: 0.72em;
   width: auto;
   display: block;
+  /* recentre optiquement l'icône sur la hauteur des chiffres */
+  transform: translateY(0.04em);
 }
 
 .montantEuros {
@@ -121,40 +134,100 @@
   white-space: nowrap;
 }
 
+.atouts {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+
+.atout {
+  flex: 1;
+  padding: 10px 6px;
+  border-radius: 999px;
+  border: 1px solid #8a6a2e;
+  background: linear-gradient(180deg, #4a3520 0%, #3b2a18 100%);
+  color: #e7c57a;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+}
+
+.atout:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.atout:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
 .boutonGain {
   width: 100%;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid #b99b5e;
-  background: #3b2a18;
-  color: #f1e1bc;
-  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid #8a6a2e;
+  background: linear-gradient(180deg, #e7c57a 0%, #c9a24e 100%);
+  color: #2c1e12;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(59, 42, 24, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 
 .boutonGain:hover {
-  background: #4a3520;
+  filter: brightness(1.05);
+  box-shadow: 0 4px 10px rgba(59, 42, 24, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transform: translateY(-1px);
+}
+
+.boutonGain:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(59, 42, 24, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .formulaire {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 12px;
-  background: #3b2a18;
-  border: 1px solid #b99b5e;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #4a3520 0%, #3b2a18 100%);
+  border: 1px solid #8a6a2e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .champ {
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border-radius: 999px;
   border: 1px solid #b99b5e;
   background: #f1e1bc;
   color: #3b2a18;
-  font-size: 14px;
+  font-family: 'Cormorant', serif;
+  font-weight: 600;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.champ::placeholder {
+  color: #a08a5e;
+}
+
+.champ:focus {
+  border-color: #e7c57a;
+  box-shadow: 0 0 0 3px rgba(231, 197, 122, 0.3);
 }
 
 .actionsFormulaire {
@@ -165,22 +238,44 @@
 .boutonValider,
 .boutonAnnuler {
   flex: 1;
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
+  padding: 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
   cursor: pointer;
-  font-weight: 600;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
 }
 
 .boutonValider {
-  background: #e7c57a;
+  background: linear-gradient(180deg, #e7c57a 0%, #c9a24e 100%);
   color: #2c1e12;
+  border-color: #8a6a2e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .boutonAnnuler {
   background: transparent;
-  color: #f1e1bc;
-  border: 1px solid #b99b5e;
+  color: #e7c57a;
+  border-color: #8a6a2e;
+}
+
+.boutonValider:hover,
+.boutonAnnuler:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.boutonAnnuler:hover {
+  background: rgba(231, 197, 122, 0.1);
+}
+
+.boutonValider:active,
+.boutonAnnuler:active {
+  transform: translateY(0);
 }
 
 @media (max-width: 900px) {

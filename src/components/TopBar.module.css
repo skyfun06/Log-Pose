@@ -1,85 +1,133 @@
 .bar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 20px;
-  background: #2c1e12;
-  color: #f1e1bc;
-  border-bottom: 2px solid #b99b5e;
+  padding: 12px 22px;
+  background: var(--grad-wood);
+  color: var(--parch-100);
+  border-bottom: 1px solid var(--gold-deep);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 5;
+}
+
+/* Fine ligne dorée lumineuse sous la barre. */
+.bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold-200) 22%, var(--gold-100) 50%, var(--gold-200) 78%, transparent);
+  opacity: 0.9;
 }
 
 .gauche {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
 
 .icone {
-  font-size: 20px;
+  font-size: 22px;
   flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .repere {
-  font-weight: 600;
-  color: #e7c57a;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-200);
   white-space: nowrap;
 }
 
 .titre {
-  font-family: 'Playfair Display', serif;
+  position: relative;
+  font-family: var(--font-title);
+  font-style: italic;
   font-size: 18px;
+  color: var(--parch-050);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding-left: 12px;
+}
+
+/* Séparateur losange entre le repère et le titre. */
+.titre::before {
+  content: '❖';
+  position: absolute;
+  left: -2px;
+  color: var(--gold-300);
+  font-size: 10px;
+  font-style: normal;
 }
 
 .onglets {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(185, 155, 94, 0.25);
 }
 
 .onglet {
-  padding: 6px 14px;
+  padding: 7px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(241, 225, 188, 0.4);
+  border: 1px solid transparent;
   background: transparent;
-  color: #f1e1bc;
-  font-size: 13px;
+  color: var(--parch-100);
+  font-family: var(--font-engraved);
+  font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.04em;
   cursor: pointer;
   white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.12s ease;
 }
 
 .onglet:hover {
-  border-color: #e7c57a;
+  color: var(--gold-100);
+  background: rgba(231, 197, 122, 0.08);
 }
 
-.ongletActif {
-  background: #c08a2e;
-  border-color: #c08a2e;
+.ongletActif,
+.ongletActif:hover {
+  background: var(--grad-gold);
+  border-color: var(--gold-deep);
   color: #2c1e12;
+  box-shadow: var(--shadow-sm), var(--inset-top);
 }
 
 .points {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-shrink: 0;
 }
 
 .point {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: rgba(241, 225, 188, 0.25);
-  border: 1px solid rgba(241, 225, 188, 0.4);
+  background: rgba(241, 225, 188, 0.18);
+  border: 1px solid rgba(241, 225, 188, 0.35);
+  transition: transform 0.2s ease;
 }
 
 .pointActif {
-  background: #c08a2e;
-  border-color: #c08a2e;
+  background: radial-gradient(circle at 35% 30%, var(--gold-100), var(--gold-400));
+  border-color: var(--gold-100);
+  box-shadow: var(--glow-gold);
+  transform: scale(1.25);
 }
 
 @media (max-width: 640px) {

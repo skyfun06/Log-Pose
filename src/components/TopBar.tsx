@@ -38,6 +38,15 @@ export function TopBar({ numero, arc, titre, totalIles, vue, onChangerVue }: Top
         >
           Emploi du temps
         </button>
+        <button
+          type="button"
+          className={
+            vue === 'going-merry' ? `${styles.onglet} ${styles.ongletActif}` : styles.onglet
+          }
+          onClick={() => onChangerVue('going-merry')}
+        >
+          Going Merry
+        </button>
       </nav>
 
       <div className={styles.points}>

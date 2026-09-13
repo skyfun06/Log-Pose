@@ -1,7 +1,67 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Cormorant:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Cormorant:wght@500;600;700&display=swap');
 
 :root {
   color-scheme: dark;
+
+  /* ---------- Palette (bois / encre) ---------- */
+  --ink-900: #150d05;
+  --ink-800: #201509;
+  --ink-700: #2c1e12;
+  --ink-600: #3b2a18;
+  --ink-500: #4a3520;
+
+  /* ---------- Parchemin ---------- */
+  --parch-050: #fff8e8;
+  --parch-100: #f1e1bc;
+  --parch-200: #e6d3a6;
+  --parch-300: #d9c090;
+
+  /* ---------- Or & bronze ---------- */
+  --gold-050: #fbeaa8;
+  --gold-100: #f5de72;
+  --gold-200: #e7c57a;
+  --gold-300: #c9a24e;
+  --gold-400: #c08a2e;
+  --gold-deep: #8a6a2e;
+  --bronze: #b99b5e;
+
+  /* ---------- Accents ---------- */
+  --red: #b33a2e;
+  --red-deep: #8f2c22;
+  --green: #3f8a4c;
+  --sea: #7fb0d6;
+
+  /* ---------- Dégradés réutilisables ---------- */
+  --grad-gold: linear-gradient(180deg, var(--gold-100) 0%, var(--gold-200) 42%, var(--gold-300) 100%);
+  --grad-gold-soft: linear-gradient(180deg, var(--gold-200) 0%, var(--gold-300) 100%);
+  --grad-ink: linear-gradient(180deg, var(--ink-500) 0%, var(--ink-700) 100%);
+  --grad-wood: linear-gradient(180deg, #33240f 0%, var(--ink-700) 55%, var(--ink-800) 100%);
+
+  /* Texture papier discrète (grain + fibres), superposable en background */
+  --paper-grain:
+    radial-gradient(circle at 20% 15%, rgba(122, 90, 46, 0.10) 0, transparent 45%),
+    radial-gradient(circle at 82% 78%, rgba(122, 90, 46, 0.08) 0, transparent 42%),
+    repeating-linear-gradient(96deg, rgba(122, 90, 46, 0.035) 0 2px, transparent 2px 5px);
+
+  /* ---------- Ombres & effets ---------- */
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.28);
+  --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.38);
+  --shadow-lg: 0 16px 42px rgba(0, 0, 0, 0.5);
+  --inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --ring-gold: 0 0 0 3px rgba(231, 197, 122, 0.32);
+  --glow-gold: 0 0 18px rgba(231, 197, 122, 0.35);
+
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 18px;
+
+  --border-gold: 1px solid var(--gold-deep);
+  --border-bronze: 1px solid rgba(185, 155, 94, 0.5);
+
+  /* ---------- Polices ---------- */
+  --font-engraved: 'Cinzel', 'Playfair Display', serif;
+  --font-title: 'Playfair Display', serif;
+  --font-body: 'Cormorant', 'Playfair Display', serif;
 }
 
 * {
@@ -17,7 +77,56 @@ body,
 }
 
 body {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  color: #f1e1bc;
-  background: #2c1e12;
+  font-family: var(--font-body);
+  color: var(--parch-100);
+  background: var(--ink-800);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Titres gravés dorés réutilisables */
+.gild {
+  background: linear-gradient(180deg, #fff3c4 0%, var(--gold-200) 45%, var(--gold-400) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+::selection {
+  background: rgba(231, 197, 122, 0.35);
+  color: #fff8e8;
+}
+
+/* Scrollbars raccord avec le thème */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-deep) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--bronze), var(--gold-deep));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--gold-200), var(--gold-400));
+  background-clip: padding-box;
+}
+
+button {
+  font-family: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-gold);
 }

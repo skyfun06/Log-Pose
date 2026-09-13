@@ -138,11 +138,16 @@ export function useGameState() {
     }));
   }, []);
 
-  const ajouterBloc = useCallback((bloc: Omit<BlocPlanning, 'id'>) => {
+  // Renvoie l'id du créneau créé : indispensable pour que l'IA (GoingMerry)
+  // puisse enchaîner plusieurs actions sur l'agenda dans un même tour sans
+  // relire un état React pas encore rafraîchi.
+  const ajouterBloc = useCallback((bloc: Omit<BlocPlanning, 'id'>): string => {
+    const id = crypto.randomUUID();
     setState((prev) => ({
       ...prev,
-      blocsPlanning: [...prev.blocsPlanning, { ...bloc, id: crypto.randomUUID() }],
+      blocsPlanning: [...prev.blocsPlanning, { ...bloc, id }],
     }));
+    return id;
   }, []);
 
   const modifierBloc = useCallback((id: string, patch: Omit<BlocPlanning, 'id'>) => {
@@ -152,8 +157,24 @@ export function useGameState() {
     }));
   }, []);
 
-  const supprimerBloc = useCallback((id: string) => {
+  const supprimerBloc = useCallback((id: string, jour: JourSemaine) => {
     setState((prev) => {
+      const bloc = prev.blocsPlanning.find((b) => b.id === id);
+      if (!bloc) return prev;
+
+      const joursRestants = bloc.jours.filter((j) => j !== jour);
+
+      // Il reste d'autres jours : on retire seulement ce jour du créneau.
+      if (joursRestants.length > 0) {
+        return {
+          ...prev,
+          blocsPlanning: prev.blocsPlanning.map((b) =>
+            b.id === id ? { ...b, jours: joursRestants } : b,
+          ),
+        };
+      }
+
+      // Plus aucun jour : on supprime le créneau entièrement.
       const statutsMissions = { ...prev.statutsMissions };
       delete statutsMissions[id];
       return {

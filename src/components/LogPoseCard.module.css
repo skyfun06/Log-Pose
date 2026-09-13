@@ -1,52 +1,107 @@
 .carte {
-  background: #f1e1bc;
-  border: 2px solid #7a5a2e;
-  border-radius: 12px;
-  padding: 20px 24px;
-  color: #3b2a18;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  /* Cadre parchemin en border-image (9-slice). */
+  --cadre-bord: 30px;
+  --cadre-slice: 50;
+
+  position: relative;
+  border-style: solid;
+  border-width: var(--cadre-bord);
+  border-color: #7a5a2e; /* repli si l'image est absente */
+  border-image-source: url('/assets/cadre-parchemin.png');
+  border-image-slice: var(--cadre-slice) fill;
+  border-image-width: var(--cadre-bord);
+  border-image-repeat: stretch;
+  background: transparent;
+  padding: 24px 30px;
+  color: var(--ink-600);
+
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4));
+}
+
+/* Texture papier + boussole en filigrane, sous le contenu. */
+.carte::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 88% 20%, rgba(122, 90, 46, 0.16) 0 12%, transparent 13%),
+    radial-gradient(circle at 88% 20%, transparent 20%, rgba(122, 90, 46, 0.14) 20.5%, transparent 21.5%),
+    var(--paper-grain);
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+
+.carte > * {
+  position: relative;
+  z-index: 1;
 }
 
 .entete {
-  margin: 0 0 10px;
-  font-family: 'Playfair Display', serif;
-  font-size: 18px;
+  margin: 0 0 12px;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.quete {
-  margin: 0 0 14px;
-  font-family: 'Cormorant', serif;
+.entete span[aria-hidden] {
   font-size: 18px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+.quete {
+  margin: 0 0 16px;
+  font-family: var(--font-title);
+  font-size: 20px;
   line-height: 1.4;
+  color: var(--ink-600);
 }
 
 .barreFond {
+  position: relative;
   width: 100%;
-  height: 14px;
+  height: 16px;
   border-radius: 999px;
-  background: rgba(59, 42, 24, 0.15);
+  background: rgba(59, 42, 24, 0.18);
   overflow: hidden;
-  border: 1px solid #b99b5e;
+  border: 1px solid rgba(122, 90, 46, 0.5);
+  box-shadow: inset 0 2px 4px rgba(59, 42, 24, 0.3);
 }
 
 .barreRemplie {
+  position: relative;
   height: 100%;
-  background: #b33a2e;
-  transition: width 0.3s ease;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--red-deep), var(--red) 60%, #d24b3c);
+  box-shadow: 0 0 10px rgba(179, 58, 46, 0.55);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.barreRemplie::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 55%);
 }
 
 .pourcentage {
-  margin-top: 6px;
+  margin-top: 7px;
   text-align: right;
+  font-family: var(--font-engraved);
   font-size: 13px;
-  font-weight: 600;
-  opacity: 0.8;
+  font-weight: 700;
+  color: var(--gold-deep);
 }

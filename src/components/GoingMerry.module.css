@@ -1,0 +1,553 @@
+/* La page Going Merry est un chat plein écran. Fond sombre chaud et sobre
+   (pas d'image), pensé pour la lisibilité du fil de discussion. */
+.page {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- Chat plein écran du Capitaine --- */
+.chatPleinePage,
+.equipageEcran {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(14px, 2.4vw, 28px);
+  background: radial-gradient(140% 100% at 50% 0%, #33240f 0%, #1e1409 55%, #140d07 100%);
+}
+
+.chatPleinePage {
+  gap: 14px;
+}
+
+.equipageEcran {
+  overflow-y: auto;
+}
+
+.equipageContenu {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* En-tête commun (Capitaine + équipage). */
+.enteteChat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(185, 155, 94, 0.32);
+}
+
+.identiteCapitaine {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.avatar {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  font-size: 26px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(231, 197, 122, 0.22), rgba(231, 197, 122, 0.05));
+  border: 1px solid rgba(231, 197, 122, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.identiteTxt {
+  min-width: 0;
+}
+
+.capNom {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  font-size: clamp(18px, 2.4vw, 22px);
+  color: var(--gold-200);
+}
+
+.capRole {
+  font-family: 'Cormorant', serif;
+  font-size: 14px;
+  color: rgba(241, 225, 188, 0.72);
+}
+
+.lienEquipage {
+  flex-shrink: 0;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 155, 94, 0.55);
+  background: rgba(28, 19, 11, 0.6);
+  color: #f1e1bc;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.lienEquipage:hover {
+  border-color: var(--gold-400);
+  background: rgba(44, 30, 18, 0.85);
+}
+
+/* --- Fil de messages --- */
+.messages {
+  min-height: 160px;
+  max-height: 48vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 6px;
+}
+
+/* Variante plein écran : la zone messages prend toute la hauteur dispo. */
+.messagesPlein {
+  min-height: 0;
+  max-height: none;
+  flex: 1;
+}
+
+/* Bouton discret en tête de fil : efface la conversation sauvegardée. */
+.effacerChat {
+  align-self: center;
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 155, 94, 0.35);
+  background: rgba(28, 19, 11, 0.45);
+  color: rgba(241, 225, 188, 0.65);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.effacerChat:hover:not(:disabled) {
+  border-color: var(--gold-400);
+  color: #f1e1bc;
+  background: rgba(44, 30, 18, 0.85);
+}
+
+.effacerChat:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.messagesVide {
+  margin: auto;
+  max-width: 460px;
+  font-family: 'Cormorant', serif;
+  font-size: 17px;
+  color: rgba(241, 225, 188, 0.62);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Bulles de conversation */
+.bulle {
+  max-width: min(80%, 760px);
+  padding: 11px 15px;
+  border-radius: 16px;
+  font-family: 'Cormorant', serif;
+  font-size: 16px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bulleUser {
+  align-self: flex-end;
+  background: var(--grad-gold);
+  color: #2c1e12;
+  border: 1px solid var(--gold-deep);
+  border-bottom-right-radius: 4px;
+}
+
+.bulleIA {
+  align-self: flex-start;
+  background: rgba(46, 32, 18, 0.85);
+  color: #f6ecd4;
+  border: 1px solid rgba(185, 155, 94, 0.4);
+  border-bottom-left-radius: 4px;
+}
+
+/* Indicateur « réfléchit » : texte + trois points qui rebondissent. */
+.reflexion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reflexionTexte {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.points {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.point {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.8;
+  animation: rebond 1.2s ease-in-out infinite;
+}
+
+.point:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.point:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes rebond {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+/* Curseur clignotant façon « machine à écrire » pendant le streaming. */
+.curseur {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  animation: clignote 1s steps(2, start) infinite;
+}
+
+@keyframes clignote {
+  50% {
+    opacity: 0;
+  }
+}
+
+.erreur {
+  align-self: center;
+  margin: 4px 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(200, 90, 70, 0.6);
+  background: rgba(80, 25, 20, 0.5);
+  color: #f3c6bc;
+  font-family: 'Cormorant', serif;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Image affichée dans une bulle de message. */
+.imageMessage {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(185, 155, 94, 0.4);
+}
+
+/* --- Zone de saisie = miniatures (si images) + barre --- */
+.saisieZone {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(241, 225, 188, 0.18);
+}
+
+.saisieBarre {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.saisieChamp {
+  flex: 1;
+  resize: none;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(185, 155, 94, 0.5);
+  background: rgba(20, 14, 8, 0.55);
+  color: #f6ecd4;
+  font-family: 'Cormorant', serif;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.saisieChamp:focus {
+  outline: none;
+  border-color: var(--gold-400);
+  box-shadow: 0 0 0 2px rgba(231, 197, 122, 0.2);
+}
+
+.saisieChamp::placeholder {
+  color: rgba(241, 225, 188, 0.4);
+}
+
+.saisieChamp:disabled {
+  opacity: 0.6;
+}
+
+.joindre {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(185, 155, 94, 0.5);
+  background: rgba(20, 14, 8, 0.55);
+  color: #f1e1bc;
+  font-size: 18px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, filter 0.15s ease;
+}
+
+.joindre:hover:not(:disabled) {
+  border-color: var(--gold-400);
+  filter: brightness(1.1);
+}
+
+.joindre:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.envoyer {
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-deep);
+  background: var(--grad-gold);
+  color: #2c1e12;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm), var(--inset-top);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.envoyer:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.envoyer:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Miniatures des images jointes, avant envoi. */
+.miniatures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.miniature {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.miniature img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(185, 155, 94, 0.5);
+}
+
+.miniatureRetirer {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--gold-deep);
+  background: #2c1e12;
+  color: #f1e1bc;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.miniatureRetirer:hover {
+  background: #52190f;
+}
+
+/* --- Équipage : hub + discussion --- */
+.hub,
+.discussion {
+  background: linear-gradient(180deg, rgba(46, 32, 18, 0.9), rgba(28, 19, 11, 0.94));
+  border: 1px solid rgba(185, 155, 94, 0.45);
+  border-radius: var(--radius-lg);
+  padding: 26px;
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.enteteHub {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.titre {
+  margin: 0;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: clamp(22px, 3vw, 30px);
+  color: var(--gold-200);
+}
+
+.sousTitre {
+  margin: 6px 0 0;
+  font-family: 'Cormorant', serif;
+  font-size: 16px;
+  color: rgba(241, 225, 188, 0.75);
+}
+
+.grilleMembres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.carteMembre {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 26px 16px;
+  background: linear-gradient(180deg, var(--parch-050), var(--parch-100));
+  border: 1px solid var(--gold-deep);
+  border-radius: var(--radius);
+  color: var(--ink-600);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  overflow: hidden;
+}
+
+.carteMembre::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--paper-grain);
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.carteMembre:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold-400);
+  box-shadow: var(--shadow-md), 0 0 20px rgba(231, 197, 122, 0.25);
+}
+
+.membreIcone {
+  font-size: 44px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(59, 42, 24, 0.3));
+}
+
+.membreNom {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  font-size: 17px;
+}
+
+.membreRole {
+  font-family: 'Cormorant', serif;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* Discussion avec un membre d'équipage (panneau) */
+.discussion {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.discussionEntete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(241, 225, 188, 0.2);
+}
+
+.retour {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #b99b5e;
+  background: transparent;
+  color: #f1e1bc;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.retour:hover {
+  border-color: #e7c57a;
+}
+
+.discussionIcone {
+  font-size: 34px;
+  line-height: 1;
+  margin-left: 4px;
+}
+
+.discussionIdentite {
+  min-width: 0;
+}
+
+.discussionNom {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #f1e1bc;
+}
+
+.discussionRole {
+  font-family: 'Cormorant', serif;
+  font-size: 14px;
+  color: rgba(241, 225, 188, 0.7);
+}
+
+/* Accessibilité : on calme les animations si l'utilisateur le demande. */
+@media (prefers-reduced-motion: reduce) {
+  .point,
+  .curseur {
+    animation: none;
+  }
+}
