@@ -37,7 +37,15 @@ const PORT = process.env.PORT ?? 3001;
 let client = null;
 function getClient() {
   if (!process.env.ANTHROPIC_API_KEY) return null;
-  if (!client) client = new Anthropic(); // lit ANTHROPIC_API_KEY depuis l'env
+  if (!client) {
+    // Une clé créée « hors workspace » exige l'en-tête anthropic-workspace-id :
+    // on le renseigne depuis ANTHROPIC_WORKSPACE_ID (.env) si présent.
+    client = new Anthropic({
+      ...(process.env.ANTHROPIC_WORKSPACE_ID
+        ? { defaultHeaders: { 'anthropic-workspace-id': process.env.ANTHROPIC_WORKSPACE_ID } }
+        : {}),
+    }); // lit ANTHROPIC_API_KEY depuis l'env
+  }
   return client;
 }
 
