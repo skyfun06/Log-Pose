@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useGameState } from './state/useGameState';
+import { useHabitudes } from './state/useHabitudes';
 import { TopBar } from './components/TopBar';
 import { WantedPoster } from './components/WantedPoster';
 import { LogPoseCard } from './components/LogPoseCard';
-import { MissionsCard } from './components/MissionsCard';
+import { HabitudesDuJourCard } from './components/HabitudesDuJourCard';
 import { BottomBar } from './components/BottomBar';
 import { PlanningPage } from './components/Planning';
+import { HabitudesPage } from './components/Habitudes';
 import { GoingMerry } from './components/GoingMerry';
 import type { Vue } from './types';
 import styles from './App.module.css';
@@ -21,15 +23,25 @@ function App() {
     currentIle,
     totalIles,
     logPose,
-    missions,
     blocsPlanning,
     ajouterGain,
-    validerMission,
-    echouerMission,
     ajouterBloc,
     modifierBloc,
     supprimerBloc,
   } = useGameState();
+
+  const {
+    habitudes,
+    habitudesQuotidiennes,
+    habitudesHebdomadaires,
+    habitudesDuJour,
+    marques,
+    ajouterHabitude,
+    modifierHabitude,
+    supprimerHabitude,
+    marquerJour,
+    cocherAujourdhui,
+  } = useHabitudes();
 
   // ⚠️ TEMPORAIRE — mesure des dimensions rendues (à RETIRER après usage).
   // Se relance à chaque changement de vue. Depuis la console tu peux aussi
@@ -92,10 +104,9 @@ function App() {
 
             <div className={styles.colonneDroite}>
               <LogPoseCard quete={currentIle.quete} progression={logPose} />
-              <MissionsCard
-                missions={missions}
-                onValider={validerMission}
-                onEchouer={echouerMission}
+              <HabitudesDuJourCard
+                habitudesDuJour={habitudesDuJour}
+                onCocherHabitude={cocherAujourdhui}
               />
             </div>
           </div>
@@ -111,12 +122,30 @@ function App() {
         />
       )}
 
+      {vue === 'habitudes' && (
+        <HabitudesPage
+          quotidiennes={habitudesQuotidiennes}
+          hebdomadaires={habitudesHebdomadaires}
+          marques={marques}
+          onAjouter={ajouterHabitude}
+          onModifier={modifierHabitude}
+          onSupprimer={supprimerHabitude}
+          onMarquer={marquerJour}
+        />
+      )}
+
       {vue === 'going-merry' && (
         <GoingMerry
           blocsPlanning={blocsPlanning}
           onAjouterBloc={ajouterBloc}
           onModifierBloc={modifierBloc}
           onSupprimerBloc={supprimerBloc}
+          habitudes={habitudes}
+          marquesHabitudes={marques}
+          onAjouterHabitude={ajouterHabitude}
+          onModifierHabitude={modifierHabitude}
+          onSupprimerHabitude={supprimerHabitude}
+          onMarquerHabitude={marquerJour}
         />
       )}
 

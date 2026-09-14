@@ -27,8 +27,9 @@
 .contenu {
   flex: 1;
   display: flex;
-  align-items: center;
-  padding: clamp(16px, 3vh, 32px) 24px;
+  align-items: stretch;
+  justify-content: center;
+  padding: clamp(12px, 2.2vh, 26px) clamp(16px, 3vw, 32px);
   min-height: 0;
   overflow: hidden;
 }
@@ -36,20 +37,22 @@
 .ligne {
   display: flex;
   align-items: stretch;
-  gap: clamp(24px, 2.5vw, 48px);
+  gap: clamp(20px, 2.4vw, 44px);
   width: 100%;
-  max-width: 1400px;
+  max-width: 1360px;
   margin: 0 auto;
   min-height: 0;
+  height: 100%;
 }
 
 .colonneDroite {
   flex: 1;
   min-width: 0;
   min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: clamp(12px, 2vh, 20px);
 }
 
 @media (max-width: 900px) {
@@ -67,5 +70,10 @@
   .ligne {
     flex-direction: column;
     gap: 16px;
+    height: auto;
+  }
+
+  .colonneDroite {
+    height: auto;
   }
 }

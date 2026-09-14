@@ -18,21 +18,25 @@
   --prime-taille: 11.5cqw;
   --prime-sub-taille: 3.8cqw;
 
-  /* Largeur fluide : bornée par la hauteur d'écran (tient sur un portable HD)
-     et plafonnée pour ne pas exploser sur un écran 2K. Ratio affiche = 0.738.
-     Le terme soustrait réserve la place des atouts + bouton sous l'affiche. */
-  width: clamp(300px, min(38vw, (100svh - 440px) * 0.738), 600px);
+  /* Largeur fluide, calée sur la HAUTEUR dispo pour que l'affiche + les boutons
+     tiennent toujours dans l'écran (ratio affiche = 0.738). Le terme soustrait
+     (~250px) réserve la place des barres haut/bas, du padding, et des atouts +
+     bouton sous l'affiche. Plafonnée en largeur pour ne pas exploser sur 2K. */
+  width: clamp(200px, min(38vw, (100svh - 290px) * 0.738), 540px);
+  height: 100%;
+  min-height: 0;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: clamp(8px, 1.4vh, 12px);
 }
 
 .affiche {
   position: relative;
   width: 100%;
+  flex-shrink: 0;
   /* Conteneur de référence pour dimensionner le texte de l'affiche (cqw). */
   container-type: inline-size;
 }
@@ -138,11 +142,12 @@
   width: 100%;
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .atout {
   flex: 1;
-  padding: 10px 6px;
+  padding: clamp(7px, 1.1vh, 10px) 6px;
   border-radius: 999px;
   border: 1px solid #8a6a2e;
   background: linear-gradient(180deg, #4a3520 0%, #3b2a18 100%);
@@ -169,7 +174,8 @@
 
 .boutonGain {
   width: 100%;
-  padding: 12px 16px;
+  flex-shrink: 0;
+  padding: clamp(9px, 1.3vh, 12px) 16px;
   border-radius: 999px;
   border: 1px solid #8a6a2e;
   background: linear-gradient(180deg, #e7c57a 0%, #c9a24e 100%);
@@ -281,7 +287,8 @@
 @media (max-width: 900px) {
   .colonne {
     width: 100%;
-    max-width: 360px;
+    max-width: 340px;
+    height: auto;
     margin: 0 auto;
   }
 }

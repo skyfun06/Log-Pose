@@ -12,10 +12,10 @@
   border-image-width: var(--cadre-bord);
   border-image-repeat: stretch;
   background: transparent;
-  padding: 24px 30px;
+  padding: clamp(14px, 1.8vh, 22px) clamp(20px, 2.2vw, 30px);
   color: var(--ink-600);
 
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -62,9 +62,9 @@
 }
 
 .quete {
-  margin: 0 0 16px;
+  margin: 0 0 clamp(10px, 1.6vh, 16px);
   font-family: var(--font-title);
-  font-size: 20px;
+  font-size: clamp(16px, 1.9vh, 20px);
   line-height: 1.4;
   color: var(--ink-600);
 }

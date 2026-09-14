@@ -29,4 +29,38 @@ export interface BlocPlanning {
   questWeight: number;
 }
 
-export type Vue = 'carte' | 'planning' | 'going-merry';
+// --- Habitudes -------------------------------------------------------------
+
+// Une habitude est soit quotidienne (visée chaque jour, prioritaire dans la
+// grille), soit hebdomadaire (visée un certain nombre de fois par semaine).
+export type CadenceHabitude = 'quotidienne' | 'hebdomadaire';
+
+// État d'un jour pour une habitude. L'absence de marque = « prévu » (neutre) :
+// on ne stocke que les jours explicitement faits ou ratés.
+export type EtatHabitude = 'fait' | 'rate';
+
+export interface Habitude {
+  id: string;
+  nom: string;
+  cadence: CadenceHabitude;
+  // Pour une habitude hebdomadaire : nombre de fois visées par semaine (1..7).
+  // Ignoré (traité comme 7) pour une habitude quotidienne.
+  objectifHebdo: number;
+  icone?: string;
+}
+
+// Marques par habitude puis par date « YYYY-MM-DD » → 'fait' | 'rate'.
+export type MarquesHabitudes = Record<string, Record<string, EtatHabitude>>;
+
+// Une habitude telle qu'affichée dans les « missions du jour » : son état du
+// jour et, pour les hebdomadaires, l'avancement de la semaine.
+export interface HabitudeDuJour {
+  id: string;
+  nom: string;
+  cadence: CadenceHabitude;
+  objectifHebdo: number;
+  etat: EtatHabitude | undefined; // marque d'aujourd'hui (undefined = à faire)
+  faitsCetteSemaine: number;
+}
+
+export type Vue = 'carte' | 'planning' | 'habitudes' | 'going-merry';

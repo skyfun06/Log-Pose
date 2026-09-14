@@ -41,6 +41,15 @@ export function TopBar({ numero, arc, titre, totalIles, vue, onChangerVue }: Top
         <button
           type="button"
           className={
+            vue === 'habitudes' ? `${styles.onglet} ${styles.ongletActif}` : styles.onglet
+          }
+          onClick={() => onChangerVue('habitudes')}
+        >
+          Habitudes
+        </button>
+        <button
+          type="button"
+          className={
             vue === 'going-merry' ? `${styles.onglet} ${styles.ongletActif}` : styles.onglet
           }
           onClick={() => onChangerVue('going-merry')}
