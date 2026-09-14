@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import photoAffiche from '../assets/photo-affiche.png';
 import styles from './WantedPoster.module.css';
 
 interface WantedPosterProps {
@@ -34,7 +35,7 @@ export function WantedPoster({ nom, bounty, prime, onAjouterGain }: WantedPoster
 
         <div className={styles.zonePhoto}>
           <img
-            src="/assets/photo.png"
+            src={photoAffiche}
             alt=""
             className={styles.photo}
             onError={(e) => {
