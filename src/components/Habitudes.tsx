@@ -77,6 +77,7 @@ export function HabitudesPage({
 
   const [formOuvert, setFormOuvert] = useState(false);
   const [enEdition, setEnEdition] = useState<Habitude | null>(null);
+  const [cadenceVue, setCadenceVue] = useState<CadenceHabitude>('quotidienne');
 
   const nbJours = joursDansMois(annee, mois);
   const jours = Array.from({ length: nbJours }, (_, i) => i + 1);
@@ -210,6 +211,26 @@ export function HabitudesPage({
               ❯
             </button>
           </div>
+          <div className={styles.basculeVue} role="tablist" aria-label="Type d'habitudes">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={cadenceVue === 'quotidienne'}
+              className={`${styles.basculeBtn} ${cadenceVue === 'quotidienne' ? styles.basculeBtnActif : ''}`}
+              onClick={() => setCadenceVue('quotidienne')}
+            >
+              Quotidiennes
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={cadenceVue === 'hebdomadaire'}
+              className={`${styles.basculeBtn} ${cadenceVue === 'hebdomadaire' ? styles.basculeBtnActif : ''}`}
+              onClick={() => setCadenceVue('hebdomadaire')}
+            >
+              Hebdomadaires
+            </button>
+          </div>
           <button type="button" className={styles.boutonAjouter} onClick={ouvrirAjout}>
             + Habitude
           </button>
@@ -255,42 +276,27 @@ export function HabitudesPage({
               </thead>
 
               <tbody>
-                {quotidiennes.length > 0 && (
-                  <SectionLignes
-                    titre="Quotidiennes"
-                    habitudes={quotidiennes}
-                    jours={jours}
-                    annee={annee}
-                    mois={mois}
-                    marques={marques}
-                    estMoisCourant={estMoisCourant}
-                    jourAujourdhui={jourAujourdhui}
-                    isoAujourdhui={isoAujourdhui}
-                    calculerStats={calculerStats}
-                    onMarquer={onMarquer}
-                    onEditer={ouvrirEdition}
-                    onSupprimer={onSupprimer}
-                    nbColonnes={nbJours + 2}
-                  />
-                )}
-                {hebdomadaires.length > 0 && (
-                  <SectionLignes
-                    titre="Hebdomadaires"
-                    habitudes={hebdomadaires}
-                    jours={jours}
-                    annee={annee}
-                    mois={mois}
-                    marques={marques}
-                    estMoisCourant={estMoisCourant}
-                    jourAujourdhui={jourAujourdhui}
-                    isoAujourdhui={isoAujourdhui}
-                    calculerStats={calculerStats}
-                    onMarquer={onMarquer}
-                    onEditer={ouvrirEdition}
-                    onSupprimer={onSupprimer}
-                    nbColonnes={nbJours + 2}
-                  />
-                )}
+                <SectionLignes
+                  titre={cadenceVue === 'quotidienne' ? 'Quotidiennes' : 'Hebdomadaires'}
+                  messageVide={
+                    cadenceVue === 'quotidienne'
+                      ? 'Aucune habitude quotidienne. Ajoute-en avec « + Habitude ».'
+                      : 'Aucune habitude hebdomadaire. Ajoute-en avec « + Habitude ».'
+                  }
+                  habitudes={cadenceVue === 'quotidienne' ? quotidiennes : hebdomadaires}
+                  jours={jours}
+                  annee={annee}
+                  mois={mois}
+                  marques={marques}
+                  estMoisCourant={estMoisCourant}
+                  jourAujourdhui={jourAujourdhui}
+                  isoAujourdhui={isoAujourdhui}
+                  calculerStats={calculerStats}
+                  onMarquer={onMarquer}
+                  onEditer={ouvrirEdition}
+                  onSupprimer={onSupprimer}
+                  nbColonnes={nbJours + 2}
+                />
               </tbody>
             </table>
           </div>
@@ -322,6 +328,7 @@ export function HabitudesPage({
 // par habitude.
 function SectionLignes({
   titre,
+  messageVide,
   habitudes,
   jours,
   annee,
@@ -337,6 +344,7 @@ function SectionLignes({
   nbColonnes,
 }: {
   titre: string;
+  messageVide: string;
   habitudes: Habitude[];
   jours: number[];
   annee: number;
@@ -358,6 +366,13 @@ function SectionLignes({
           {titre}
         </td>
       </tr>
+      {habitudes.length === 0 && (
+        <tr className={styles.ligneVideSection}>
+          <td className={styles.tdVideSection} colSpan={nbColonnes}>
+            {messageVide}
+          </td>
+        </tr>
+      )}
       {habitudes.map((h) => {
         const stats = calculerStats(h);
         const parDate = marques[h.id] ?? {};
