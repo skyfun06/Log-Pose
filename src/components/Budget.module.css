@@ -140,7 +140,7 @@
 .donut {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
 }
 
 .arc {
@@ -167,11 +167,11 @@
   background:
     radial-gradient(circle at 50% 32%, rgba(255, 248, 232, 0.08), transparent 70%),
     var(--grad-wood);
-  border: 2px solid rgba(185, 155, 94, 0.6);
+  border: 2px solid rgba(197, 162, 78, 0.75);
   box-shadow:
-    inset 0 2px 12px rgba(0, 0, 0, 0.6),
-    0 0 0 5px rgba(10, 6, 2, 0.55),
-    0 0 20px rgba(231, 197, 122, 0.14);
+    inset 0 2px 14px rgba(0, 0, 0, 0.65),
+    0 0 0 5px rgba(10, 6, 2, 0.6),
+    0 0 26px rgba(231, 197, 122, 0.28);
 }
 
 /* ===== Gouvernail décoratif (SVG) ===== */

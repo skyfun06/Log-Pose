@@ -12,24 +12,50 @@ interface BudgetPageProps {
   onSupprimerPoste: (id: string) => void;
 }
 
-// Palette de segments, choisie dans les tokens du thème (or / bronze / accents).
-// L'ordre est stable : la couleur d'un poste dépend de sa position dans la liste.
+// Palette « trésor » : joyaux nautiques harmonieux (or, rubis, émeraude,
+// saphir, cuivre, turquoise, bronze, terracotta, olive doré, sable). L'ordre
+// est stable : la couleur d'un poste dépend de sa position dans la liste.
 const COULEURS = [
-  '#c9a24e',
-  '#b33a2e',
-  '#3f8a4c',
-  '#7fb0d6',
-  '#b99b5e',
-  '#e7c57a',
-  '#8a6a2e',
-  '#d9c090',
-  '#c08a2e',
-  '#8f2c22',
+  '#E3B23C', // or
+  '#C0453B', // rubis
+  '#3E9A6B', // émeraude
+  '#4F8FB0', // saphir
+  '#D98A4E', // ambre cuivré
+  '#6FB2A4', // turquoise
+  '#B99B5E', // bronze
+  '#C06A5A', // terracotta
+  '#8CA85B', // olive doré
+  '#D8C58A', // sable
 ];
-const COULEUR_RESTE = 'rgba(241, 225, 188, 0.14)';
+const COULEUR_RESTE = 'rgba(241, 225, 188, 0.12)';
 
 function couleurPoste(index: number): string {
   return COULEURS[index % COULEURS.length];
+}
+
+// ---- Petites maths de couleur pour les dégradés des segments ----
+function estHex(c: string): boolean {
+  return c.startsWith('#');
+}
+
+function hexVersRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  const plein = h.length === 3 ? h.split('').map((x) => x + x).join('') : h;
+  const n = parseInt(plein, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function melanger([r, g, b]: [number, number, number], vers: [number, number, number], t: number): string {
+  const c = (a: number, z: number) => Math.round(a + (z - a) * t);
+  return `rgb(${c(r, vers[0])}, ${c(g, vers[1])}, ${c(b, vers[2])})`;
+}
+
+function eclaircir(hex: string, t: number): string {
+  return melanger(hexVersRgb(hex), [255, 255, 255], t);
+}
+
+function assombrir(hex: string, t: number): string {
+  return melanger(hexVersRgb(hex), [0, 0, 0], t);
 }
 
 function formatEuro(n: number): string {
@@ -130,6 +156,56 @@ export function BudgetPage({
                 role="img"
                 aria-label="Répartition du budget"
               >
+                <defs>
+                  {/* Halo doré doux sous les segments */}
+                  <filter id="lueurAnneau" x="-25%" y="-25%" width="150%" height="150%">
+                    <feDropShadow
+                      dx="0"
+                      dy="0"
+                      stdDeviation="3"
+                      floodColor="#f5de72"
+                      floodOpacity="0.3"
+                    />
+                  </filter>
+                  {/* Un dégradé « joyau » par segment : lumière venant du haut */}
+                  {arcs.map((a) =>
+                    estHex(a.couleur) ? (
+                      <linearGradient
+                        key={a.cle}
+                        id={`grad-${a.cle}`}
+                        gradientUnits="userSpaceOnUse"
+                        x1="110"
+                        y1="26"
+                        x2="110"
+                        y2="194"
+                      >
+                        <stop offset="0%" stopColor={eclaircir(a.couleur, 0.28)} />
+                        <stop offset="50%" stopColor={a.couleur} />
+                        <stop offset="100%" stopColor={assombrir(a.couleur, 0.18)} />
+                      </linearGradient>
+                    ) : null,
+                  )}
+                </defs>
+
+                {/* Fins anneaux d'encadrement (dorés, translucides) */}
+                <circle
+                  cx={CX}
+                  cy={CY}
+                  r={R + 19}
+                  fill="none"
+                  stroke="rgba(231, 197, 122, 0.2)"
+                  strokeWidth="1"
+                />
+                <circle
+                  cx={CX}
+                  cy={CY}
+                  r={R - 19}
+                  fill="none"
+                  stroke="rgba(231, 197, 122, 0.14)"
+                  strokeWidth="1"
+                />
+
+                {/* Piste de fond */}
                 <circle
                   cx={CX}
                   cy={CY}
@@ -138,21 +214,25 @@ export function BudgetPage({
                   stroke="rgba(10, 6, 2, 0.5)"
                   strokeWidth={EPAISSEUR}
                 />
-                {arcs.map((a) => (
-                  <circle
-                    key={a.cle}
-                    cx={CX}
-                    cy={CY}
-                    r={R}
-                    fill="none"
-                    stroke={a.couleur}
-                    strokeWidth={EPAISSEUR}
-                    strokeLinecap="round"
-                    strokeDasharray={`${a.longueur} ${CIRCONFERENCE - a.longueur}`}
-                    transform={`rotate(${a.rotation} ${CX} ${CY})`}
-                    className={styles.arc}
-                  />
-                ))}
+
+                {/* Segments */}
+                <g filter="url(#lueurAnneau)">
+                  {arcs.map((a) => (
+                    <circle
+                      key={a.cle}
+                      cx={CX}
+                      cy={CY}
+                      r={R}
+                      fill="none"
+                      stroke={estHex(a.couleur) ? `url(#grad-${a.cle})` : a.couleur}
+                      strokeWidth={EPAISSEUR}
+                      strokeLinecap="round"
+                      strokeDasharray={`${a.longueur} ${CIRCONFERENCE - a.longueur}`}
+                      transform={`rotate(${a.rotation} ${CX} ${CY})`}
+                      className={styles.arc}
+                    />
+                  ))}
+                </g>
               </svg>
 
               {/* Frame centrale : gouvernail décoratif, remplaçable par ta propre
@@ -214,7 +294,12 @@ export function BudgetPage({
                     <li key={p.id} className={styles.poste}>
                       <span
                         className={styles.pastille}
-                        style={{ background: couleurPoste(i) }}
+                        style={{
+                          background: `linear-gradient(155deg, ${eclaircir(
+                            couleurPoste(i),
+                            0.3,
+                          )}, ${couleurPoste(i)} 55%, ${assombrir(couleurPoste(i), 0.16)})`,
+                        }}
                         aria-hidden="true"
                       />
                       <input
