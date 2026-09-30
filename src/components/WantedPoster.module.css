@@ -50,10 +50,13 @@
 
 .zonePhoto {
   position: absolute;
-  top: var(--photo-top);
-  left: var(--photo-left);
-  width: var(--photo-width);
-  height: var(--photo-height);
+  /* On étire légèrement la case au-delà du cadre imprimé : +5px à gauche, +3px à
+     droite, +3px en haut et +10px vers le bas, pour que la photo occupe vraiment
+     tout l'espace. */
+  top: calc(var(--photo-top) - 3px);
+  left: calc(var(--photo-left) - 5px);
+  width: calc(var(--photo-width) + 8px);
+  height: calc(var(--photo-height) + 13px);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -62,24 +65,18 @@
   box-shadow: inset 0 3px 12px rgba(59, 42, 24, 0.4), inset 0 -2px 6px rgba(59, 42, 24, 0.25);
 }
 
-.photoPlaceholder {
-  width: var(--photo-icone-taille);
-  height: var(--photo-icone-taille);
-  color: #6b5a3a;
-}
-
-.photoPlaceholder svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
 .photo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Rendu « avis de recherche » One Piece : noir et blanc, légère teinte sépia
+     chaude pour se fondre dans le parchemin, contraste renforcé. Le mélange
+     « multiply » laisse le fond ocre de la case transparaître dans les tons
+     clairs, comme une vraie photo imprimée sur papier jauni. */
+  filter: grayscale(1) sepia(0.35) contrast(1.15) brightness(1.04);
+  mix-blend-mode: multiply;
 }
 
 .nom {

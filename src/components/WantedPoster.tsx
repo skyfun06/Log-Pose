@@ -42,12 +42,6 @@ export function WantedPoster({ nom, bounty, prime, onAjouterGain }: WantedPoster
               e.currentTarget.style.display = 'none';
             }}
           />
-          <span className={styles.photoPlaceholder} aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="8" r="4.5" />
-              <path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7v1H4v-1z" />
-            </svg>
-          </span>
         </div>
 
         <div className={styles.nom}>{nom}</div>
