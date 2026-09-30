@@ -1,0 +1,476 @@
+.page {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: clamp(14px, 2.4vw, 26px);
+}
+
+/* Carte large ; sa hauteur suit le contenu, la liste des postes absorbe le
+   surplus via son propre scroll → l'ensemble tient au mieux sur un écran. */
+.carte {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background:
+    var(--paper-grain),
+    linear-gradient(180deg, rgba(44, 30, 18, 0.94), rgba(24, 16, 9, 0.96));
+  border: 1px solid rgba(185, 155, 94, 0.5);
+  border-radius: var(--radius-lg);
+  padding: clamp(16px, 2.2vw, 26px);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ===== En-tête : titre à gauche, salaire à droite ===== */
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(185, 155, 94, 0.22);
+}
+
+.titreBloc {
+  min-width: 0;
+}
+
+.titre {
+  margin: 0;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-size: clamp(22px, 2.6vw, 30px);
+  color: var(--gold-100);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.sousTitre {
+  margin: 4px 0 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--parch-200);
+}
+
+.salaireBloc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.salaireLabel {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+}
+
+.salaireChamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 155, 94, 0.55);
+  background: rgba(10, 6, 2, 0.5);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.salaireInput {
+  width: 140px;
+  border: none;
+  background: transparent;
+  color: var(--gold-050);
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 26px;
+  text-align: right;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.salaireInput::-webkit-outer-spin-button,
+.salaireInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.salaireInput::placeholder {
+  color: rgba(245, 222, 114, 0.35);
+}
+
+.salaireDevise {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--gold-300);
+}
+
+/* ===== Corps : deux colonnes ===== */
+.corps {
+  display: flex;
+  gap: clamp(20px, 3.5vw, 44px);
+  align-items: flex-start;
+  padding-top: 16px;
+}
+
+/* ---- Colonne gauche : anneau + totaux ---- */
+.colGauche {
+  flex: 1 1 42%;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Taille de l'anneau pilotée par une seule règle carrée (jamais déformé). */
+.graphe {
+  position: relative;
+  width: clamp(230px, 28vw, 360px);
+  aspect-ratio: 1;
+}
+
+.donut {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+}
+
+.arc {
+  transition: stroke-dasharray 0.4s ease;
+}
+
+.frameCentre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.frameInner {
+  width: 50%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(255, 248, 232, 0.08), transparent 70%),
+    var(--grad-wood);
+  border: 2px solid rgba(185, 155, 94, 0.6);
+  box-shadow:
+    inset 0 2px 12px rgba(0, 0, 0, 0.6),
+    0 0 0 5px rgba(10, 6, 2, 0.55),
+    0 0 20px rgba(231, 197, 122, 0.14);
+}
+
+/* ===== Gouvernail décoratif (SVG) ===== */
+.gouvernail {
+  width: 100%;
+  height: 100%;
+  opacity: 0.92;
+}
+
+.gRayon {
+  stroke: var(--bronze);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.gPoignee {
+  fill: var(--gold-300);
+  stroke: var(--gold-deep);
+  stroke-width: 1.5;
+}
+
+.gJante {
+  stroke: var(--bronze);
+  stroke-width: 6;
+}
+
+.gMoyeuFond {
+  fill: var(--ink-700);
+}
+
+.gMoyeuBord {
+  stroke: var(--gold-300);
+  stroke-width: 2.5;
+}
+
+.gCentre {
+  fill: var(--gold-200);
+}
+
+/* ===== Totaux (deux pastilles) ===== */
+.totaux {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  gap: 12px;
+}
+
+.totalPill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 11px 10px;
+  border-radius: var(--radius);
+  background: rgba(255, 248, 232, 0.05);
+  border: 1px solid rgba(185, 155, 94, 0.3);
+}
+
+.totalLabel {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+  text-align: center;
+}
+
+.totalValeur {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 21px;
+  color: var(--gold-050);
+}
+
+.totalNote {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--parch-200);
+  opacity: 0.8;
+}
+
+.positif {
+  color: #6fce86 !important;
+}
+
+.negatif {
+  color: #e57a6e !important;
+}
+
+/* ===== Colonne droite : répartition ===== */
+.colDroite {
+  flex: 1 1 58%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.postesEntete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.postesTitre {
+  margin: 0;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 18px;
+  color: var(--gold-200);
+}
+
+.boutonAjouter {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-deep);
+  background: var(--grad-gold);
+  color: #2c1e12;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm), var(--inset-top);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.boutonAjouter:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* Liste plafonnée : au-delà, elle défile toute seule → la page reste courte. */
+.liste {
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  max-height: clamp(240px, 52vh, 560px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.poste {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background:
+    var(--paper-grain),
+    linear-gradient(180deg, var(--parch-050), var(--parch-100));
+  border: 1px solid rgba(122, 90, 46, 0.35);
+  box-shadow: var(--shadow-sm);
+}
+
+.pastille {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.posteNom {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--ink-700);
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 4px 2px;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.12s ease;
+}
+
+.posteNom:hover,
+.posteNom:focus {
+  border-bottom-color: rgba(122, 90, 46, 0.4);
+}
+
+.posteNom::placeholder {
+  color: rgba(74, 53, 32, 0.5);
+  font-style: italic;
+}
+
+.postePart {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold-deep);
+  min-width: 36px;
+  text-align: right;
+}
+
+.posteMontant {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  background: rgba(122, 90, 46, 0.12);
+  border: 1px solid rgba(122, 90, 46, 0.3);
+}
+
+.posteInput {
+  width: 80px;
+  border: none;
+  background: transparent;
+  color: var(--ink-700);
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 15px;
+  text-align: right;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.posteInput::-webkit-outer-spin-button,
+.posteInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.posteDevise {
+  color: var(--gold-deep);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.posteSupprimer {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(143, 44, 34, 0.4);
+  background: rgba(255, 248, 232, 0.7);
+  color: var(--red-deep);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.posteSupprimer:hover {
+  background: rgba(179, 58, 46, 0.18);
+}
+
+/* ===== État vide ===== */
+.vide {
+  text-align: center;
+  padding: 28px 20px;
+  border-radius: var(--radius);
+  background: rgba(255, 248, 232, 0.04);
+  border: 1px dashed rgba(185, 155, 94, 0.4);
+}
+
+.videIcone {
+  font-size: 34px;
+}
+
+.videTitre {
+  margin: 10px 0 4px;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  color: var(--gold-200);
+}
+
+.videTexte {
+  margin: 0 auto;
+  max-width: 320px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--parch-200);
+  opacity: 0.85;
+}
+
+/* ===== Écrans étroits : une seule colonne, scroll naturel ===== */
+@media (max-width: 720px) {
+  .corps {
+    flex-direction: column;
+  }
+  .colGauche,
+  .colDroite {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+  .liste {
+    max-height: none;
+  }
+}

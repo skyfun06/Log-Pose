@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGameState } from './state/useGameState';
 import { useHabitudes } from './state/useHabitudes';
+import { useBudget } from './state/useBudget';
 import { TopBar } from './components/TopBar';
 import { WantedPoster } from './components/WantedPoster';
 import { LogPoseCard } from './components/LogPoseCard';
@@ -8,6 +9,7 @@ import { HabitudesDuJourCard } from './components/HabitudesDuJourCard';
 import { BottomBar } from './components/BottomBar';
 import { PlanningPage } from './components/Planning';
 import { HabitudesPage } from './components/Habitudes';
+import { BudgetPage } from './components/Budget';
 import { GoingMerry } from './components/GoingMerry';
 import type { Vue } from './types';
 import styles from './App.module.css';
@@ -42,6 +44,17 @@ function App() {
     marquerJour,
     cocherAujourdhui,
   } = useHabitudes();
+
+  const {
+    salaire,
+    postes,
+    totalReparti,
+    restant,
+    definirSalaire,
+    ajouterPoste,
+    modifierPoste,
+    supprimerPoste,
+  } = useBudget();
 
   // ⚠️ TEMPORAIRE — mesure des dimensions rendues (à RETIRER après usage).
   // Se relance à chaque changement de vue. Depuis la console tu peux aussi
@@ -131,6 +144,19 @@ function App() {
           onModifier={modifierHabitude}
           onSupprimer={supprimerHabitude}
           onMarquer={marquerJour}
+        />
+      )}
+
+      {vue === 'budget' && (
+        <BudgetPage
+          salaire={salaire}
+          postes={postes}
+          totalReparti={totalReparti}
+          restant={restant}
+          onDefinirSalaire={definirSalaire}
+          onAjouterPoste={ajouterPoste}
+          onModifierPoste={modifierPoste}
+          onSupprimerPoste={supprimerPoste}
         />
       )}
 

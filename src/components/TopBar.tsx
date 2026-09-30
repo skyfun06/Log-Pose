@@ -49,6 +49,13 @@ export function TopBar({ numero, arc, titre, totalIles, vue, onChangerVue }: Top
         </button>
         <button
           type="button"
+          className={vue === 'budget' ? `${styles.onglet} ${styles.ongletActif}` : styles.onglet}
+          onClick={() => onChangerVue('budget')}
+        >
+          Budget
+        </button>
+        <button
+          type="button"
           className={
             vue === 'going-merry' ? `${styles.onglet} ${styles.ongletActif}` : styles.onglet
           }

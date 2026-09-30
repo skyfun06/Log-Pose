@@ -63,4 +63,14 @@ export interface HabitudeDuJour {
   faitsCetteSemaine: number;
 }
 
-export type Vue = 'carte' | 'planning' | 'habitudes' | 'going-merry';
+// --- Budget ----------------------------------------------------------------
+
+// Un poste de répartition du salaire mensuel (loyer, courses, épargne…).
+// La répartition est manuelle : Louis saisit lui-même chaque montant.
+export interface PosteBudget {
+  id: string;
+  nom: string;
+  montant: number; // en euros
+}
+
+export type Vue = 'carte' | 'planning' | 'habitudes' | 'budget' | 'going-merry';
