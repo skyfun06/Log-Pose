@@ -1,0 +1,129 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(14px, 3vw, 32px);
+  background: rgba(10, 6, 2, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.modale {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background:
+    var(--paper-grain),
+    linear-gradient(180deg, rgba(44, 30, 18, 0.97), rgba(24, 16, 9, 0.98));
+  border: 1px solid rgba(185, 155, 94, 0.55);
+  border-radius: var(--radius-lg);
+  padding: clamp(16px, 2.4vw, 26px);
+  box-shadow: var(--shadow-lg);
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.titre {
+  margin: 0;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: clamp(18px, 2.4vw, 24px);
+  color: var(--gold-100);
+}
+
+.fermer {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(185, 155, 94, 0.5);
+  background: rgba(10, 6, 2, 0.5);
+  color: var(--gold-200);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.fermer:hover {
+  background: rgba(231, 197, 122, 0.18);
+}
+
+.corps {
+  position: relative;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.aucune {
+  margin: 12px 4px 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-style: italic;
+  text-align: center;
+  color: var(--parch-200);
+}
+
+.pied {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.boutonExport {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-deep);
+  background: var(--grad-gold);
+  color: #2c1e12;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm), var(--inset-top);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.boutonExport:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.boutonExport:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.boutonFermer {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 155, 94, 0.5);
+  background: rgba(10, 6, 2, 0.4);
+  color: var(--parch-100);
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.boutonFermer:hover {
+  background: rgba(231, 197, 122, 0.14);
+}

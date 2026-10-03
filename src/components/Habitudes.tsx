@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { CadenceHabitude, EtatHabitude, Habitude, MarquesHabitudes } from '../types';
 import { HabitudeForm } from './HabitudeForm';
+import { BilanHabitudes } from './BilanHabitudes';
 import styles from './Habitudes.module.css';
 
 interface HabitudesPageProps {
@@ -78,6 +79,7 @@ export function HabitudesPage({
   const [formOuvert, setFormOuvert] = useState(false);
   const [enEdition, setEnEdition] = useState<Habitude | null>(null);
   const [cadenceVue, setCadenceVue] = useState<CadenceHabitude>('quotidienne');
+  const [bilanOuvert, setBilanOuvert] = useState(false);
 
   const nbJours = joursDansMois(annee, mois);
   const jours = Array.from({ length: nbJours }, (_, i) => i + 1);
@@ -231,6 +233,13 @@ export function HabitudesPage({
               Hebdomadaires
             </button>
           </div>
+          <button
+            type="button"
+            className={styles.boutonBilan}
+            onClick={() => setBilanOuvert(true)}
+          >
+            📊 Bilan
+          </button>
           <button type="button" className={styles.boutonAjouter} onClick={ouvrirAjout}>
             + Habitude
           </button>
@@ -318,6 +327,14 @@ export function HabitudesPage({
             setFormOuvert(false);
             setEnEdition(null);
           }}
+        />
+      )}
+
+      {bilanOuvert && (
+        <BilanHabitudes
+          habitudes={[...quotidiennes, ...hebdomadaires]}
+          marques={marques}
+          onFermer={() => setBilanOuvert(false)}
         />
       )}
     </section>

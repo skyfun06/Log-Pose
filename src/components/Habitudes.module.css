@@ -137,6 +137,26 @@
   transform: translateY(-1px);
 }
 
+.boutonBilan {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 155, 94, 0.55);
+  background: rgba(28, 19, 11, 0.75);
+  color: var(--gold-100);
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm), inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.boutonBilan:hover {
+  background: rgba(231, 197, 122, 0.16);
+  transform: translateY(-1px);
+}
+
 /* ===== État vide ===== */
 .vide {
   max-width: 560px;
