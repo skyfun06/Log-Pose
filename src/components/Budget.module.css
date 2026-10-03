@@ -140,11 +140,29 @@
 .donut {
   width: 100%;
   height: 100%;
+  overflow: visible; /* laisse les étiquettes dépasser l'anneau */
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
 }
 
 .arc {
   transition: stroke-dasharray 0.4s ease;
+}
+
+.etiquetteTrait {
+  stroke: rgba(231, 197, 122, 0.45);
+  stroke-width: 1;
+}
+
+.etiquette {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 9px;
+  fill: var(--parch-050);
+  /* Contour sombre pour rester lisible sur le fond bois. */
+  paint-order: stroke;
+  stroke: rgba(10, 6, 2, 0.85);
+  stroke-width: 2.4px;
+  stroke-linejoin: round;
 }
 
 .frameCentre {

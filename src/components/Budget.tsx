@@ -68,12 +68,23 @@ const CX = 110;
 const CY = 110;
 const EPAISSEUR = 26;
 const CIRCONFERENCE = 2 * Math.PI * R;
+const RAYON_ETIQUETTE = 100; // où sont posés les noms des postes
+const SPAN_MIN_ETIQUETTE = 12; // n'étiquette que les parts assez grandes (degrés)
+
+function tronquer(s: string, max: number): string {
+  const t = s.trim();
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+}
 
 interface Arc {
   cle: string;
+  nom: string;
   couleur: string;
   longueur: number; // longueur de l'arc (portion de la circonférence)
   rotation: number; // degrés, 0 = 3h ; on part de midi (-90)
+  spanDeg: number; // ouverture angulaire du segment
+  midAngle: number; // angle du milieu du segment (pour l'étiquette)
+  pct: number; // part en % du salaire (ou de la base si pas de salaire)
 }
 
 export function BudgetPage({
@@ -95,9 +106,16 @@ export function BudgetPage({
   // Segments à tracer (postes non nuls + éventuel « non réparti »).
   const segments = [
     ...postes
-      .map((p, i) => ({ cle: p.id, montant: p.montant, couleur: couleurPoste(i) }))
+      .map((p, i) => ({
+        cle: p.id,
+        nom: p.nom.trim() || 'Sans nom',
+        montant: p.montant,
+        couleur: couleurPoste(i),
+      }))
       .filter((s) => s.montant > 0),
-    ...(reste > 0 ? [{ cle: 'reste', montant: reste, couleur: COULEUR_RESTE }] : []),
+    ...(reste > 0
+      ? [{ cle: 'reste', nom: 'Non réparti', montant: reste, couleur: COULEUR_RESTE }]
+      : []),
   ];
 
   // Petit écart visuel entre segments (uniquement s'il y en a plusieurs).
@@ -108,11 +126,17 @@ export function BudgetPage({
     let cumul = 0;
     for (const s of segments) {
       const longueur = Math.max(0, (s.montant / base) * CIRCONFERENCE - ecart);
+      const rotation = -90 + (cumul / base) * 360;
+      const spanDeg = (s.montant / base) * 360;
       arcs.push({
         cle: s.cle,
+        nom: s.nom,
         couleur: s.couleur,
         longueur,
-        rotation: -90 + (cumul / base) * 360,
+        rotation,
+        spanDeg,
+        midAngle: rotation + spanDeg / 2,
+        pct: Math.round((salaire > 0 ? s.montant / salaire : s.montant / base) * 100),
       });
       cumul += s.montant;
     }
@@ -233,6 +257,41 @@ export function BudgetPage({
                     />
                   ))}
                 </g>
+
+                {/* Étiquettes : nom + % de chaque poste, posés autour de l'anneau */}
+                {arcs
+                  .filter((a) => a.spanDeg >= SPAN_MIN_ETIQUETTE)
+                  .map((a) => {
+                    const rad = (a.midAngle * Math.PI) / 180;
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+                    const xInterne = CX + (R + EPAISSEUR / 2) * cos;
+                    const yInterne = CY + (R + EPAISSEUR / 2) * sin;
+                    const xExterne = CX + RAYON_ETIQUETTE * cos;
+                    const yExterne = CY + RAYON_ETIQUETTE * sin;
+                    const ancre = cos >= 0 ? 'start' : 'end';
+                    const xTexte = xExterne + (cos >= 0 ? 3 : -3);
+                    return (
+                      <g key={`lbl-${a.cle}`}>
+                        <line
+                          x1={xInterne}
+                          y1={yInterne}
+                          x2={xExterne}
+                          y2={yExterne}
+                          className={styles.etiquetteTrait}
+                        />
+                        <text
+                          x={xTexte}
+                          y={yExterne}
+                          textAnchor={ancre}
+                          dominantBaseline="middle"
+                          className={styles.etiquette}
+                        >
+                          {tronquer(a.nom, 9)} {a.pct}%
+                        </text>
+                      </g>
+                    );
+                  })}
               </svg>
 
               {/* Frame centrale : gouvernail décoratif, remplaçable par ta propre
@@ -270,7 +329,7 @@ export function BudgetPage({
           <div className={styles.colDroite}>
             <div className={styles.postesEntete}>
               <h2 className={styles.postesTitre}>Répartition</h2>
-              <button type="button" className={styles.boutonAjouter} onClick={onAjouterPoste}>
+              <button type="button" className={styles.boutonAjouter} onClick={() => onAjouterPoste()}>
                 + Poste
               </button>
             </div>
