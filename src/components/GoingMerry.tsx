@@ -374,7 +374,12 @@ export function GoingMerry({
       const blocs = blocsRef.current;
       if (blocs.length === 0) return "L'agenda est vide pour l'instant.";
       return blocs
-        .map((b) => `- id=${b.id} | ${b.titre} : ${b.heureDebut}–${b.heureFin} (${b.jours.join(', ')})`)
+        .map(
+          (b) =>
+            `- id=${b.id} | ${b.titre} : ${b.heureDebut}–${b.heureFin} (${b.jours.join(', ')})${
+              b.fixe ? ' [FIXE : horaires de travail, ne jamais modifier ni supprimer]' : ''
+            }`,
+        )
         .join('\n');
     }
 
@@ -434,6 +439,9 @@ export function GoingMerry({
       if (!cible) {
         return `Erreur : aucun créneau trouvé (id « ${String(args.id ?? '')} », titre « ${String(args.titre ?? '')} »). Appelle lister_creneaux pour obtenir les id exacts.`;
       }
+      if (cible.fixe) {
+        return `Refusé : « ${cible.titre} » correspond aux horaires de travail fixes de Louis, ils ne se modifient pas. Organise le reste autour.`;
+      }
 
       const heureDebut = args.heureDebut != null ? normaliserHeure(args.heureDebut) : cible.heureDebut;
       const heureFin = args.heureFin != null ? normaliserHeure(args.heureFin) : cible.heureFin;
@@ -467,6 +475,9 @@ export function GoingMerry({
       const cible = trouverBloc(args);
       if (!cible) {
         return `Erreur : aucun créneau trouvé (id « ${String(args.id ?? '')} », titre « ${String(args.titre ?? '')} »). Appelle lister_creneaux pour obtenir les id exacts.`;
+      }
+      if (cible.fixe) {
+        return `Refusé : « ${cible.titre} » correspond aux horaires de travail fixes de Louis, ils ne se suppriment pas.`;
       }
 
       const jour = String(args.jour ?? '').trim().toLowerCase();

@@ -10,7 +10,13 @@ interface HabitudesPageProps {
   marques: MarquesHabitudes;
   joursMalades: string[];
   onBasculerMalade: (dateISO: string) => void;
-  onAjouter: (h: { nom: string; cadence: CadenceHabitude; objectifHebdo: number; icone?: string }) => void;
+  onAjouter: (h: {
+    nom: string;
+    cadence: CadenceHabitude;
+    objectifHebdo: number;
+    icone?: string;
+    compteMemeMalade?: boolean;
+  }) => void;
   onModifier: (id: string, patch: Partial<Omit<Habitude, 'id'>>) => void;
   onSupprimer: (id: string) => void;
   onMarquer: (id: string, dateISO: string, etat: EtatHabitude | null) => void;
@@ -76,7 +82,8 @@ export function HabitudesPage({
   onSupprimer,
   onMarquer,
 }: HabitudesPageProps) {
-  const malades = new Set(joursMalades);
+  const maladesDuMois = new Set(joursMalades);
+  const malades = maladesDuMois;
   const aujourdhui = new Date();
   const [annee, setAnnee] = useState(aujourdhui.getFullYear());
   const [mois, setMois] = useState(aujourdhui.getMonth());
@@ -102,12 +109,13 @@ export function HabitudesPage({
     annee > aujourdhui.getFullYear() ||
     (annee === aujourdhui.getFullYear() && mois > aujourdhui.getMonth());
   const joursEcoules = moisEstPasse ? nbJours : moisEstFutur ? 0 : jourAujourdhui;
-  // Jours malades parmi les jours écoulés : retirés du calcul des taux.
+  // Jours malades parmi les jours écoulés : retirés du calcul des taux (sauf
+  // pour les habitudes qui comptent même malade).
   let maladesEcoules = 0;
   for (let d = 1; d <= joursEcoules; d++) {
     if (malades.has(dateISO(annee, mois, d))) maladesEcoules++;
   }
-  const joursActifs = joursEcoules - maladesEcoules;
+  const AUCUN_JOUR = new Set<string>();
 
   const lundi = lundiDeLaSemaine(aujourdhui);
   const dimanche = dimancheDeLaSemaine(aujourdhui);
@@ -124,6 +132,9 @@ export function HabitudesPage({
   }
 
   function calculerStats(h: Habitude): StatsHabitude {
+    // Les jours malades ne s'appliquent pas aux habitudes qui comptent même malade.
+    const malades = h.compteMemeMalade ? AUCUN_JOUR : maladesDuMois;
+    const joursActifs = joursEcoules - (h.compteMemeMalade ? 0 : maladesEcoules);
     const parDate = marques[h.id] ?? {};
     let faits = 0;
     let rates = 0;
@@ -190,6 +201,7 @@ export function HabitudesPage({
     nom: string;
     cadence: CadenceHabitude;
     objectifHebdo: number;
+    compteMemeMalade: boolean;
   }) {
     if (enEdition) onModifier(enEdition.id, data);
     else onAjouter(data);
@@ -448,6 +460,11 @@ function SectionLignes({
                 {h.cadence === 'hebdomadaire' && (
                   <span className={styles.tagObjectif}>obj {h.objectifHebdo}×/sem</span>
                 )}
+                {h.compteMemeMalade && (
+                  <span className={styles.tagObjectif} title="Reste active les jours malades">
+                    même malade
+                  </span>
+                )}
                 <div className={styles.habitudeActions}>
                   <button
                     type="button"
@@ -478,7 +495,7 @@ function SectionLignes({
               const etat = parDate[iso];
               const estAuj = estMoisCourant && d === jourAujourdhui;
               const futur = iso > isoAujourdhui;
-              if (malades.has(iso)) {
+              if (malades.has(iso) && !h.compteMemeMalade) {
                 return (
                   <td key={d} className={`${styles.tdCellule} ${styles.tdMalade}`}>
                     <span

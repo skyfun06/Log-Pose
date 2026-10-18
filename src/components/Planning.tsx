@@ -535,7 +535,7 @@ function VueJour({
                           key={bloc.id}
                           className={`${styles.creneau} ${styles[`nature_${nature}`]} ${
                             passe ? styles.creneauPasse : ''
-                          } ${actif ? styles.creneauActif : ''}`}
+                          } ${actif ? styles.creneauActif : ''} ${bloc.fixe ? styles.creneauFixe : ''}`}
                         >
                           <div className={styles.creneauHeure}>
                             <span className={styles.creneauDebut}>{bloc.heureDebut}</span>
@@ -552,8 +552,10 @@ function VueJour({
                                   <span className={styles.badgeQuete}>quête +{bloc.questWeight} %</span>
                                 )}
                                 {actif && <span className={styles.badgeEnCours}>En cours</span>}
+                                {bloc.fixe && <span className={styles.badgeFixe}>Horaire fixe</span>}
                               </div>
                             </div>
+                            {!bloc.fixe && (
                             <div className={styles.capActions}>
                               <button
                                 type="button"
@@ -573,6 +575,7 @@ function VueJour({
                                 ✕
                               </button>
                             </div>
+                            )}
                           </article>
                         </li>
                       );
@@ -686,7 +689,9 @@ function VueSemaine({
                   key={bloc.id}
                   className={`${styles.bloc} ${styles[`nature_${nature}`]} ${
                     compact ? styles.blocCompact : ''
-                  } ${minuscule ? styles.blocMinuscule : ''} ${passe ? styles.blocPasse : ''}`}
+                  } ${minuscule ? styles.blocMinuscule : ''} ${passe ? styles.blocPasse : ''} ${
+                    bloc.fixe ? styles.blocFixe : ''
+                  }`}
                   style={styleBloc}
                   title={`${bloc.heureDebut} – ${bloc.heureFin} · ${bloc.titre}`}
                 >
@@ -700,10 +705,11 @@ function VueSemaine({
                         {bloc.heureDebut} – {bloc.heureFin}
                       </div>
                     )}
-                    {bloc.questWeight > 0 && !compact && (
+                    {bloc.questWeight > 0 && fin - debut >= 90 && (
                       <span className={styles.badge}>quête +{bloc.questWeight}%</span>
                     )}
                   </div>
+                  {!bloc.fixe && (
                   <div className={styles.blocActions}>
                     <button
                       type="button"
@@ -722,6 +728,7 @@ function VueSemaine({
                       ✕
                     </button>
                   </div>
+                  )}
                 </article>
               );
             })}

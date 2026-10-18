@@ -28,9 +28,15 @@ function pad2(n: number): string {
 }
 
 // Agrège les marques par mois sur les NB_MOIS derniers mois (mois courant
-// inclus). Les jours malades sont ignorés.
-function calculerStats(marques: MarquesHabitudes, joursMalades: string[]): StatMois[] {
+// inclus). Les jours malades sont ignorés, sauf pour les habitudes qui
+// comptent même malade.
+function calculerStats(
+  habitudes: Habitude[],
+  marques: MarquesHabitudes,
+  joursMalades: string[],
+): StatMois[] {
   const malades = new Set(joursMalades);
+  const exemptees = new Set(habitudes.filter((h) => h.compteMemeMalade).map((h) => h.id));
   const base = new Date();
   base.setDate(1);
   const mois: StatMois[] = [];
@@ -39,9 +45,9 @@ function calculerStats(marques: MarquesHabitudes, joursMalades: string[]): StatM
     const prefixe = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
     let faits = 0;
     let rates = 0;
-    for (const parDate of Object.values(marques)) {
+    for (const [id, parDate] of Object.entries(marques)) {
       for (const [date, etat] of Object.entries(parDate)) {
-        if (date.startsWith(prefixe) && !malades.has(date)) {
+        if (date.startsWith(prefixe) && (exemptees.has(id) || !malades.has(date))) {
           if (etat === 'fait') faits++;
           else if (etat === 'rate') rates++;
         }
@@ -61,7 +67,10 @@ function calculerStats(marques: MarquesHabitudes, joursMalades: string[]): StatM
 export function BilanHabitudes({ habitudes, marques, joursMalades, onFermer }: BilanHabitudesProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [pret, setPret] = useState(false);
-  const stats = useMemo(() => calculerStats(marques, joursMalades), [marques, joursMalades]);
+  const stats = useMemo(
+    () => calculerStats(habitudes, marques, joursMalades),
+    [habitudes, marques, joursMalades],
+  );
 
   // Dessine le graphe sur le canvas (haute résolution pour un export net).
   useEffect(() => {

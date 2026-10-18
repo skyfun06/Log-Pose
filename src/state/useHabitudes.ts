@@ -56,6 +56,12 @@ const JOURS_MALADES_INITIAUX = [
 
 const DATE_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
+// « !Drogues » (s'abstenir) se tient même malade : l'option est cochée d'office
+// tant que Louis ne l'a pas réglée lui-même dans le formulaire.
+function compteMemeMaladeParDefaut(nom: string): boolean {
+  return /^!\s*drogues?$/i.test(nom.trim());
+}
+
 function borner(n: unknown, min: number, max: number, defaut: number): number {
   const v = Math.round(Number(n));
   if (!Number.isFinite(v)) return defaut;
@@ -76,6 +82,10 @@ function loadState(): HabitudesState {
             cadence: h.cadence === 'hebdomadaire' ? 'hebdomadaire' : 'quotidienne',
             objectifHebdo: borner(h.objectifHebdo, 1, 7, h.cadence === 'hebdomadaire' ? 3 : 7),
             icone: typeof h.icone === 'string' ? h.icone : undefined,
+            compteMemeMalade:
+              typeof h.compteMemeMalade === 'boolean'
+                ? h.compteMemeMalade
+                : compteMemeMaladeParDefaut(h.nom),
           }))
       : [];
     const marques =
@@ -124,6 +134,7 @@ export function useHabitudes() {
       cadence: CadenceHabitude;
       objectifHebdo?: number;
       icone?: string;
+      compteMemeMalade?: boolean;
     }): string => {
       const id = crypto.randomUUID();
       const objectifHebdo =
@@ -134,7 +145,14 @@ export function useHabitudes() {
         ...prev,
         habitudes: [
           ...prev.habitudes,
-          { id, nom: habitude.nom.trim(), cadence: habitude.cadence, objectifHebdo, icone: habitude.icone },
+          {
+            id,
+            nom: habitude.nom.trim(),
+            cadence: habitude.cadence,
+            objectifHebdo,
+            icone: habitude.icone,
+            compteMemeMalade: habitude.compteMemeMalade ?? compteMemeMaladeParDefaut(habitude.nom),
+          },
         ],
       }));
       return id;
@@ -208,27 +226,35 @@ export function useHabitudes() {
   // - quotidiennes : toujours ;
   // - hebdomadaires : tant que l'objectif de la semaine n'est pas atteint
   //   (ou si déjà marquées aujourd'hui, pour rester visibles jusqu'au soir).
-  // Quotidiennes d'abord, puis hebdomadaires. Un jour « malade » : rien à faire.
+  // Quotidiennes d'abord, puis hebdomadaires. Un jour « malade », seules les
+  // habitudes qui comptent même malade restent à faire.
   const habitudesDuJour = useMemo<HabitudeDuJour[]>(() => {
     const today = new Date();
     const iso = isoDeDate(today);
     const [lundi, dimanche] = bornesSemaine(today);
     const malades = new Set(state.joursMalades);
-    if (malades.has(iso)) return [];
+    const aujourdhuiMalade = malades.has(iso);
     const maladesSemaine = state.joursMalades.filter((d) => d >= lundi && d <= dimanche).length;
 
-    const items = state.habitudes.map((h): HabitudeDuJour => {
+    const concernees = aujourdhuiMalade
+      ? state.habitudes.filter((h) => h.compteMemeMalade)
+      : state.habitudes;
+
+    const items = concernees.map((h): HabitudeDuJour => {
       const parDate = state.marques[h.id] ?? {};
+      const ignoreMalade = h.compteMemeMalade === true;
       let faitsCetteSemaine = 0;
       for (const [d, e] of Object.entries(parDate)) {
-        if (e === 'fait' && d >= lundi && d <= dimanche && !malades.has(d)) faitsCetteSemaine++;
+        if (e === 'fait' && d >= lundi && d <= dimanche && (ignoreMalade || !malades.has(d))) {
+          faitsCetteSemaine++;
+        }
       }
       return {
         id: h.id,
         nom: h.nom,
         cadence: h.cadence,
         // Les jours malades de la semaine réduisent l'objectif d'autant.
-        objectifHebdo: Math.min(h.objectifHebdo, 7 - maladesSemaine),
+        objectifHebdo: ignoreMalade ? h.objectifHebdo : Math.min(h.objectifHebdo, 7 - maladesSemaine),
         etat: parDate[iso],
         faitsCetteSemaine,
       };

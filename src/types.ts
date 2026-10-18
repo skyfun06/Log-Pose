@@ -27,6 +27,8 @@ export interface BlocPlanning {
   heureFin: string;
   jours: JourSemaine[];
   questWeight: number;
+  // Créneau verrouillé (ex : horaires de travail) : ni modifiable ni supprimable.
+  fixe?: boolean;
 }
 
 // --- Habitudes -------------------------------------------------------------
@@ -47,6 +49,9 @@ export interface Habitude {
   // Ignoré (traité comme 7) pour une habitude quotidienne.
   objectifHebdo: number;
   icone?: string;
+  // Vraie = l'habitude reste active les jours « malade » (ex : « !Drogues »,
+  // qu'on tient même cloué au lit). Par défaut, un jour malade la désactive.
+  compteMemeMalade?: boolean;
 }
 
 // Marques par habitude puis par date « YYYY-MM-DD » → 'fait' | 'rate'.

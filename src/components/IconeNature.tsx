@@ -3,6 +3,7 @@ import type { Nature } from '../data/creneaux';
 // Petite icône gravée au trait pour chaque nature de créneau.
 const TRACES: Record<Nature, string> = {
   travail: 'M4 8.5h16v10H4zM9 8.5V6.5h6v2M4 13h16',
+  projet: 'M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zM12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2z',
   sport: 'M3.5 9.5v5M6.5 7.5v9M17.5 7.5v9M20.5 9.5v5M6.5 12h11',
   lecture: 'M12 6.5c-2-1.4-4.8-1.8-8-1.3V18c3.2-.5 6 0 8 1.3 2-1.3 4.8-1.8 8-1.3V5.2c-3.2-.5-6-.1-8 1.3zM12 6.5v12.8',
   etudes: 'M2.5 9.5 12 5l9.5 4.5L12 14zM6.5 11.5v4.3c3.5 2.3 7.5 2.3 11 0v-4.3M21.5 9.5v5',

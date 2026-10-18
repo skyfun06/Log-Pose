@@ -2,20 +2,29 @@
 // nature d'un créneau d'après son titre, le ranger dans un moment de la
 // journée, et formater heures et durées.
 
-export type Nature = 'travail' | 'sport' | 'lecture' | 'etudes' | 'repas' | 'sommeil' | 'autre';
+export type Nature =
+  | 'travail'
+  | 'projet'
+  | 'sport'
+  | 'lecture'
+  | 'etudes'
+  | 'repas'
+  | 'sommeil'
+  | 'autre';
 
 // Mots-clés (sans accents, en minuscules) → nature. Le premier qui correspond gagne.
 const MOTS_CLES: [Nature, string[]][] = [
+  ['repas', ['repas', 'dejeuner', 'diner', 'manger', 'cuisine', 'petit-dej', 'petit dej']],
   ['sommeil', ['coucher', 'dormir', 'sieste', 'sommeil', 'reveil', 'lever']],
+  ['projet', ['business', 'prospection', 'prospect', 'client', 'offre', 'relance', 'devis', 'facture', 'vente', 'projet']],
   ['sport', ['sport', 'muscu', 'courir', 'course', 'footing', 'running', 'salle', 'velo', 'natation', 'yoga', 'etirement', 'marche']],
   ['lecture', ['lire', 'lecture', 'livre', 'pages']],
   ['etudes', ['cours', 'fac', 'reviser', 'revision', 'etudier', 'examen', 'partiel', 'td', 'tp', 'devoir']],
-  ['repas', ['repas', 'dejeuner', 'diner', 'manger', 'cuisine', 'petit-dej', 'petit dej']],
-  ['travail', ['prospection', 'prospect', 'client', 'travail', 'boulot', 'business', 'mail', 'appel', 'rdv', 'rendez-vous', 'projet', 'reunion', 'facture', 'vente', 'shift', 'service']],
+  ['travail', ['travail', 'boulot', 'job', 'shift', 'service', 'reunion', 'rdv', 'rendez-vous']],
 ];
 
 function normaliser(texte: string): string {
-  return texte.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return texte.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 export function natureDe(titre: string): Nature {
@@ -28,6 +37,7 @@ export function natureDe(titre: string): Nature {
 
 export const LIBELLES_NATURE: Record<Nature, string> = {
   travail: 'Travail',
+  projet: 'Business',
   sport: 'Sport',
   lecture: 'Lecture',
   etudes: 'Études',

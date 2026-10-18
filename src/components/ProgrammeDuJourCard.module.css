@@ -1,6 +1,10 @@
 /* Teinte de chaque nature de créneau (mêmes couleurs que l'emploi du temps,
    éclaircies pour le bois sombre). */
 .nature_travail {
+  --teinte: #a7b1c8;
+}
+
+.nature_projet {
   --teinte: #e0705f;
 }
 

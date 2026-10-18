@@ -115,3 +115,11 @@
   border-color: var(--red-deep);
   color: #fff;
 }
+
+/* Rappel discret quand Louis est noté malade aujourd'hui. */
+.noteMalade {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--parch-300);
+}

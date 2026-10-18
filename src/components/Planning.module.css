@@ -234,6 +234,10 @@
 
 /* Teinte de chaque nature de créneau (liseré, icône, ruban). */
 .nature_travail {
+  --teinte: #5b6478;
+}
+
+.nature_projet {
   --teinte: #b33a2e;
 }
 
@@ -584,6 +588,26 @@
   color: #156e66;
 }
 
+/* Créneau fixe (le travail) : hachures discrètes, pas d'actions. */
+.creneauFixe .creneauCarte {
+  background:
+    repeating-linear-gradient(135deg, rgba(91, 100, 120, 0.08) 0 6px, transparent 6px 12px),
+    rgba(240, 236, 228, 0.75);
+}
+
+.badgeFixe {
+  font-family: var(--font-engraved);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: rgba(91, 100, 120, 0.16);
+  color: #3f4658;
+}
+
 /* Temps libre entre deux créneaux. */
 .libre {
   margin-left: 64px;
@@ -877,6 +901,13 @@
   transform: translateY(-1px) scale(1.01);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
   z-index: 4;
+}
+
+/* Créneau fixe (le travail) en vue semaine. */
+.blocFixe {
+  background:
+    repeating-linear-gradient(135deg, rgba(91, 100, 120, 0.1) 0 6px, transparent 6px 12px),
+    linear-gradient(180deg, #ece6da, #ddd4c3);
 }
 
 /* Créneau court : titre seul, centré ; une ligne pour les tout petits. */

@@ -1,16 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { iles } from '../data/iles';
-import { missionsInitiales } from '../data/missions';
+import { PROGRAMME_CONSEILLE, VERSION_PROGRAMME } from '../data/programme';
 import type { BlocPlanning, JourSemaine, Mission, StatutMission } from '../types';
 
 const STORAGE_KEY = 'log-pose-state';
 
-const TOUS_LES_JOURS: JourSemaine[] = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
 const JOUR_INDEX: JourSemaine[] = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
-
-function heure(h: number): string {
-  return `${String(h).padStart(2, '0')}:00`;
-}
 
 function jourSemaineActuel(): JourSemaine {
   return JOUR_INDEX[new Date().getDay()];
@@ -21,37 +16,9 @@ function dateDuJour(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-// Horaires des créneaux d'exemple, calés sur ce qu'ils décrivent (30 min de
-// sport = 30 min, se coucher = le soir…).
-const HORAIRES_INITIAUX: Record<string, [string, string]> = {
-  m1: ['09:00', '09:45'],
-  m2: ['18:00', '18:30'],
-  m3: ['21:30', '22:00'],
-  m4: ['23:15', '23:45'],
-};
-
-const blocsPlanningInitiaux: BlocPlanning[] = missionsInitiales.map((m) => ({
-  id: m.id,
-  titre: m.texte,
-  heureDebut: HORAIRES_INITIAUX[m.id][0],
-  heureFin: HORAIRES_INITIAUX[m.id][1],
-  jours: TOUS_LES_JOURS,
-  questWeight: m.questWeight,
-}));
-
-// Les toutes premières versions posaient ces exemples d'heure en heure à
-// partir de 8 h (« se coucher avant minuit » à 11 h du matin…). Un créneau
-// d'exemple encore à son horaire d'origine reçoit son horaire logique ; un
-// créneau que Louis a modifié n'est jamais touché.
-function recalerExemples(blocs: BlocPlanning[]): BlocPlanning[] {
-  return blocs.map((b) => {
-    const i = missionsInitiales.findIndex((m) => m.id === b.id);
-    const nouveaux = HORAIRES_INITIAUX[b.id];
-    if (i === -1 || !nouveaux) return b;
-    if (b.heureDebut !== heure(8 + i) || b.heureFin !== heure(9 + i)) return b;
-    return { ...b, heureDebut: nouveaux[0], heureFin: nouveaux[1] };
-  });
-}
+// Avant de remplacer l'emploi du temps par le programme conseillé, l'ancien
+// est mis de côté ici (on peut le restaurer à la main au besoin).
+const CLE_SAUVEGARDE_PLANNING = 'log-pose-planning-avant-programme';
 
 interface GameState {
   prime: number;
@@ -60,16 +27,32 @@ interface GameState {
   blocsPlanning: BlocPlanning[];
   statutsMissions: Record<string, StatutMission>;
   dateStatuts: string;
+  // Version du programme conseillé déjà appliquée (voir data/programme.ts).
+  versionProgramme?: number;
 }
 
 const defaultState: GameState = {
   prime: 0,
   currentIslandId: iles[0].id,
   logPose: {},
-  blocsPlanning: blocsPlanningInitiaux,
+  blocsPlanning: PROGRAMME_CONSEILLE,
   statutsMissions: {},
   dateStatuts: dateDuJour(),
+  versionProgramme: VERSION_PROGRAMME,
 };
+
+// Applique une fois le programme conseillé (nouvelle version) en sauvegardant
+// l'ancien emploi du temps ; sinon garde celui de Louis tel quel.
+function programmeAJour(parsed: Partial<GameState>): BlocPlanning[] {
+  const actuel = parsed.blocsPlanning ?? PROGRAMME_CONSEILLE;
+  if ((parsed.versionProgramme ?? 0) >= VERSION_PROGRAMME) return actuel;
+  try {
+    localStorage.setItem(CLE_SAUVEGARDE_PLANNING, JSON.stringify(actuel));
+  } catch {
+    /* sauvegarde impossible : on applique quand même le programme */
+  }
+  return PROGRAMME_CONSEILLE;
+}
 
 function loadState(): GameState {
   try {
@@ -83,11 +66,10 @@ function loadState(): GameState {
           ? parsed.currentIslandId
           : defaultState.currentIslandId,
       logPose: parsed.logPose ?? defaultState.logPose,
-      blocsPlanning: parsed.blocsPlanning
-        ? recalerExemples(parsed.blocsPlanning)
-        : defaultState.blocsPlanning,
+      blocsPlanning: programmeAJour(parsed),
       statutsMissions: parsed.statutsMissions ?? defaultState.statutsMissions,
       dateStatuts: parsed.dateStatuts ?? defaultState.dateStatuts,
+      versionProgramme: VERSION_PROGRAMME,
     };
   } catch {
     return defaultState;
@@ -178,14 +160,16 @@ export function useGameState() {
   const modifierBloc = useCallback((id: string, patch: Omit<BlocPlanning, 'id'>) => {
     setState((prev) => ({
       ...prev,
-      blocsPlanning: prev.blocsPlanning.map((b) => (b.id === id ? { ...patch, id } : b)),
+      blocsPlanning: prev.blocsPlanning.map((b) =>
+        b.id === id && !b.fixe ? { ...patch, id, fixe: b.fixe } : b,
+      ),
     }));
   }, []);
 
   const supprimerBloc = useCallback((id: string, jour: JourSemaine) => {
     setState((prev) => {
       const bloc = prev.blocsPlanning.find((b) => b.id === id);
-      if (!bloc) return prev;
+      if (!bloc || bloc.fixe) return prev;
 
       const joursRestants = bloc.jours.filter((j) => j !== jour);
 

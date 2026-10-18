@@ -10,6 +10,7 @@ interface HabitudeFormProps {
     cadence: CadenceHabitude;
     objectifHebdo: number;
     icone?: string;
+    compteMemeMalade: boolean;
   }) => void;
   onAnnuler: () => void;
 }
@@ -24,6 +25,9 @@ export function HabitudeForm({ habitudeInitiale, onValider, onAnnuler }: Habitud
       ? habitudeInitiale.objectifHebdo
       : 3),
   );
+  const [compteMemeMalade, setCompteMemeMalade] = useState(
+    habitudeInitiale?.compteMemeMalade ?? false,
+  );
   const [erreur, setErreur] = useState('');
 
   function handleSubmit(e: FormEvent) {
@@ -37,6 +41,7 @@ export function HabitudeForm({ habitudeInitiale, onValider, onAnnuler }: Habitud
       nom: nom.trim(),
       cadence,
       objectifHebdo: cadence === 'hebdomadaire' && Number.isFinite(obj) ? obj : 7,
+      compteMemeMalade,
     });
   }
 
@@ -101,6 +106,15 @@ export function HabitudeForm({ habitudeInitiale, onValider, onAnnuler }: Habitud
             />
           </label>
         )}
+
+        <label className={styles.jourCase}>
+          <input
+            type="checkbox"
+            checked={compteMemeMalade}
+            onChange={(e) => setCompteMemeMalade(e.target.checked)}
+          />
+          Compte même les jours malades
+        </label>
 
         {erreur && <p className={styles.erreur}>{erreur}</p>}
 

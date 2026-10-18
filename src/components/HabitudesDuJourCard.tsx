@@ -29,7 +29,7 @@ export function HabitudesDuJourCard({
         )}
       </div>
 
-      {aujourdhuiMalade ? (
+      {aujourdhuiMalade && total === 0 ? (
         <p className={panneau.vide}>
           Jour de repos : tu es noté malade aujourd'hui. Soigne-toi, capitaine.
         </p>
@@ -42,6 +42,11 @@ export function HabitudesDuJourCard({
         </div>
       ) : (
         <div className={panneau.corps}>
+          {aujourdhuiMalade && (
+            <p className={styles.noteMalade}>
+              Jour malade : seules les habitudes qui comptent même malade restent à tenir.
+            </p>
+          )}
           <ul className={panneau.liste}>
             {habitudesDuJour.map((h) => (
               <li
