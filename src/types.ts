@@ -73,4 +73,69 @@ export interface PosteBudget {
   montant: number; // en euros
 }
 
-export type Vue = 'carte' | 'planning' | 'habitudes' | 'budget' | 'going-merry';
+// --- Courrier --------------------------------------------------------------
+
+// Un mail jugé important par le tri (voir server/mails.js).
+export interface MailImportant {
+  id: string;
+  compte: string; // boîte Gmail qui l'a reçu
+  de: string;
+  adresse: string;
+  objet: string;
+  date: string; // ISO
+  nonLu: boolean;
+  lien: string | null; // ouvre le fil dans Gmail
+  raison: string; // résumé d'une phrase écrit par l'IA
+}
+
+// Réponse de /api/mails. « configure: false » = aucune boîte dans .env.
+export type ReleveCourrier =
+  | { configure: false }
+  | {
+      configure: true;
+      comptes: string[];
+      mails: MailImportant[];
+      ecartes: number;
+      nonTries: number;
+      jours: number;
+      releveLe: string;
+      erreurs: string[];
+    };
+
+// --- Récaps ----------------------------------------------------------------
+
+export type MomentRecap = 'matin' | 'soir';
+
+// Créneau en cours, calculé par le serveur (ex : « 2026-10-11-matin »).
+export interface CreneauRecap {
+  cle: string;
+  moment: MomentRecap;
+  depuis: string; // ISO : les mails reçus après cette date sont « nouveaux »
+}
+
+export interface BlocRecap {
+  titre: string;
+  heureDebut: string;
+  heureFin: string;
+}
+
+// Un récap du matin ou du soir (voir server/recaps.js).
+export interface Recap {
+  cle: string;
+  moment: MomentRecap;
+  creeLe: string; // ISO
+  planning: BlocRecap[]; // matin : aujourd'hui ; soir : demain
+  habitudes: { nom: string; etat: EtatHabitude | null }[];
+  courrier: { configure: boolean; nouveaux: MailImportant[]; nonLus: number };
+  mot: string | null; // mot d'introduction écrit par l'IA
+  erreurs: string[];
+}
+
+export type Vue =
+  | 'carte'
+  | 'recap'
+  | 'planning'
+  | 'habitudes'
+  | 'budget'
+  | 'courrier'
+  | 'going-merry';

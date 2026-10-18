@@ -30,3 +30,6 @@ dist-ssr
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Données gardées par le serveur relais (résumés de mails, récaps)
+server/.cache-*.json

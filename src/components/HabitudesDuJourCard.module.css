@@ -1,194 +1,117 @@
-.carte {
-  --cadre-bord: 30px;
-  --cadre-slice: 50;
-
-  position: relative;
-  border-style: solid;
-  border-width: var(--cadre-bord);
-  border-color: #7a5a2e;
-  border-image-source: url('/assets/cadre-parchemin.png');
-  border-image-slice: var(--cadre-slice) fill;
-  border-image-width: var(--cadre-bord);
-  border-image-repeat: stretch;
-  background: transparent;
-  padding: clamp(14px, 1.8vh, 22px) clamp(20px, 2.2vw, 28px);
-  color: var(--ink-600);
-
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4));
-}
-
-.carte::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: var(--paper-grain);
-  mix-blend-mode: multiply;
-  opacity: 0.7;
-}
-
-.carte > * {
-  position: relative;
-  z-index: 1;
-}
-
-.entete {
-  flex-shrink: 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(122, 90, 46, 0.3);
-}
-
-.titre {
-  margin: 0;
-  font-family: var(--font-engraved);
-  font-weight: 700;
-  font-size: 17px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--ink-600);
-}
-
-.compteur {
-  font-family: var(--font-engraved);
-  font-weight: 700;
-  font-size: 13px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(122, 90, 46, 0.16);
-  color: var(--gold-deep);
-}
-
-/* Zone défilante des habitudes. */
-.corps {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 6px;
-}
-
-.liste {
-  list-style: none;
-  margin: 0;
-  padding: 2px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .ligne {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 9px 12px;
+  padding: 7px 8px 7px 7px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, rgba(255, 248, 232, 0.55), rgba(185, 155, 94, 0.14));
-  border: 1px solid rgba(122, 90, 46, 0.22);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  border: 1px solid rgba(185, 155, 94, 0.18);
+  background: rgba(10, 6, 2, 0.32);
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .ligne:hover {
-  transform: translateX(2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+  border-color: rgba(231, 197, 122, 0.4);
 }
 
-.icone {
+/* Case à cocher ronde, gravée dans le bois. */
+.case {
   flex-shrink: 0;
-  font-size: 16px;
-  line-height: 1;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(231, 197, 122, 0.55);
+  background: rgba(0, 0, 0, 0.3);
+  color: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
-.texte {
+.case:hover {
+  border-color: var(--gold-100);
+  transform: scale(1.08);
+}
+
+.case svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.faite .case {
+  background: linear-gradient(180deg, #4fa25e, var(--green));
+  border-color: #2f6b3a;
+  color: #fff;
+}
+
+/* La coche se trace au moment où on valide. */
+.faite .case svg {
+  stroke-dashoffset: 0;
+}
+
+.nom {
   flex: 1;
+  min-width: 0;
   font-family: var(--font-title);
   font-size: 16px;
-  min-width: 0;
-  color: var(--ink-600);
+  color: var(--parch-050);
+  transition: color 0.2s ease;
 }
 
-.texteValide {
+.faite .nom {
+  color: rgba(241, 225, 188, 0.5);
   text-decoration: line-through;
-  color: #8a7a5c;
+  text-decoration-color: rgba(79, 162, 94, 0.8);
 }
 
-.texteEchoue {
+.ratee .nom {
+  color: rgba(241, 225, 188, 0.5);
   text-decoration: line-through;
-  color: var(--red);
+  text-decoration-color: var(--red);
 }
 
-/* Avancement hebdomadaire d'une habitude (ex : 2/3 sem.). */
-.badgeHebdo {
+.semaine {
   flex-shrink: 0;
-  font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 1px 8px;
   border-radius: 999px;
-  background: rgba(122, 90, 46, 0.16);
-  color: var(--gold-deep);
+  background: rgba(185, 155, 94, 0.16);
+  color: var(--gold-200);
   white-space: nowrap;
 }
 
-.actions {
-  display: flex;
-  gap: 6px;
+.rater {
   flex-shrink: 0;
-}
-
-.boutonValider,
-.boutonEchouer {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
   border-radius: 50%;
   border: 1px solid transparent;
-  cursor: pointer;
+  background: transparent;
+  color: rgba(241, 225, 188, 0.35);
+  font-size: 12px;
   font-weight: 700;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-sm), var(--inset-top);
-  transition: transform 0.12s ease, filter 0.12s ease;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-.boutonValider:hover,
-.boutonEchouer:hover {
-  transform: scale(1.1);
-  filter: brightness(1.08);
+.rater:hover {
+  color: #ff8a7a;
+  border-color: rgba(179, 58, 46, 0.6);
 }
 
-.boutonValider {
-  background: linear-gradient(180deg, #4fa25e, var(--green));
-  color: #fff;
-  border-color: #2f6b3a;
-}
-
-.boutonEchouer {
-  background: linear-gradient(180deg, #cc4a3c, var(--red));
-  color: #fff;
+.ratee .rater {
+  background: var(--red);
   border-color: var(--red-deep);
-}
-
-.vide {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.5;
-  color: rgba(59, 42, 24, 0.7);
-  padding: 12px;
+  color: #fff;
 }

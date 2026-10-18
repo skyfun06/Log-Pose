@@ -1,14 +1,29 @@
+/* ===== Barre : planche de bois verni ===== */
 .bar {
+  --verre: #2aa79b;
+  --laiton-clair: #fbe7a1;
+  --laiton: #e2bd6a;
+  --laiton-fonce: #a87a2c;
+  --courbe-glisse: cubic-bezier(0.22, 0.9, 0.24, 1);
+
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px 22px;
-  background: var(--grad-wood);
+  gap: clamp(12px, 2vw, 28px);
+  padding: 9px clamp(14px, 2vw, 24px);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 220, 160, 0.025) 0 1px,
+      transparent 1px 7px,
+      rgba(0, 0, 0, 0.05) 7px 8px,
+      transparent 8px 19px
+    ),
+    var(--grad-wood);
   color: var(--parch-100);
   border-bottom: 1px solid var(--gold-deep);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 230, 180, 0.08);
   z-index: 5;
 }
 
@@ -22,120 +37,349 @@
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--gold-200) 22%, var(--gold-100) 50%, var(--gold-200) 78%, transparent);
   opacity: 0.9;
+  pointer-events: none;
 }
 
+/* ===== Gauche : boussole + cap ===== */
 .gauche {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   min-width: 0;
+  flex: 0 1 auto;
 }
 
-.icone {
-  font-size: 22px;
+.boussole {
+  width: 38px;
+  height: 44px;
   flex-shrink: 0;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  overflow: visible;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 10px rgba(42, 167, 155, 0.25));
+}
+
+/* L'aiguille pivote autour du centre de la bulle, avec un léger dépassement
+   comme une vraie aiguille aimantée qui se stabilise. */
+.aiguille {
+  transform-box: view-box;
+  transform-origin: 20px 19px;
+  transition: transform 0.9s cubic-bezier(0.34, 1.7, 0.5, 1);
+}
+
+.aiguilleVibre {
+  transform-box: view-box;
+  transform-origin: 20px 19px;
+  animation: vibre 3.2s ease-in-out infinite;
+}
+
+@keyframes vibre {
+  0%,
+  100% {
+    transform: rotate(-1.6deg);
+  }
+  50% {
+    transform: rotate(1.6deg);
+  }
+}
+
+.cap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
 }
 
 .repere {
   font-family: var(--font-engraved);
   font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--gold-200);
+  color: var(--gold-300);
   white-space: nowrap;
 }
 
 .titre {
-  position: relative;
   font-family: var(--font-title);
   font-style: italic;
-  font-size: 18px;
+  font-size: 17px;
   color: var(--parch-050);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding-left: 12px;
 }
 
-/* Séparateur losange entre le repère et le titre. */
-.titre::before {
-  content: '❖';
-  position: absolute;
-  left: -2px;
-  color: var(--gold-300);
-  font-size: 10px;
-  font-style: normal;
-}
-
-.onglets {
+/* ===== Tourniquet ===== */
+.tourniquet {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 960px;
+  min-width: 220px;
+}
+
+/* Flèches : rivets de laiton. */
+.fleche {
   flex-shrink: 0;
-  padding: 4px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--laiton-fonce);
+  background: radial-gradient(circle at 35% 30%, #5a4022, #2a1b0c 70%);
+  color: var(--laiton);
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 230, 170, 0.18), 0 2px 5px rgba(0, 0, 0, 0.45);
+  transition: color 0.2s ease, transform 0.2s var(--courbe-glisse), box-shadow 0.2s ease;
+}
+
+.fleche svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fleche:hover {
+  color: var(--laiton-clair);
+  transform: scale(1.08);
+  box-shadow: inset 0 1px 0 rgba(255, 230, 170, 0.25), 0 0 12px rgba(231, 197, 122, 0.35);
+}
+
+.fleche:active {
+  transform: scale(0.94);
+}
+
+/* Le ruban : une rainure creusée dans le bois, où glisse la plaque. */
+.ruban {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(185, 155, 94, 0.25);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.22));
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.6),
+    inset 0 -1px 0 rgba(255, 220, 160, 0.08),
+    0 1px 0 rgba(255, 220, 160, 0.06);
+  --fondu: 34px;
+}
+
+.ruban::-webkit-scrollbar {
+  display: none;
+}
+
+.fonduGauche {
+  mask-image: linear-gradient(90deg, transparent, #000 var(--fondu));
+}
+
+.fonduDroite {
+  mask-image: linear-gradient(90deg, #000 calc(100% - var(--fondu)), transparent);
+}
+
+.fonduGauche.fonduDroite {
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 var(--fondu),
+    #000 calc(100% - var(--fondu)),
+    transparent
+  );
+}
+
+.liste {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  width: max-content;
+  padding: 4px;
+}
+
+/* Plaque de laiton sous l'onglet actif. */
+.plaque {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--laiton-clair) 0%, var(--laiton) 45%, var(--laiton-fonce) 100%);
+  border: 1px solid #7a5520;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -2px 3px rgba(120, 80, 20, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.45),
+    0 0 16px rgba(231, 197, 122, 0.28);
+  pointer-events: none;
+}
+
+.plaqueAnimee {
+  transition:
+    transform 0.45s var(--courbe-glisse),
+    width 0.45s var(--courbe-glisse);
 }
 
 .onglet {
-  padding: 7px 16px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 17px 7px 14px;
+  border: none;
   border-radius: 999px;
-  border: 1px solid transparent;
   background: transparent;
-  color: var(--parch-100);
+  color: rgba(241, 225, 188, 0.72);
   font-family: var(--font-engraved);
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   white-space: nowrap;
-  transition: color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+
+.ongletIcone {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  transition: transform 0.35s var(--courbe-glisse), color 0.25s ease;
 }
 
 .onglet:hover {
-  color: var(--gold-100);
-  background: rgba(231, 197, 122, 0.08);
+  color: var(--gold-050);
+}
+
+.onglet:hover .ongletIcone {
+  transform: translateY(-2px) rotate(-6deg);
 }
 
 .ongletActif,
 .ongletActif:hover {
-  background: var(--grad-gold);
-  border-color: var(--gold-deep);
   color: #2c1e12;
-  box-shadow: var(--shadow-sm), var(--inset-top);
+  text-shadow: 0 1px 0 rgba(255, 245, 210, 0.6);
 }
 
-.points {
+.ongletActif .ongletIcone,
+.ongletActif:hover .ongletIcone {
+  transform: none;
+  color: #6a2a1c;
+}
+
+.onglet:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-gold);
+}
+
+/* Point doré « nouveau » (ex : un récap pas encore lu). */
+.nouveau {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold-100);
+  box-shadow: 0 0 0 2px rgba(32, 21, 9, 0.9);
+  animation: appel 2.2s ease-out infinite;
+}
+
+@keyframes appel {
+  0% {
+    box-shadow: 0 0 0 2px rgba(32, 21, 9, 0.9), 0 0 0 2px rgba(245, 222, 114, 0.7);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(32, 21, 9, 0.9), 0 0 0 9px rgba(245, 222, 114, 0);
+  }
+}
+
+/* ===== Droite : la route des îles ===== */
+.route {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-shrink: 0;
+  padding: 0 2px;
 }
 
-.point {
-  width: 9px;
-  height: 9px;
+/* Tracé de la route maritime en pointillés. */
+.route::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  border-top: 1.5px dashed rgba(231, 197, 122, 0.35);
+}
+
+.escale {
+  position: relative;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: rgba(241, 225, 188, 0.18);
-  border: 1px solid rgba(241, 225, 188, 0.35);
-  transition: transform 0.2s ease;
+  background: #241809;
+  border: 1.5px solid rgba(241, 225, 188, 0.4);
 }
 
-.pointActif {
-  background: radial-gradient(circle at 35% 30%, var(--gold-100), var(--gold-400));
+.escalePassee {
+  background: var(--gold-300);
+  border-color: var(--gold-200);
+}
+
+.escaleActive {
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle at 35% 30%, #c9fff5, var(--verre) 70%);
   border-color: var(--gold-100);
-  box-shadow: var(--glow-gold);
-  transform: scale(1.25);
+  box-shadow: 0 0 0 3px rgba(42, 167, 155, 0.25), 0 0 12px rgba(42, 167, 155, 0.6);
+}
+
+/* ===== Petits écrans ===== */
+@media (max-width: 900px) {
+  .titre {
+    font-size: 15px;
+  }
+
+  .onglet {
+    padding: 7px 14px 7px 12px;
+  }
 }
 
 @media (max-width: 640px) {
   .bar {
     flex-wrap: wrap;
+    row-gap: 8px;
   }
 
-  .titre {
+  /* Sur téléphone, le tourniquet prend toute la largeur, sous le cap. */
+  .tourniquet {
+    order: 3;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  /* Le numéro d'île figure déjà dans le cap : la route est masquée. */
+  .route {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aiguille,
+  .plaqueAnimee,
+  .ongletIcone,
+  .fleche {
+    transition: none;
+  }
+
+  .aiguilleVibre,
+  .nouveau {
+    animation: none;
   }
 }

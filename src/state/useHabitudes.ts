@@ -1,6 +1,9 @@
 // État des habitudes, persisté dans le localStorage.
-// Deux morceaux : la liste des habitudes (nom + cadence + objectif) et les
-// marques (ce qui est fait/raté, par habitude et par date). Séparé du reste du
+// Trois morceaux : la liste des habitudes (nom + cadence + objectif), les
+// marques (ce qui est fait/raté, par habitude et par date) et les jours
+// « malade », communs à toutes les habitudes : ces jours-là sont désactivés et
+// ne comptent ni dans les taux, ni dans les séries, ni dans les objectifs.
+// Séparé du reste du
 // jeu (useGameState) pour rester simple et indépendant.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -29,9 +32,29 @@ function bornesSemaine(d: Date): [string, string] {
 interface HabitudesState {
   habitudes: Habitude[];
   marques: MarquesHabitudes;
+  joursMalades: string[]; // dates « YYYY-MM-DD »
+  // Jours de JOURS_MALADES_INITIAUX déjà posés (pour ne jamais les reposer
+  // si Louis les retire ensuite).
+  maladiesPosees?: string[];
+  // Ancien drapeau : vrai = les 5 premiers jours (11 au 15) ont été posés.
+  maladieInitialePosee?: boolean;
 }
 
-const defaultState: HabitudesState = { habitudes: [], marques: {} };
+const defaultState: HabitudesState = { habitudes: [], marques: {}, joursMalades: [] };
+
+// Louis a été cloué au lit du 11 au 15 octobre 2026 : chacun de ces jours est
+// posé « malade » une seule fois, à l'ouverture suivante (il peut ensuite le
+// retirer d'un clic sur l'en-tête du jour). Ajouter une date ici la pose ;
+// retirer une date déjà posée l'enlève aussi des jours malades (une fois).
+const JOURS_MALADES_INITIAUX = [
+  '2026-10-11',
+  '2026-10-12',
+  '2026-10-13',
+  '2026-10-14',
+  '2026-10-15',
+];
+
+const DATE_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 function borner(n: unknown, min: number, max: number, defaut: number): number {
   const v = Math.round(Number(n));
@@ -42,7 +65,7 @@ function borner(n: unknown, min: number, max: number, defaut: number): number {
 function loadState(): HabitudesState {
   try {
     const brut = localStorage.getItem(STORAGE_KEY);
-    if (!brut) return defaultState;
+    if (!brut) return { ...defaultState, maladiesPosees: JOURS_MALADES_INITIAUX };
     const parsed = JSON.parse(brut) as Partial<HabitudesState>;
     const habitudes = Array.isArray(parsed.habitudes)
       ? parsed.habitudes
@@ -57,7 +80,27 @@ function loadState(): HabitudesState {
       : [];
     const marques =
       parsed.marques && typeof parsed.marques === 'object' ? parsed.marques : {};
-    return { habitudes, marques };
+    const joursMalades = new Set(
+      Array.isArray(parsed.joursMalades)
+        ? parsed.joursMalades.filter((d): d is string => typeof d === 'string' && DATE_ISO.test(d))
+        : [],
+    );
+    const dejaPoses = new Set(
+      Array.isArray(parsed.maladiesPosees)
+        ? parsed.maladiesPosees
+        : parsed.maladieInitialePosee
+          ? JOURS_MALADES_INITIAUX.slice(0, 5)
+          : [],
+    );
+    JOURS_MALADES_INITIAUX.filter((d) => !dejaPoses.has(d)).forEach((d) => joursMalades.add(d));
+    // Dates posées autrefois mais retirées depuis de la liste : on les enlève.
+    [...dejaPoses].filter((d) => !JOURS_MALADES_INITIAUX.includes(d)).forEach((d) => joursMalades.delete(d));
+    return {
+      habitudes,
+      marques,
+      joursMalades: [...joursMalades].sort(),
+      maladiesPosees: JOURS_MALADES_INITIAUX,
+    };
   } catch {
     return defaultState;
   }
@@ -120,7 +163,7 @@ export function useHabitudes() {
     setState((prev) => {
       const marques = { ...prev.marques };
       delete marques[id];
-      return { habitudes: prev.habitudes.filter((h) => h.id !== id), marques };
+      return { ...prev, habitudes: prev.habitudes.filter((h) => h.id !== id), marques };
     });
   }, []);
 
@@ -138,6 +181,21 @@ export function useHabitudes() {
     [],
   );
 
+  // Déclare un jour « malade » (ou le réactive s'il l'était déjà).
+  const basculerJourMalade = useCallback((dateISO: string) => {
+    setState((prev) => {
+      const malade = prev.joursMalades.includes(dateISO);
+      return {
+        ...prev,
+        joursMalades: malade
+          ? prev.joursMalades.filter((d) => d !== dateISO)
+          : [...prev.joursMalades, dateISO].sort(),
+      };
+    });
+  }, []);
+
+  const aujourdhuiMalade = state.joursMalades.includes(isoDeDate(new Date()));
+
   // Trie les habitudes : quotidiennes d'abord, puis hebdomadaires, en gardant
   // l'ordre de création à l'intérieur de chaque groupe.
   const habitudesTriees = useMemo(() => {
@@ -150,23 +208,27 @@ export function useHabitudes() {
   // - quotidiennes : toujours ;
   // - hebdomadaires : tant que l'objectif de la semaine n'est pas atteint
   //   (ou si déjà marquées aujourd'hui, pour rester visibles jusqu'au soir).
-  // Quotidiennes d'abord, puis hebdomadaires.
+  // Quotidiennes d'abord, puis hebdomadaires. Un jour « malade » : rien à faire.
   const habitudesDuJour = useMemo<HabitudeDuJour[]>(() => {
     const today = new Date();
     const iso = isoDeDate(today);
     const [lundi, dimanche] = bornesSemaine(today);
+    const malades = new Set(state.joursMalades);
+    if (malades.has(iso)) return [];
+    const maladesSemaine = state.joursMalades.filter((d) => d >= lundi && d <= dimanche).length;
 
     const items = state.habitudes.map((h): HabitudeDuJour => {
       const parDate = state.marques[h.id] ?? {};
       let faitsCetteSemaine = 0;
       for (const [d, e] of Object.entries(parDate)) {
-        if (e === 'fait' && d >= lundi && d <= dimanche) faitsCetteSemaine++;
+        if (e === 'fait' && d >= lundi && d <= dimanche && !malades.has(d)) faitsCetteSemaine++;
       }
       return {
         id: h.id,
         nom: h.nom,
         cadence: h.cadence,
-        objectifHebdo: h.objectifHebdo,
+        // Les jours malades de la semaine réduisent l'objectif d'autant.
+        objectifHebdo: Math.min(h.objectifHebdo, 7 - maladesSemaine),
         etat: parDate[iso],
         faitsCetteSemaine,
       };
@@ -182,7 +244,7 @@ export function useHabitudes() {
       ...pertinentes.filter((h) => h.cadence === 'quotidienne'),
       ...pertinentes.filter((h) => h.cadence === 'hebdomadaire'),
     ];
-  }, [state.habitudes, state.marques]);
+  }, [state.habitudes, state.marques, state.joursMalades]);
 
   // Coche une habitude pour aujourd'hui (raccourci pour la carte missions).
   const cocherAujourdhui = useCallback((id: string, etat: EtatHabitude | null) => {
@@ -195,6 +257,9 @@ export function useHabitudes() {
     habitudesHebdomadaires: habitudesTriees.hebdomadaires,
     habitudesDuJour,
     marques: state.marques,
+    joursMalades: state.joursMalades,
+    aujourdhuiMalade,
+    basculerJourMalade,
     ajouterHabitude,
     modifierHabitude,
     supprimerHabitude,

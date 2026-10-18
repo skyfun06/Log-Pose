@@ -1,0 +1,101 @@
+/* Panneau de bois sombre partagé par les cartes du bas de la page Carte. */
+.panneau {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(12px, 1.8vh, 18px) clamp(14px, 1.6vw, 20px);
+  border-radius: var(--radius);
+  background:
+    var(--paper-grain),
+    linear-gradient(180deg, rgba(44, 30, 18, 0.95), rgba(24, 16, 9, 0.97));
+  border: 1px solid rgba(185, 155, 94, 0.45);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 230, 180, 0.07);
+  color: var(--parch-100);
+}
+
+.entete {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(185, 155, 94, 0.22);
+}
+
+.titre {
+  margin: 0;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-200);
+}
+
+.compteur {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(231, 197, 122, 0.14);
+  color: var(--gold-100);
+  white-space: nowrap;
+}
+
+/* Zone défilante. */
+.corps {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* État vide : une phrase et une action pour le remplir. */
+.vide {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 10px;
+  font-size: 17px;
+  font-style: italic;
+  color: var(--parch-200);
+}
+
+.boutonVide {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-deep);
+  background: transparent;
+  color: var(--gold-100);
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.boutonVide:hover {
+  background: rgba(231, 197, 122, 0.12);
+  color: var(--gold-050);
+}

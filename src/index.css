@@ -130,3 +130,40 @@ input:focus-visible {
   outline: none;
   box-shadow: var(--ring-gold);
 }
+
+/* ===== Transitions entre les pages (View Transitions) =====
+   Seule la page glisse : le reste (fond, header, barre du bas) change sans
+   fondu, pour que la plaque du header puisse glisser en direct. --sens-page
+   vaut 1 (vers la droite des onglets) ou -1 (vers la gauche). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(page-vue) {
+  animation-duration: 0.42s;
+}
+
+::view-transition-old(page-vue) {
+  animation: page-sort 0.26s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(page-vue) {
+  animation: page-entre 0.42s cubic-bezier(0.22, 0.9, 0.24, 1) 0.06s both;
+}
+
+@keyframes page-sort {
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--sens-page, 1) * -36px));
+    filter: blur(2px);
+  }
+}
+
+@keyframes page-entre {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--sens-page, 1) * 48px));
+    filter: blur(2px);
+  }
+}

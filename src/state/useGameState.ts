@@ -21,14 +21,37 @@ function dateDuJour(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-const blocsPlanningInitiaux: BlocPlanning[] = missionsInitiales.map((m, i) => ({
+// Horaires des créneaux d'exemple, calés sur ce qu'ils décrivent (30 min de
+// sport = 30 min, se coucher = le soir…).
+const HORAIRES_INITIAUX: Record<string, [string, string]> = {
+  m1: ['09:00', '09:45'],
+  m2: ['18:00', '18:30'],
+  m3: ['21:30', '22:00'],
+  m4: ['23:15', '23:45'],
+};
+
+const blocsPlanningInitiaux: BlocPlanning[] = missionsInitiales.map((m) => ({
   id: m.id,
   titre: m.texte,
-  heureDebut: heure(8 + i),
-  heureFin: heure(9 + i),
+  heureDebut: HORAIRES_INITIAUX[m.id][0],
+  heureFin: HORAIRES_INITIAUX[m.id][1],
   jours: TOUS_LES_JOURS,
   questWeight: m.questWeight,
 }));
+
+// Les toutes premières versions posaient ces exemples d'heure en heure à
+// partir de 8 h (« se coucher avant minuit » à 11 h du matin…). Un créneau
+// d'exemple encore à son horaire d'origine reçoit son horaire logique ; un
+// créneau que Louis a modifié n'est jamais touché.
+function recalerExemples(blocs: BlocPlanning[]): BlocPlanning[] {
+  return blocs.map((b) => {
+    const i = missionsInitiales.findIndex((m) => m.id === b.id);
+    const nouveaux = HORAIRES_INITIAUX[b.id];
+    if (i === -1 || !nouveaux) return b;
+    if (b.heureDebut !== heure(8 + i) || b.heureFin !== heure(9 + i)) return b;
+    return { ...b, heureDebut: nouveaux[0], heureFin: nouveaux[1] };
+  });
+}
 
 interface GameState {
   prime: number;
@@ -60,7 +83,9 @@ function loadState(): GameState {
           ? parsed.currentIslandId
           : defaultState.currentIslandId,
       logPose: parsed.logPose ?? defaultState.logPose,
-      blocsPlanning: parsed.blocsPlanning ?? defaultState.blocsPlanning,
+      blocsPlanning: parsed.blocsPlanning
+        ? recalerExemples(parsed.blocsPlanning)
+        : defaultState.blocsPlanning,
       statutsMissions: parsed.statutsMissions ?? defaultState.statutsMissions,
       dateStatuts: parsed.dateStatuts ?? defaultState.dateStatuts,
     };

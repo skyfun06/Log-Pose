@@ -1,11 +1,24 @@
 .bar {
   position: relative;
-  padding: 12px 22px 14px;
-  background: var(--grad-wood);
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 32px);
+  padding: 10px clamp(14px, 2vw, 24px);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 220, 160, 0.025) 0 1px,
+      transparent 1px 7px,
+      rgba(0, 0, 0, 0.05) 7px 8px,
+      transparent 8px 19px
+    ),
+    var(--grad-wood);
   border-top: 1px solid var(--gold-deep);
   color: var(--parch-100);
   box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.4);
   z-index: 5;
+  /* Les bulles des paliers du bout ne doivent pas élargir la page. */
+  overflow-x: clip;
 }
 
 /* Liseré doré lumineux au-dessus de la barre. */
@@ -18,85 +31,238 @@
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--gold-200) 22%, var(--gold-100) 50%, var(--gold-200) 78%, transparent);
   opacity: 0.9;
+  pointer-events: none;
 }
 
-.ligneTexte {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 9px;
-}
-
-.icone {
-  font-size: 19px;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
-}
-
-.label {
+.etiquette {
+  display: block;
   font-family: var(--font-engraved);
   font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.05em;
+  font-size: 10px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--gold-200);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--gold-300);
   white-space: nowrap;
 }
 
-.pourcentage {
-  font-family: var(--font-engraved);
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--parch-050);
+/* ===== Rang atteint ===== */
+.rang {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex-shrink: 0;
+  min-width: 0;
 }
 
-.barreFond {
+/* Médaille de laiton frappée du numéro de palier. */
+.medaille {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff1bf, var(--gold-200) 45%, var(--gold-400) 100%);
+  border: 1px solid #7a5520;
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 248, 220, 0.35),
+    inset 0 -2px 3px rgba(110, 70, 20, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 15px;
+  color: #3b2a18;
+  text-shadow: 0 1px 0 rgba(255, 245, 210, 0.6);
+}
+
+.rangTexte {
+  min-width: 0;
+}
+
+.titre {
+  display: block;
+  font-family: var(--font-title);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--parch-050);
+  white-space: nowrap;
+}
+
+/* ===== Piste des paliers ===== */
+.piste {
   position: relative;
-  width: 100%;
-  height: 12px;
+  flex: 1;
+  min-width: 140px;
+  height: 30px;
+  margin: 0 8px;
+}
+
+.rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 220, 160, 0.08);
   overflow: hidden;
-  border: 1px solid rgba(185, 155, 94, 0.55);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
-.barreRemplie {
-  position: relative;
+.remplissage {
   height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--gold-400), var(--gold-100) 50%, var(--gold-200));
-  box-shadow: 0 0 12px rgba(231, 197, 122, 0.6);
-  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold-400), var(--gold-100));
+  box-shadow: 0 0 10px rgba(231, 197, 122, 0.6);
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Reflet qui glisse le long de la jauge (effet or poli). */
-.barreRemplie::after {
+/* Jalon : un losange par palier (dessiné par ::before pour que la bulle
+   reste droite). */
+.jalon {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  cursor: default;
+}
+
+.jalon::before {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
-  background-size: 220% 100%;
-  animation: reflet 3.2s ease-in-out infinite;
+  inset: 2px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+  background: #2a1b0c;
+  border: 1.5px solid rgba(231, 197, 122, 0.45);
+  transition: transform 0.2s ease;
 }
 
-@keyframes reflet {
-  0% {
-    background-position: 180% 0;
+.jalonAtteint::before {
+  background: linear-gradient(135deg, var(--gold-050), var(--gold-300));
+  border-color: #7a5520;
+}
+
+/* Le palier visé respire doucement. */
+.jalonVise::before {
+  border-color: var(--gold-100);
+  animation: vise 2.4s ease-in-out infinite;
+}
+
+@keyframes vise {
+  50% {
+    box-shadow: 0 0 0 4px rgba(245, 222, 114, 0.18), 0 0 12px rgba(245, 222, 114, 0.5);
   }
-  60%,
-  100% {
-    background-position: -80% 0;
+}
+
+.jalon:hover::before {
+  transform: rotate(45deg) scale(1.3);
+}
+
+/* Bulle au survol : titre et prime du palier. */
+.bulle {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translate(-50%, 4px);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--ink-900);
+  border: 1px solid var(--gold-deep);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-title);
+  font-size: 13px;
+  color: var(--parch-050);
+  white-space: nowrap;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.jalon:first-of-type .bulle {
+  left: 0;
+  transform: translate(0, 4px);
+}
+
+.jalon:last-of-type .bulle {
+  left: auto;
+  right: 0;
+  transform: translate(0, 4px);
+}
+
+.jalon:hover .bulle {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.jalon:first-of-type:hover .bulle,
+.jalon:last-of-type:hover .bulle {
+  transform: none;
+}
+
+.bulleMontant {
+  display: block;
+  font-family: var(--font-engraved);
+  font-size: 11px;
+  color: var(--gold-200);
+}
+
+/* ===== Prochain palier ===== */
+.prochain {
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 0;
+}
+
+.prochainTitre {
+  display: block;
+  font-family: var(--font-title);
+  font-size: 16px;
+  color: var(--parch-050);
+  white-space: nowrap;
+}
+
+.prochainMontant {
+  font-family: var(--font-engraved);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold-200);
+}
+
+.reste {
+  display: block;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--parch-300);
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .bar {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .piste {
+    order: 3;
+    flex: 1 1 100%;
+    margin: 0 6px;
+  }
+
+  .prochain {
+    margin-left: auto;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .barreRemplie::after {
+  .jalonVise::before {
     animation: none;
+  }
+
+  .remplissage {
+    transition: none;
   }
 }

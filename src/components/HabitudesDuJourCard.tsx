@@ -1,80 +1,88 @@
 import type { EtatHabitude, HabitudeDuJour } from '../types';
+import panneau from './Panneau.module.css';
 import styles from './HabitudesDuJourCard.module.css';
 
 interface HabitudesDuJourCardProps {
   habitudesDuJour: HabitudeDuJour[];
+  aujourdhuiMalade: boolean;
   onCocherHabitude: (id: string, etat: EtatHabitude | null) => void;
-}
-
-function iconeHabitude(etat: EtatHabitude | undefined) {
-  if (etat === 'fait') return '✅';
-  if (etat === 'rate') return '❌';
-  return '⚪';
+  onOuvrirHabitudes: () => void;
 }
 
 export function HabitudesDuJourCard({
   habitudesDuJour,
+  aujourdhuiMalade,
   onCocherHabitude,
+  onOuvrirHabitudes,
 }: HabitudesDuJourCardProps) {
   const faites = habitudesDuJour.filter((h) => h.etat === 'fait').length;
   const total = habitudesDuJour.length;
 
   return (
-    <section className={styles.carte}>
-      <div className={styles.entete}>
-        <h2 className={styles.titre}>Habitudes du jour</h2>
+    <section className={panneau.panneau}>
+      <div className={panneau.entete}>
+        <h2 className={panneau.titre}>Habitudes du jour</h2>
         {total > 0 && (
-          <span className={styles.compteur}>
+          <span className={panneau.compteur}>
             {faites} / {total}
           </span>
         )}
       </div>
 
-      {total === 0 ? (
-        <p className={styles.vide}>
-          Aucune habitude à suivre aujourd'hui. Ajoute-en dans l'onglet Habitudes, ou demande
-          au Capitaine.
+      {aujourdhuiMalade ? (
+        <p className={panneau.vide}>
+          Jour de repos : tu es noté malade aujourd'hui. Soigne-toi, capitaine.
         </p>
+      ) : total === 0 ? (
+        <div className={panneau.vide}>
+          <span>Aucune habitude à tenir aujourd'hui.</span>
+          <button type="button" className={panneau.boutonVide} onClick={onOuvrirHabitudes}>
+            Ajouter une habitude
+          </button>
+        </div>
       ) : (
-        <div className={styles.corps}>
-          <ul className={styles.liste}>
-            {habitudesDuJour.map((h) => {
-              const classesTexte = [styles.texte];
-              if (h.etat === 'fait') classesTexte.push(styles.texteValide);
-              if (h.etat === 'rate') classesTexte.push(styles.texteEchoue);
-
-              return (
-                <li key={h.id} className={styles.ligne}>
-                  <span className={styles.icone} aria-hidden="true">
-                    {iconeHabitude(h.etat)}
+        <div className={panneau.corps}>
+          <ul className={panneau.liste}>
+            {habitudesDuJour.map((h) => (
+              <li
+                key={h.id}
+                className={[
+                  styles.ligne,
+                  h.etat === 'fait' ? styles.faite : '',
+                  h.etat === 'rate' ? styles.ratee : '',
+                ].join(' ')}
+              >
+                <button
+                  type="button"
+                  className={styles.case}
+                  aria-label={
+                    h.etat === 'fait' ? `Décocher « ${h.nom} »` : `Marquer « ${h.nom} » comme faite`
+                  }
+                  onClick={() => onCocherHabitude(h.id, h.etat === 'fait' ? null : 'fait')}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m6 12.5 4 4 8-9" />
+                  </svg>
+                </button>
+                <span className={styles.nom}>{h.nom}</span>
+                {h.cadence === 'hebdomadaire' && (
+                  <span className={styles.semaine}>
+                    {h.faitsCetteSemaine}/{h.objectifHebdo} sem.
                   </span>
-                  <span className={classesTexte.join(' ')}>{h.nom}</span>
-                  {h.cadence === 'hebdomadaire' && (
-                    <span className={styles.badgeHebdo}>
-                      {h.faitsCetteSemaine}/{h.objectifHebdo} sem.
-                    </span>
-                  )}
-                  <div className={styles.actions}>
-                    <button
-                      type="button"
-                      className={styles.boutonValider}
-                      aria-label="Marquer l'habitude comme faite"
-                      onClick={() => onCocherHabitude(h.id, h.etat === 'fait' ? null : 'fait')}
-                    >
-                      ✓
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.boutonEchouer}
-                      aria-label="Marquer l'habitude comme ratée"
-                      onClick={() => onCocherHabitude(h.id, h.etat === 'rate' ? null : 'rate')}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
+                )}
+                <button
+                  type="button"
+                  className={styles.rater}
+                  aria-label={
+                    h.etat === 'rate' ? `Annuler l'échec de « ${h.nom} »` : `Marquer « ${h.nom} » comme ratée`
+                  }
+                  title="Ratée aujourd'hui"
+                  onClick={() => onCocherHabitude(h.id, h.etat === 'rate' ? null : 'rate')}
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
           </ul>
         </div>
       )}

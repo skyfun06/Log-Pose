@@ -24,6 +24,21 @@
   z-index: 1;
 }
 
+/* Conteneur de la page affichée : c'est lui qui glisse lors des transitions
+   (voir index.css) ; le fond de l'île et les barres restent immobiles. */
+.vue {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Nommé seulement pendant la transition : en permanence, le nom créerait un
+   contexte d'empilement qui ferait passer les fenêtres modales sous le header. */
+:global(.transition-page) .vue {
+  view-transition-name: page-vue;
+}
+
 .contenu {
   flex: 1;
   display: flex;
@@ -50,9 +65,17 @@
   min-width: 0;
   min-height: 0;
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr);
   gap: clamp(12px, 2vh, 20px);
+}
+
+/* Sous la carte : habitudes et programme côte à côte. */
+.bord {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 20px);
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
@@ -75,5 +98,14 @@
 
   .colonneDroite {
     height: auto;
+    grid-template-rows: auto;
+  }
+
+  .bord {
+    grid-template-columns: 1fr;
+  }
+
+  .bord > * {
+    min-height: 220px;
   }
 }

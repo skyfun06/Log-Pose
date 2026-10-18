@@ -8,6 +8,8 @@ interface HabitudesPageProps {
   quotidiennes: Habitude[];
   hebdomadaires: Habitude[];
   marques: MarquesHabitudes;
+  joursMalades: string[];
+  onBasculerMalade: (dateISO: string) => void;
   onAjouter: (h: { nom: string; cadence: CadenceHabitude; objectifHebdo: number; icone?: string }) => void;
   onModifier: (id: string, patch: Partial<Omit<Habitude, 'id'>>) => void;
   onSupprimer: (id: string) => void;
@@ -67,11 +69,14 @@ export function HabitudesPage({
   quotidiennes,
   hebdomadaires,
   marques,
+  joursMalades,
+  onBasculerMalade,
   onAjouter,
   onModifier,
   onSupprimer,
   onMarquer,
 }: HabitudesPageProps) {
+  const malades = new Set(joursMalades);
   const aujourdhui = new Date();
   const [annee, setAnnee] = useState(aujourdhui.getFullYear());
   const [mois, setMois] = useState(aujourdhui.getMonth());
@@ -97,6 +102,12 @@ export function HabitudesPage({
     annee > aujourdhui.getFullYear() ||
     (annee === aujourdhui.getFullYear() && mois > aujourdhui.getMonth());
   const joursEcoules = moisEstPasse ? nbJours : moisEstFutur ? 0 : jourAujourdhui;
+  // Jours malades parmi les jours écoulés : retirés du calcul des taux.
+  let maladesEcoules = 0;
+  for (let d = 1; d <= joursEcoules; d++) {
+    if (malades.has(dateISO(annee, mois, d))) maladesEcoules++;
+  }
+  const joursActifs = joursEcoules - maladesEcoules;
 
   const lundi = lundiDeLaSemaine(aujourdhui);
   const dimanche = dimancheDeLaSemaine(aujourdhui);
@@ -117,18 +128,23 @@ export function HabitudesPage({
     let faits = 0;
     let rates = 0;
     for (let d = 1; d <= nbJours; d++) {
-      const etat = parDate[dateISO(annee, mois, d)];
+      const iso = dateISO(annee, mois, d);
+      if (malades.has(iso)) continue;
+      const etat = parDate[iso];
       if (etat === 'fait') faits++;
       else if (etat === 'rate') rates++;
     }
 
     // Série en cours : jours faits consécutifs en remontant depuis aujourd'hui.
+    // Un jour malade ne casse pas la série (et ne la rallonge pas non plus).
     let streak = 0;
     if (h.cadence === 'quotidienne') {
       const curseur = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), aujourdhui.getDate());
       for (;;) {
         const iso = dateISO(curseur.getFullYear(), curseur.getMonth(), curseur.getDate());
-        if (parDate[iso] === 'fait') {
+        if (malades.has(iso)) {
+          curseur.setDate(curseur.getDate() - 1);
+        } else if (parDate[iso] === 'fait') {
           streak++;
           curseur.setDate(curseur.getDate() - 1);
         } else {
@@ -140,17 +156,18 @@ export function HabitudesPage({
     // Faits dans la semaine en cours (habitudes hebdomadaires).
     let cetteSemaine = 0;
     for (const [iso, etat] of Object.entries(parDate)) {
-      if (etat === 'fait' && iso >= lundi && iso <= dimanche) cetteSemaine++;
+      if (etat === 'fait' && iso >= lundi && iso <= dimanche && !malades.has(iso)) cetteSemaine++;
     }
 
     let consideres: number;
     let taux: number;
     if (h.cadence === 'quotidienne') {
-      consideres = joursEcoules;
+      consideres = joursActifs;
       taux = consideres > 0 ? Math.round((faits / consideres) * 100) : 0;
     } else {
       // Objectif attendu ≈ objectif hebdo × nombre de semaines écoulées du mois.
-      const semaines = Math.max(1, Math.round(joursEcoules / 7));
+      // Les jours malades sont retirés des semaines écoulées.
+      const semaines = joursActifs > 0 ? Math.max(1, Math.round(joursActifs / 7)) : 0;
       const attendu = h.objectifHebdo * semaines;
       consideres = attendu;
       taux = attendu > 0 ? Math.min(100, Math.round((faits / attendu) * 100)) : 0;
@@ -268,15 +285,31 @@ export function HabitudesPage({
                     const jourSemaine = new Date(annee, mois, d).getDay();
                     const estAuj = estMoisCourant && d === jourAujourdhui;
                     const weekend = jourSemaine === 0 || jourSemaine === 6;
+                    const iso = dateISO(annee, mois, d);
+                    const malade = malades.has(iso);
                     return (
                       <th
                         key={d}
                         className={`${styles.thJour} ${estAuj ? styles.thJourAuj : ''} ${
                           weekend ? styles.thWeekend : ''
-                        }`}
+                        } ${malade ? styles.thMalade : ''}`}
                       >
-                        <span className={styles.thLettre}>{LETTRES_JOUR[jourSemaine]}</span>
-                        <span className={styles.thNum}>{d}</span>
+                        <button
+                          type="button"
+                          className={styles.thBouton}
+                          title={
+                            malade
+                              ? 'Malade ce jour-là : clique pour réactiver'
+                              : 'Clique pour marquer ce jour « malade »'
+                          }
+                          aria-label={`Jour ${d} : ${malade ? 'malade, cliquer pour réactiver' : 'marquer malade'}`}
+                          onClick={() => onBasculerMalade(iso)}
+                        >
+                          <span className={styles.thLettre}>
+                            {malade ? '🤒' : LETTRES_JOUR[jourSemaine]}
+                          </span>
+                          <span className={styles.thNum}>{d}</span>
+                        </button>
                       </th>
                     );
                   })}
@@ -297,6 +330,7 @@ export function HabitudesPage({
                   annee={annee}
                   mois={mois}
                   marques={marques}
+                  malades={malades}
                   estMoisCourant={estMoisCourant}
                   jourAujourdhui={jourAujourdhui}
                   isoAujourdhui={isoAujourdhui}
@@ -314,7 +348,10 @@ export function HabitudesPage({
             <span><span className={`${styles.pastille} ${styles.pFait}`}>✓</span> fait</span>
             <span><span className={`${styles.pastille} ${styles.pRate}`}>✕</span> raté</span>
             <span><span className={`${styles.pastille} ${styles.pNeutre}`} /> prévu</span>
-            <span className={styles.legendeAstuce}>Clique une case pour changer son état.</span>
+            <span><span className={`${styles.pastille} ${styles.pMalade}`} /> malade (ne compte pas)</span>
+            <span className={styles.legendeAstuce}>
+              Clique une case pour changer son état, ou un jour (en haut) pour le marquer malade.
+            </span>
           </div>
         </div>
       )}
@@ -334,6 +371,7 @@ export function HabitudesPage({
         <BilanHabitudes
           habitudes={[...quotidiennes, ...hebdomadaires]}
           marques={marques}
+          joursMalades={joursMalades}
           onFermer={() => setBilanOuvert(false)}
         />
       )}
@@ -351,6 +389,7 @@ function SectionLignes({
   annee,
   mois,
   marques,
+  malades,
   estMoisCourant,
   jourAujourdhui,
   isoAujourdhui,
@@ -367,6 +406,7 @@ function SectionLignes({
   annee: number;
   mois: number;
   marques: MarquesHabitudes;
+  malades: Set<string>;
   estMoisCourant: boolean;
   jourAujourdhui: number;
   isoAujourdhui: string;
@@ -438,6 +478,16 @@ function SectionLignes({
               const etat = parDate[iso];
               const estAuj = estMoisCourant && d === jourAujourdhui;
               const futur = iso > isoAujourdhui;
+              if (malades.has(iso)) {
+                return (
+                  <td key={d} className={`${styles.tdCellule} ${styles.tdMalade}`}>
+                    <span
+                      className={`${styles.case} ${styles.caseMalade}`}
+                      aria-label={`${h.nom}, jour ${d} : malade`}
+                    />
+                  </td>
+                );
+              }
               return (
                 <td key={d} className={styles.tdCellule}>
                   <button

@@ -1,7 +1,16 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { BlocPlanning, JourSemaine } from '../types';
 import { BlocForm } from './BlocForm';
+import { IconeNature } from './IconeNature';
+import {
+  LIBELLES_NATURE,
+  MOMENTS,
+  formatDans,
+  formatDuree,
+  momentDe,
+  natureDe,
+} from '../data/creneaux';
 import styles from './Planning.module.css';
 
 interface PlanningPageProps {
@@ -35,14 +44,6 @@ const CLE_MODE_VUE = 'log-pose-planning-vue';
 function toMinutes(h: string): number {
   const [heures, minutes] = h.split(':').map(Number);
   return heures * 60 + minutes;
-}
-
-function formatDuree(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m} min`;
-  if (m === 0) return `${h}h`;
-  return `${h}h${String(m).padStart(2, '0')}`;
 }
 
 interface BlocPositionne {
@@ -224,10 +225,76 @@ export function PlanningPage({ blocs, onAjouter, onModifier, onSupprimer }: Plan
 
 // ============================================================================
 // Vue « Aujourd'hui » : la feuille de route d'un jour, sur parchemin.
-// Par défaut le jour réel, mais les pastilles Lun → Dim permettent de mettre
-// le cap sur n'importe quel jour de la semaine. Les effets « temps réel »
-// (caps estompés, cap en cours, fil rouge) ne valent que pour le jour réel.
+// En haut, le ruban de la journée (6 h → minuit) pour voir d'un coup d'œil où
+// tombent les créneaux ; puis le cap du moment ; puis les créneaux rangés par
+// moment (matin, après-midi, soir), avec le temps libre entre eux. Les pastilles
+// ❮ ❯ (ou un glissement du doigt) changent de jour.
 // ============================================================================
+
+// Temps libre à partir duquel on l'affiche entre deux créneaux.
+const SEUIL_TEMPS_LIBRE = 30;
+
+type Entree =
+  | { type: 'bloc'; bloc: BlocPlanning; debut: number; fin: number }
+  | { type: 'libre'; debut: number; fin: number }
+  | { type: 'maintenant'; debut: number };
+
+function RubanJournee({
+  blocsJour,
+  minutesActuelles,
+  estAujourdhui,
+}: {
+  blocsJour: { bloc: BlocPlanning; debut: number; fin: number }[];
+  minutesActuelles: number;
+  estAujourdhui: boolean;
+}) {
+  const debutRuban = Math.min(6 * 60, ...blocsJour.map((b) => Math.floor(b.debut / 60) * 60));
+  const finRuban = Math.max(24 * 60, ...blocsJour.map((b) => Math.ceil(b.fin / 60) * 60));
+  const etendue = finRuban - debutRuban;
+  const pct = (m: number) => `${((m - debutRuban) / etendue) * 100}%`;
+  const reperes: number[] = [];
+  for (let h = Math.ceil(debutRuban / 180) * 3; h * 60 <= finRuban; h += 3) reperes.push(h);
+
+  return (
+    <div className={styles.ruban} aria-hidden="true">
+      <div className={styles.rubanPiste}>
+        {MOMENTS.map((m, i) => {
+          const de = Math.max(debutRuban, m.debut);
+          const a = Math.min(finRuban, MOMENTS[i + 1]?.debut ?? finRuban);
+          if (a <= de) return null;
+          return (
+            <span
+              key={m.cle}
+              className={`${styles.rubanMoment} ${styles[`rubanMoment_${m.cle}`]}`}
+              style={{ left: pct(de), width: `${((a - de) / etendue) * 100}%` }}
+            />
+          );
+        })}
+        {blocsJour.map(({ bloc, debut, fin }) => (
+          <span
+            key={bloc.id}
+            className={`${styles.rubanBloc} ${styles[`nature_${natureDe(bloc.titre)}`]} ${
+              estAujourdhui && fin <= minutesActuelles ? styles.rubanBlocPasse : ''
+            }`}
+            style={{ left: pct(debut), width: `max(4px, ${((fin - debut) / etendue) * 100}%)` }}
+            title={`${bloc.heureDebut} – ${bloc.heureFin} · ${bloc.titre}`}
+          />
+        ))}
+        {estAujourdhui && minutesActuelles >= debutRuban && minutesActuelles <= finRuban && (
+          <span className={styles.rubanMaintenant} style={{ left: pct(minutesActuelles) }} />
+        )}
+      </div>
+      <div className={styles.rubanReperes}>
+        {reperes.map((h) => (
+          <span key={h} style={{ left: pct(h * 60) }}>
+            {h === 24 ? '0h' : `${h}h`}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function VueJour({
   blocs,
   jourActuel,
@@ -288,50 +355,43 @@ function VueJour({
   const enCours = estAujourdhui
     ? blocsJour.find((b) => b.debut <= minutesActuelles && minutesActuelles < b.fin)
     : undefined;
-  const prochain = estAujourdhui
-    ? blocsJour.find((b) => b.debut > minutesActuelles)
-    : undefined;
-  const restants = blocsJour.filter((b) => b.fin > minutesActuelles).length;
+  const prochain = estAujourdhui ? blocsJour.find((b) => b.debut > minutesActuelles) : undefined;
+  const totalPlanifie = blocsJour.reduce((t, b) => t + (b.fin - b.debut), 0);
 
   const dateLongue = maintenant.toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   });
-
-  // Position du fil rouge dans la liste : après tous les caps déjà commencés.
-  const indexMaintenant = blocsJour.filter((b) => b.debut <= minutesActuelles).length;
-
   const heureCourante = `${String(maintenant.getHours()).padStart(2, '0')}:${String(
     maintenant.getMinutes(),
   ).padStart(2, '0')}`;
 
-  // Pastille forte + phrase clé, adaptées selon qu'on regarde le jour réel ou
-  // un autre jour de la semaine.
-  let chipForte: string;
-  let phraseCap: string;
-  if (estAujourdhui) {
-    chipForte =
-      restants > 0 ? `${restants} cap${restants > 1 ? 's' : ''} à tenir` : 'journée bouclée';
-    if (enCours) {
-      phraseCap = `⚓ En ce moment : ${enCours.bloc.titre}, jusqu'à ${enCours.bloc.heureFin}.`;
-    } else if (prochain) {
-      phraseCap = `Prochain cap à ${prochain.bloc.heureDebut} — ${prochain.bloc.titre}.`;
-    } else if (blocsJour.length > 0) {
-      phraseCap = 'Tous les caps du jour sont derrière toi. Belle navigation.';
-    } else {
-      phraseCap = 'Mer calme : aucun cap prévu aujourd’hui.';
+  // Fil de la journée : créneaux, temps libres et repère « maintenant ».
+  const entrees: Entree[] = [];
+  let finPrecedente: number | null = null;
+  let maintenantPlace = !estAujourdhui;
+  for (const b of blocsJour) {
+    if (finPrecedente !== null && b.debut - finPrecedente >= SEUIL_TEMPS_LIBRE) {
+      entrees.push({ type: 'libre', debut: finPrecedente, fin: b.debut });
     }
-  } else {
-    const n = blocsJour.length;
-    chipForte = n > 0 ? `${n} cap${n > 1 ? 's' : ''} prévu${n > 1 ? 's' : ''}` : 'journée libre';
-    if (n > 0) {
-      const finMax = blocsJour.reduce((max, b) => (b.fin > max.fin ? b : max), blocsJour[0]);
-      phraseCap = `De ${blocsJour[0].bloc.heureDebut} à ${finMax.bloc.heureFin}.`;
-    } else {
-      phraseCap = 'Mer calme : rien de prévu ce jour-là.';
+    if (!maintenantPlace && minutesActuelles < b.debut) {
+      entrees.push({ type: 'maintenant', debut: minutesActuelles });
+      maintenantPlace = true;
     }
+    entrees.push({ type: 'bloc', ...b });
+    if (!maintenantPlace && minutesActuelles < b.fin) maintenantPlace = true; // en cours
+    finPrecedente = Math.max(finPrecedente ?? 0, b.fin);
   }
+  if (!maintenantPlace && blocsJour.length > 0) {
+    entrees.push({ type: 'maintenant', debut: minutesActuelles });
+  }
+
+  // Chaque moment de la journée qui a au moins un créneau devient une section.
+  const sections = MOMENTS.map((m) => ({
+    ...m,
+    entrees: entrees.filter((e) => momentDe(e.debut) === m.cle),
+  })).filter((s) => s.entrees.some((e) => e.type === 'bloc'));
 
   return (
     <div className={styles.jourVue} onTouchStart={surToucheDebut} onTouchEnd={surToucheFin}>
@@ -363,108 +423,166 @@ function VueJour({
         </button>
       </header>
 
-      <div className={styles.jourChips}>
-        <span className={`${styles.chip} ${styles.chipFort}`}>{chipForte}</span>
-        <span className={styles.chip}>{phraseCap}</span>
-      </div>
-
-      <div
-        key={jourVu}
-        className={direction === 1 ? styles.glisseDroite : styles.glisseGauche}
-      >
-      {blocsJour.length === 0 ? (
-        <div className={styles.jourVide}>
-          <div className={styles.jourVideIcone} aria-hidden="true">
-            ⛵
+      <div key={jourVu} className={direction === 1 ? styles.glisseDroite : styles.glisseGauche}>
+        {blocsJour.length === 0 ? (
+          <div className={styles.jourVide}>
+            <div className={styles.jourVideIcone} aria-hidden="true">
+              ⛵
+            </div>
+            <p className={styles.jourVideTitre}>Rien à l'horizon</p>
+            <p className={styles.jourVideTexte}>
+              Ajoute un créneau avec le bouton « + Ajouter un créneau », ou demande au Capitaine de
+              te caler la journée.
+            </p>
           </div>
-          <p className={styles.jourVideTitre}>Rien à l'horizon</p>
-          <p className={styles.jourVideTexte}>
-            Ajoute un créneau avec le bouton ci-dessus, ou demande au Capitaine de te caler la
-            journée.
-          </p>
-        </div>
-      ) : (
-        <ol className={styles.route}>
-          {blocsJour.map(({ bloc, debut, fin }, i) => {
-            const passe = estAujourdhui && fin <= minutesActuelles;
-            const actif = estAujourdhui && debut <= minutesActuelles && minutesActuelles < fin;
-            const progression = actif
-              ? Math.round(((minutesActuelles - debut) / (fin - debut)) * 100)
-              : 0;
-            return (
-              <Fragment key={bloc.id}>
-                {estAujourdhui && i === indexMaintenant && (
-                  <li className={styles.filMaintenant} aria-hidden="true">
-                    <span className={styles.filHeure}>{heureCourante}</span>
-                    <span className={styles.filLigne} />
-                  </li>
-                )}
-                <li
-                  className={`${styles.cap} ${passe ? styles.capPasse : ''} ${
-                    actif ? styles.capEnCours : ''
-                  }`}
-                >
-                  <div className={styles.capHeure}>
-                    <span className={styles.capHeureDebut}>{bloc.heureDebut}</span>
-                    <span className={styles.capDuree}>{formatDuree(fin - debut)}</span>
+        ) : (
+          <>
+            <RubanJournee
+              blocsJour={blocsJour}
+              minutesActuelles={minutesActuelles}
+              estAujourdhui={estAujourdhui}
+            />
+
+            {/* Le cap du moment : ce qui compte maintenant, en grand. */}
+            <div className={styles.focus}>
+              {enCours ? (
+                <>
+                  <span className={styles.focusEtiquette}>En ce moment</span>
+                  <div className={styles.focusLigne}>
+                    <IconeNature nature={natureDe(enCours.bloc.titre)} className={styles.focusIcone} />
+                    <span className={styles.focusTitre}>{enCours.bloc.titre}</span>
                   </div>
-                  <article className={`${styles.capCarte} ${bloc.questWeight > 0 ? styles.capQuete : ''}`}>
-                    <div className={styles.capLigneTitre}>
-                      <h3 className={styles.capTitre}>{bloc.titre}</h3>
-                      {actif && <span className={styles.badgeEnCours}>En cours</span>}
-                      <div className={styles.capActions}>
-                        <button
-                          type="button"
-                          className={styles.capBoutonModifier}
-                          aria-label="Modifier le créneau"
-                          onClick={() => onEditer(bloc)}
+                  <div className={styles.focusJauge}>
+                    <div
+                      className={styles.focusJaugeRemplie}
+                      style={{
+                        width: `${((minutesActuelles - enCours.debut) / (enCours.fin - enCours.debut)) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <span className={styles.focusDetail}>
+                    jusqu'à {enCours.bloc.heureFin} · encore {formatDuree(enCours.fin - minutesActuelles)}
+                  </span>
+                </>
+              ) : prochain ? (
+                <>
+                  <span className={styles.focusEtiquette}>
+                    Prochain cap · {formatDans(prochain.debut - minutesActuelles)}
+                  </span>
+                  <div className={styles.focusLigne}>
+                    <IconeNature nature={natureDe(prochain.bloc.titre)} className={styles.focusIcone} />
+                    <span className={styles.focusTitre}>{prochain.bloc.titre}</span>
+                  </div>
+                  <span className={styles.focusDetail}>
+                    à {prochain.bloc.heureDebut}, pendant {formatDuree(prochain.fin - prochain.debut)}
+                  </span>
+                </>
+              ) : estAujourdhui ? (
+                <>
+                  <span className={styles.focusEtiquette}>Journée bouclée</span>
+                  <span className={styles.focusTitre}>Tous les caps du jour sont derrière toi.</span>
+                </>
+              ) : (
+                <>
+                  <span className={styles.focusEtiquette}>{labelJourVu}</span>
+                  <span className={styles.focusTitre}>
+                    {blocsJour.length} créneau{blocsJour.length > 1 ? 'x' : ''} · {formatDuree(totalPlanifie)}{' '}
+                    planifiées
+                  </span>
+                  <span className={styles.focusDetail}>
+                    de {blocsJour[0].bloc.heureDebut} à{' '}
+                    {blocsJour.reduce((m, b) => (b.fin > m.fin ? b : m), blocsJour[0]).bloc.heureFin}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {sections.map((section) => {
+              const blocsSection = section.entrees.filter((e) => e.type === 'bloc');
+              const duree = blocsSection.reduce((t, e) => t + (e.type === 'bloc' ? e.fin - e.debut : 0), 0);
+              return (
+                <section key={section.cle} className={styles.moment}>
+                  <h3 className={styles.momentTitre}>
+                    <span className={`${styles.momentPastille} ${styles[`momentPastille_${section.cle}`]}`} />
+                    {section.label}
+                    <span className={styles.momentResume}>
+                      {blocsSection.length} créneau{blocsSection.length > 1 ? 'x' : ''} · {formatDuree(duree)}
+                    </span>
+                  </h3>
+                  <ol className={styles.fil}>
+                    {section.entrees.map((e) => {
+                      if (e.type === 'maintenant') {
+                        return (
+                          <li key="maintenant" className={styles.maintenant} aria-label={`Maintenant, ${heureCourante}`}>
+                            <span className={styles.maintenantHeure}>{heureCourante}</span>
+                            <span className={styles.maintenantLigne} />
+                          </li>
+                        );
+                      }
+                      if (e.type === 'libre') {
+                        return (
+                          <li key={`libre-${e.debut}`} className={styles.libre}>
+                            {formatDuree(e.fin - e.debut)} de temps libre
+                          </li>
+                        );
+                      }
+                      const { bloc, debut, fin } = e;
+                      const nature = natureDe(bloc.titre);
+                      const passe = estAujourdhui && fin <= minutesActuelles;
+                      const actif = estAujourdhui && debut <= minutesActuelles && minutesActuelles < fin;
+                      return (
+                        <li
+                          key={bloc.id}
+                          className={`${styles.creneau} ${styles[`nature_${nature}`]} ${
+                            passe ? styles.creneauPasse : ''
+                          } ${actif ? styles.creneauActif : ''}`}
                         >
-                          ✎
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.capBoutonSupprimer}
-                          aria-label="Retirer ce créneau de ce jour"
-                          title="Retirer ce créneau de ce jour"
-                          onClick={() => onSupprimer(bloc.id, jourVu)}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                    <div className={styles.capMeta}>
-                      {bloc.heureDebut} – {bloc.heureFin}
-                      {bloc.questWeight > 0 && (
-                        <span className={styles.badgeQuete}>quête +{bloc.questWeight}%</span>
-                      )}
-                    </div>
-                    {actif && (
-                      <div
-                        className={styles.progression}
-                        role="progressbar"
-                        aria-valuenow={progression}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                      >
-                        <div
-                          className={styles.progressionRemplie}
-                          style={{ width: `${progression}%` }}
-                        />
-                      </div>
-                    )}
-                  </article>
-                </li>
-              </Fragment>
-            );
-          })}
-          {estAujourdhui && indexMaintenant === blocsJour.length && (
-            <li className={styles.filMaintenant} aria-hidden="true">
-              <span className={styles.filHeure}>{heureCourante}</span>
-              <span className={styles.filLigne} />
-            </li>
-          )}
-        </ol>
-      )}
+                          <div className={styles.creneauHeure}>
+                            <span className={styles.creneauDebut}>{bloc.heureDebut}</span>
+                            <span className={styles.creneauFin}>{bloc.heureFin}</span>
+                          </div>
+                          <article className={styles.creneauCarte}>
+                            <IconeNature nature={nature} className={styles.creneauIcone} />
+                            <div className={styles.creneauTexte}>
+                              <h4 className={styles.creneauTitre}>{bloc.titre}</h4>
+                              <div className={styles.creneauMeta}>
+                                <span>{LIBELLES_NATURE[nature]}</span>
+                                <span>{formatDuree(fin - debut)}</span>
+                                {bloc.questWeight > 0 && (
+                                  <span className={styles.badgeQuete}>quête +{bloc.questWeight} %</span>
+                                )}
+                                {actif && <span className={styles.badgeEnCours}>En cours</span>}
+                              </div>
+                            </div>
+                            <div className={styles.capActions}>
+                              <button
+                                type="button"
+                                className={styles.capBoutonModifier}
+                                aria-label="Modifier le créneau"
+                                onClick={() => onEditer(bloc)}
+                              >
+                                ✎
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.capBoutonSupprimer}
+                                aria-label="Retirer ce créneau de ce jour"
+                                title="Retirer ce créneau de ce jour"
+                                onClick={() => onSupprimer(bloc.id, jourVu)}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </article>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </section>
+              );
+            })}
+          </>
+        )}
       </div>
     </div>
   );
@@ -487,15 +605,17 @@ function VueSemaine({
   onEditer: (bloc: BlocPlanning) => void;
   onSupprimer: (id: string, jour: JourSemaine) => void;
 }) {
-  // Plage horaire affichée : par défaut 7h–22h, élargie pour englober tous les créneaux.
+  // Plage horaire affichée : resserrée sur les créneaux (une heure de marge de
+  // chaque côté), pour ne pas faire défiler des heures vides. Sans créneau :
+  // une journée type.
   let heureMin = HEURE_MIN_DEFAUT;
   let heureMax = HEURE_MAX_DEFAUT;
-  for (const bloc of blocs) {
-    heureMin = Math.min(heureMin, Math.floor(toMinutes(bloc.heureDebut) / 60));
-    heureMax = Math.max(heureMax, Math.ceil(toMinutes(bloc.heureFin) / 60));
+  if (blocs.length > 0) {
+    heureMin = Math.min(...blocs.map((b) => Math.floor(toMinutes(b.heureDebut) / 60))) - 1;
+    heureMax = Math.max(...blocs.map((b) => Math.ceil(toMinutes(b.heureFin) / 60))) + 1;
   }
   heureMin = Math.max(0, heureMin);
-  heureMax = Math.min(24, heureMax);
+  heureMax = Math.min(24, Math.max(heureMax, heureMin + 6));
 
   const nbHeures = heureMax - heureMin;
   const heures = Array.from({ length: nbHeures + 1 }, (_, i) => heureMin + i);
@@ -503,7 +623,7 @@ function VueSemaine({
 
   const styleGrille = {
     '--heures': nbHeures,
-    '--hauteur-heure': '60px',
+    '--hauteur-heure': '54px',
   } as CSSProperties;
 
   const filVisible = minutesActuelles >= debutPlage && minutesActuelles <= heureMax * 60;
@@ -558,17 +678,23 @@ function VueSemaine({
                 width: `calc(${(1 / colonnes) * 100}% - 4px)`,
               } as CSSProperties;
               const compact = fin - debut <= 45;
+              const minuscule = fin - debut <= 30;
               const passe = key === jourActuel && fin <= minutesActuelles;
+              const nature = natureDe(bloc.titre);
               return (
                 <article
                   key={bloc.id}
-                  className={`${styles.bloc} ${bloc.questWeight > 0 ? styles.blocQuete : ''} ${
-                    passe ? styles.blocPasse : ''
-                  }`}
+                  className={`${styles.bloc} ${styles[`nature_${nature}`]} ${
+                    compact ? styles.blocCompact : ''
+                  } ${minuscule ? styles.blocMinuscule : ''} ${passe ? styles.blocPasse : ''}`}
                   style={styleBloc}
+                  title={`${bloc.heureDebut} – ${bloc.heureFin} · ${bloc.titre}`}
                 >
                   <div className={styles.blocInfos}>
-                    <div className={styles.blocTitre}>{bloc.titre}</div>
+                    <div className={styles.blocTitre}>
+                      <IconeNature nature={nature} className={styles.blocIcone} />
+                      {bloc.titre}
+                    </div>
                     {!compact && (
                       <div className={styles.blocHoraire}>
                         {bloc.heureDebut} – {bloc.heureFin}

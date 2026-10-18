@@ -1,0 +1,129 @@
+/* Teinte de chaque nature de créneau (mêmes couleurs que l'emploi du temps,
+   éclaircies pour le bois sombre). */
+.nature_travail {
+  --teinte: #e0705f;
+}
+
+.nature_sport {
+  --teinte: #6fc27d;
+}
+
+.nature_lecture {
+  --teinte: #6fb3d6;
+}
+
+.nature_etudes {
+  --teinte: #a98be0;
+}
+
+.nature_repas {
+  --teinte: #e7b45a;
+}
+
+.nature_sommeil {
+  --teinte: #94a6e0;
+}
+
+.nature_autre {
+  --teinte: var(--gold-200);
+}
+
+.creneau {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  overflow: hidden;
+}
+
+.heure {
+  flex-shrink: 0;
+  width: 42px;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold-200);
+  font-variant-numeric: tabular-nums;
+}
+
+.icone {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--teinte);
+}
+
+.texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.titre {
+  font-family: var(--font-title);
+  font-size: 16px;
+  line-height: 1.25;
+  color: var(--parch-050);
+}
+
+.detail {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--parch-200);
+}
+
+.duree {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: rgba(241, 225, 188, 0.5);
+  white-space: nowrap;
+}
+
+/* Le premier créneau restant : mis en avant. */
+.premier {
+  padding-block: 11px;
+  border-color: rgba(231, 197, 122, 0.35);
+  background: rgba(231, 197, 122, 0.08);
+}
+
+.premier .titre {
+  font-size: 17px;
+}
+
+.premier .icone {
+  width: 22px;
+  height: 22px;
+}
+
+.enCours {
+  border-color: rgba(42, 167, 155, 0.55);
+  background: rgba(42, 167, 155, 0.1);
+}
+
+/* Avancement du créneau en cours, en fin trait sous la ligne. */
+.jauge {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #2aa79b, #8fe3d8);
+  box-shadow: 0 0 6px rgba(42, 167, 155, 0.7);
+}
+
+.passes {
+  margin: 10px 0 0;
+  padding-left: 10px;
+  font-size: 14px;
+  font-style: italic;
+  color: rgba(241, 225, 188, 0.45);
+}
+
+.demain {
+  font-size: 15px;
+  font-style: normal;
+  color: var(--gold-200);
+}

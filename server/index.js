@@ -15,6 +15,8 @@
 import express from 'express';
 import cors from 'cors';
 import Anthropic from '@anthropic-ai/sdk';
+import { releverCourrier } from './mails.js';
+import { creerRecap, listerRecaps, planifierReleves } from './recaps.js';
 
 // --- Réglages faciles à changer -------------------------------------------
 
@@ -118,7 +120,63 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// Le courrier et les récaps sont privés : cors() étant ouvert, n'importe quel site visité dans
+// le navigateur pourrait sinon interroger ce serveur et lire la réponse. On ne
+// sert donc que les pages ouvertes depuis cette machine ou le réseau local.
+function origineLocale(req, res, next) {
+  const origine = req.headers.origin;
+  if (!origine) return next(); // même origine (proxy Vite) : pas d'en-tête Origin
+  try {
+    const hote = new URL(origine).hostname;
+    if (
+      hote === 'localhost' ||
+      hote === '127.0.0.1' ||
+      hote === '[::1]' ||
+      /^(10.|192.168.|172.(1[6-9]|2d|3[01]).)/.test(hote)
+    ) {
+      return next();
+    }
+  } catch {
+    // Origin illisible : refusé ci-dessous.
+  }
+  res.status(403).json({ error: 'Accessible uniquement depuis le réseau local.' });
+}
+
+// Mails importants des boîtes Gmail (voir server/mails.js). « ?forcer=1 »
+// ignore le relevé gardé en mémoire.
+app.get('/api/mails', origineLocale, async (req, res) => {
+  try {
+    res.json(await releverCourrier({ forcer: req.query.forcer === '1' }));
+  } catch (err) {
+    console.error('[Log Pose] Erreur courrier:', err?.message ?? err);
+    res.status(500).json({ error: 'Impossible de relever le courrier : ' + (err?.message ?? 'inconnue') });
+  }
+});
+
+// Récaps du matin et du soir (voir server/recaps.js). Le GET renvoie
+// l'historique et le créneau en cours ; le POST crée le récap du créneau à
+// partir du planning et des habitudes fournis par le front.
+app.get('/api/recaps', origineLocale, async (_req, res) => {
+  try {
+    res.json(await listerRecaps());
+  } catch (err) {
+    console.error('[Log Pose] Erreur récaps:', err?.message ?? err);
+    res.status(500).json({ error: 'Impossible de lire les récaps : ' + (err?.message ?? 'inconnue') });
+  }
+});
+
+app.post('/api/recaps', origineLocale, async (req, res) => {
+  try {
+    const { planning, habitudes, refaire } = req.body ?? {};
+    res.json(await creerRecap({ planning, habitudes }, { refaire: refaire === true }));
+  } catch (err) {
+    console.error('[Log Pose] Erreur récap:', err?.message ?? err);
+    res.status(500).json({ error: 'Impossible de préparer le récap : ' + (err?.message ?? 'inconnue') });
+  }
+});
+
 app.listen(PORT, () => {
+  planifierReleves();
   console.log(`[Log Pose] Serveur relais démarré sur http://localhost:${PORT} (modèle : ${MODEL})`);
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn(
