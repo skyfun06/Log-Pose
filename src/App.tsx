@@ -15,7 +15,7 @@ import { HabitudesPage } from './components/Habitudes';
 import { BudgetPage } from './components/Budget';
 import { CourrierPage } from './components/Courrier';
 import { RecapPage } from './components/Recap';
-import { GoingMerry } from './components/GoingMerry';
+import { SecondCerveau } from './components/Cerveau';
 import { iles } from './data/iles';
 import type { Vue } from './types';
 import styles from './App.module.css';
@@ -56,7 +56,6 @@ function App() {
   } = useGameState();
 
   const {
-    habitudes,
     habitudesQuotidiennes,
     habitudesHebdomadaires,
     habitudesDuJour,
@@ -205,24 +204,11 @@ function App() {
 
         {vue === 'courrier' && <CourrierPage />}
 
-        {vue === 'going-merry' && (
-          <GoingMerry
-            blocsPlanning={blocsPlanning}
-            onAjouterBloc={ajouterBloc}
-            onModifierBloc={modifierBloc}
-            onSupprimerBloc={supprimerBloc}
-            habitudes={habitudes}
-            marquesHabitudes={marques}
-            onAjouterHabitude={ajouterHabitude}
-            onModifierHabitude={modifierHabitude}
-            onSupprimerHabitude={supprimerHabitude}
-            onMarquerHabitude={marquerJour}
-          />
-        )}
+        {vue === 'going-merry' && <SecondCerveau />}
       </div>
 
       {/* L'objectif « Roi des pirates » est masqué sur la page Going Merry
-          pour laisser le chat occuper tout l'écran. */}
+          (second cerveau) pour lui laisser toute la hauteur. */}
       {vue !== 'going-merry' && <BottomBar prime={prime} />}
     </div>
   );

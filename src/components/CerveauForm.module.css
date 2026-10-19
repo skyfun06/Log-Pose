@@ -1,0 +1,152 @@
+/* Compléments au formulaire parchemin partagé (BlocForm.module.css). */
+.formulaire {
+  max-width: 520px;
+}
+
+.titreLigne {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.compteur {
+  font-family: var(--font-engraved);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold-deep);
+}
+
+/* --- Le fichier déposé --- */
+.fichier {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px dashed rgba(122, 90, 46, 0.55);
+  background: rgba(185, 155, 94, 0.12);
+}
+
+.vignette {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: var(--grad-ink);
+  color: var(--gold-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.vignette img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vignette svg {
+  width: 30px;
+  height: 30px;
+}
+
+/* L'étiquette de format est inutile dans ce petit cadre. */
+.vignette [data-format] {
+  display: none;
+}
+
+.fichierTexte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fichierNom {
+  font-weight: 700;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fichierTaille {
+  font-size: 13px;
+  color: var(--ink-500);
+}
+
+/* --- Catégories --- */
+.categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 6px;
+}
+
+.categorie {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border-radius: 9px;
+  border: 1px solid #b99b5e;
+  background: rgba(185, 155, 94, 0.12);
+  color: var(--ink-600);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.categorie:hover {
+  background: rgba(185, 155, 94, 0.25);
+}
+
+.categorieActive {
+  border-color: var(--ink-600);
+  background: var(--grad-ink);
+  color: var(--gold-100);
+}
+
+.categorieActive:hover {
+  background: var(--grad-ink);
+}
+
+.categorieIcone {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+}
+
+/* --- Champs --- */
+.ligne {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ligne > * {
+  flex: 1 1 160px;
+}
+
+.facultatif {
+  margin-left: 4px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--ink-500);
+}
+
+.note {
+  resize: vertical;
+  min-height: 52px;
+}
+
+.astuce {
+  margin: -4px 0 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-500);
+}

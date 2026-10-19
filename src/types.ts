@@ -144,3 +144,41 @@ export type Vue =
   | 'budget'
   | 'courrier'
   | 'going-merry';
+
+// --- Second cerveau ---------------------------------------------------------
+
+// Lecture du fichier par Ollama (voir server/cerveau.js).
+export type AnalyseCerveau =
+  | { etat: 'attente' | 'en-cours' }
+  | {
+      etat: 'faite';
+      resume: string;
+      motsCles: string[];
+      date: string | null; // AAAA-MM-JJ trouvée dans le document
+      montant: number | null; // en euros, trouvé dans le document
+    }
+  | { etat: 'echec' | 'sans-objet'; raison: string };
+
+// Infos saisies à la main lors du dépôt (modifiables ensuite).
+export interface InfosCerveau {
+  nom: string;
+  categorie: string;
+  date: string | null; // AAAA-MM-JJ
+  montant: number | null; // euros
+  note: string;
+}
+
+export interface FicheCerveau extends InfosCerveau {
+  id: string;
+  fichier: { nomOrigine: string; type: string; taille: number; extension: string };
+  ajouteLe: string; // ISO
+  apercu?: boolean; // miniature disponible (images)
+  analyse: AnalyseCerveau;
+}
+
+// Un échange avec le cerveau : les réponses citent les fichiers trouvés.
+export interface MessageCerveau {
+  role: 'user' | 'assistant';
+  content: string;
+  ids?: string[];
+}

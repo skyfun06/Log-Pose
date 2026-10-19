@@ -33,3 +33,6 @@ dist-ssr
 
 # Données gardées par le serveur relais (résumés de mails, récaps)
 server/.cache-*.json
+
+# Second cerveau : tes fichiers et leur index restent sur ta machine
+server/cerveau/

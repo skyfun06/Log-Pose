@@ -176,16 +176,20 @@ async function releverCompte({ adresse, motDePasse }) {
 // --- Tri par Ollama --------------------------------------------------------
 
 // Envoie une conversation au modèle local et renvoie sa réponse (texte).
-// « format » (schéma JSON) force une réponse structurée.
-export async function appelerOllama(messages, format) {
+// « format » (schéma JSON) force une réponse structurée. « modele » et
+// « contexte » (taille de la fenêtre, en tokens) sont facultatifs.
+// La réponse arrive en flux : sur un PC sans carte graphique, une longue
+// lecture (image, gros document) dépasserait sinon les 5 minutes d'attente
+// maximum de fetch.
+export async function appelerOllama(messages, format, { modele, contexte } = {}) {
   const reponse = await fetch(`${URL_OLLAMA}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: MODELE_OLLAMA,
-      stream: false,
+      model: modele ?? MODELE_OLLAMA,
+      stream: true,
       think: false, // pas de « réflexion » : bien plus rapide pour ces tâches simples
-      options: { temperature: format ? 0 : 0.6 },
+      options: { temperature: format ? 0 : 0.6, ...(contexte ? { num_ctx: contexte } : {}) },
       ...(format ? { format } : {}),
       messages,
     }),
@@ -194,8 +198,27 @@ export async function appelerOllama(messages, format) {
     const detail = await reponse.text().catch(() => '');
     throw new Error(`Ollama a répondu ${reponse.status}. ${detail}`.trim());
   }
-  const data = await reponse.json();
-  return data.message?.content ?? '';
+
+  // NDJSON : un objet par ligne, chacun portant un morceau de la réponse.
+  let texte = '';
+  let tampon = '';
+  const lireLigne = (ligne) => {
+    if (!ligne.trim()) return;
+    const morceau = JSON.parse(ligne);
+    if (morceau.error) throw new Error(`Ollama a échoué : ${morceau.error}`);
+    texte += morceau.message?.content ?? '';
+  };
+  const decodeur = new TextDecoder();
+  for await (const bloc of reponse.body) {
+    tampon += decodeur.decode(bloc, { stream: true });
+    let saut;
+    while ((saut = tampon.indexOf('\n')) !== -1) {
+      lireLigne(tampon.slice(0, saut));
+      tampon = tampon.slice(saut + 1);
+    }
+  }
+  lireLigne(tampon);
+  return texte;
 }
 
 // Message d'erreur lisible quand Ollama ne répond pas.

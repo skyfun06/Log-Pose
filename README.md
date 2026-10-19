@@ -8,6 +8,7 @@ Le projet a deux parties : le front Vite et un petit serveur relais (`server/`) 
 2. **Serveur relais** : `npm run server` (démarre sur http://localhost:3001 ; tourne même sans clé, mais renvoie une erreur claire tant qu'elle manque).
 3. **Front** : `npm run dev` dans un autre terminal (http://localhost:5173). Il tape sur le serveur via `VITE_API_URL` (défaut `http://localhost:3001`).
 4. **Courrier** (optionnel) : l'onglet « Courrier » affiche les mails importants de tes boîtes Gmail, triés en local par Ollama (qui doit être lancé). Renseigne `GMAIL_COMPTES` dans `.env` (voir `.env.example`). L'onglet « Récap » prépare un récap chaque matin et chaque soir (heures réglables en haut de `server/recaps.js`) : le serveur relais doit tourner.
+5. **Second cerveau** (page « Going Merry ») : dépose n'importe quel fichier (bouton, glisser-déposer ou Ctrl+V), remplis la petite fiche, puis retrouve-le en le demandant. Les fichiers restent sur ta machine dans `server/cerveau/` (non commité). Ollama lit chaque fichier en arrière-plan (texte des PDF, description des images) pour qu'on le retrouve aussi par son contenu ; sans carte graphique, compte quelques minutes par image.
 
 ---
 

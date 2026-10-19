@@ -17,6 +17,17 @@ import cors from 'cors';
 import Anthropic from '@anthropic-ai/sdk';
 import { releverCourrier } from './mails.js';
 import { creerRecap, listerRecaps, planifierReleves } from './recaps.js';
+import {
+  ErreurCerveau,
+  ajouterFichier,
+  demander,
+  listerFichiers,
+  modifierFichier,
+  relancerAnalyse,
+  reprendreAnalyses,
+  supprimerFichier,
+  trouverFichier,
+} from './cerveau.js';
 
 // --- Réglages faciles à changer -------------------------------------------
 
@@ -175,8 +186,113 @@ app.post('/api/recaps', origineLocale, async (req, res) => {
   }
 });
 
+// Second cerveau (voir server/cerveau.js) : fichiers déposés avec leurs infos,
+// retrouvés en posant la question en langage naturel.
+function erreurCerveau(res, err, contexte) {
+  if (err instanceof ErreurCerveau) return res.status(err.statut).json({ error: err.message });
+  console.error(`[Log Pose] Erreur cerveau (${contexte}):`, err?.message ?? err);
+  res.status(500).json({ error: `${contexte} : ${err?.message ?? 'erreur inconnue'}` });
+}
+
+app.get('/api/cerveau', origineLocale, async (_req, res) => {
+  try {
+    res.json(await listerFichiers());
+  } catch (err) {
+    erreurCerveau(res, err, 'Impossible de lire le cerveau');
+  }
+});
+
+// Le fichier arrive brut dans le corps (toujours en application/octet-stream,
+// sinon un .json serait avalé par express.json) ; ses infos (nom, catégorie,
+// type réel...) dans l'en-tête X-Cerveau-Infos, en JSON encodé (accents compris).
+app.post(
+  '/api/cerveau',
+  origineLocale,
+  express.raw({ type: () => true, limit: '200mb' }),
+  async (req, res) => {
+    try {
+      let infos = {};
+      try {
+        infos = JSON.parse(decodeURIComponent(req.get('x-cerveau-infos') ?? '{}'));
+      } catch {
+        throw new ErreurCerveau(400, 'Infos du fichier illisibles.');
+      }
+      if (!Buffer.isBuffer(req.body)) throw new ErreurCerveau(400, 'Fichier manquant.');
+      res.json(
+        await ajouterFichier(req.body, {
+          infos,
+          type: infos.type,
+          nomOrigine: infos.nomOrigine,
+        }),
+      );
+    } catch (err) {
+      erreurCerveau(res, err, "Impossible de ranger le fichier");
+    }
+  },
+);
+
+app.patch('/api/cerveau/:id', origineLocale, async (req, res) => {
+  try {
+    res.json(await modifierFichier(req.params.id, req.body ?? {}));
+  } catch (err) {
+    erreurCerveau(res, err, 'Impossible de modifier le fichier');
+  }
+});
+
+app.delete('/api/cerveau/:id', origineLocale, async (req, res) => {
+  try {
+    await supprimerFichier(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    erreurCerveau(res, err, 'Impossible de supprimer le fichier');
+  }
+});
+
+app.post('/api/cerveau/:id/relire', origineLocale, async (req, res) => {
+  try {
+    res.json(await relancerAnalyse(req.params.id));
+  } catch (err) {
+    erreurCerveau(res, err, 'Impossible de relancer la lecture');
+  }
+});
+
+// « ?telecharger=1 » force le téléchargement au lieu de l'affichage ;
+// « ?apercu=1 » renvoie la miniature (images seulement).
+app.get('/api/cerveau/:id/fichier', origineLocale, async (req, res) => {
+  try {
+    const { chemin, entetes } = await trouverFichier(req.params.id, {
+      telecharger: req.query.telecharger === '1',
+      apercu: req.query.apercu === '1',
+    });
+    res.set(entetes).sendFile(chemin);
+  } catch (err) {
+    erreurCerveau(res, err, 'Impossible de lire le fichier');
+  }
+});
+
+// Réponse en NDJSON : les pistes par mots-clés d'abord, puis la réponse d'Ollama.
+app.post('/api/cerveau/demander', origineLocale, async (req, res) => {
+  try {
+    const { question, historique } = req.body ?? {};
+    await demander(question, historique, (evenement) => {
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+      res.write(JSON.stringify(evenement) + '\n');
+    });
+    res.end();
+  } catch (err) {
+    if (res.headersSent) return res.end();
+    erreurCerveau(res, err, 'Impossible de chercher');
+  }
+});
+
 app.listen(PORT, () => {
   planifierReleves();
+  void reprendreAnalyses().catch((err) =>
+    console.error('[Log Pose] Cerveau illisible:', err?.message ?? err),
+  );
   console.log(`[Log Pose] Serveur relais démarré sur http://localhost:${PORT} (modèle : ${MODEL})`);
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn(
