@@ -165,7 +165,8 @@ export function CerveauForm({ fichier, position, fiche, onValider, onAnnuler }: 
           {avecMontant && (
             <label className={base.champLabel}>
               <span>
-                Montant (€) <span className={styles.facultatif}>facultatif</span>
+                {categorie === 'Fiche de paie' ? 'Net à payer (€)' : 'Montant (€)'}{' '}
+                <span className={styles.facultatif}>facultatif</span>
               </span>
               <input
                 type="text"
@@ -193,6 +194,12 @@ export function CerveauForm({ fichier, position, fiche, onValider, onAnnuler }: 
           />
         </label>
 
+        {categorie === 'Fiche de paie' && (
+          <p className={styles.astuce}>
+            Paie du mois en plusieurs fiches ? Donne-leur une date du même mois : le budget les
+            additionne.
+          </p>
+        )}
         {!fiche && (
           <p className={styles.astuce}>
             La vigie lira aussi le fichier : laisse la date ou le montant vides, elle les repérera

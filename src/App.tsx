@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useGameState } from './state/useGameState';
 import { useHabitudes } from './state/useHabitudes';
 import { useBudget } from './state/useBudget';
 import { useRecapNonLu, useRecaps } from './state/useRecaps';
+import { useCerveau } from './state/useCerveau';
+import { CATEGORIE_PAIE, moisDePaie, moisDuSalaire, montantFiche } from './data/formatCerveau';
 import { TopBar } from './components/TopBar';
 import { WantedPoster } from './components/WantedPoster';
 import { CarteMarine } from './components/CarteMarine';
@@ -72,14 +74,30 @@ function App() {
 
   const {
     salaire,
+    source,
     postes,
     totalReparti,
     restant,
     definirSalaire,
+    lierMois,
+    synchroniserSalaire,
     ajouterPoste,
     modifierPoste,
     supprimerPoste,
   } = useBudget();
+
+  // Second cerveau : ses fiches de paie remplissent le salaire du budget
+  // (toutes celles d'un même mois additionnées).
+  const cerveau = useCerveau();
+  const moisPaie = useMemo(() => moisDePaie(cerveau.fichiers), [cerveau.fichiers]);
+  const moisSalaire = moisDuSalaire(moisPaie, source);
+  const montantSalaire = moisSalaire?.total ?? null;
+  useEffect(() => {
+    if (montantSalaire !== null) synchroniserSalaire(montantSalaire);
+  }, [montantSalaire, synchroniserSalaire]);
+  const paiesSansMontant = cerveau.fichiers.filter(
+    (f) => f.categorie === CATEGORIE_PAIE && montantFiche(f) === null,
+  );
 
   const recaps = useRecaps(blocsPlanning, habitudesDuJour);
   const recapNonLu = useRecapNonLu(recaps.recaps[0]?.cle ?? null, vue === 'recap');
@@ -196,6 +214,17 @@ function App() {
             totalReparti={totalReparti}
             restant={restant}
             onDefinirSalaire={definirSalaire}
+            liaison={{
+              source,
+              mois: moisPaie,
+              retenu: moisSalaire,
+              enLecture: paiesSansMontant.some(
+                (f) => f.analyse.etat === 'attente' || f.analyse.etat === 'en-cours',
+              ),
+              sansMontant: paiesSansMontant,
+            }}
+            onLierMois={lierMois}
+            onOuvrirCerveau={() => changerVue('going-merry', 1)}
             onAjouterPoste={ajouterPoste}
             onModifierPoste={modifierPoste}
             onSupprimerPoste={supprimerPoste}
@@ -204,7 +233,7 @@ function App() {
 
         {vue === 'courrier' && <CourrierPage />}
 
-        {vue === 'going-merry' && <SecondCerveau />}
+        {vue === 'going-merry' && <SecondCerveau cerveau={cerveau} />}
       </div>
 
       {/* L'objectif « Roi des pirates » est masqué sur la page Going Merry

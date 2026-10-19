@@ -1,6 +1,6 @@
 // Mise en forme des infos du second cerveau.
 
-import type { FicheCerveau } from '../types';
+import type { FicheCerveau, SourceSalaire } from '../types';
 
 // « 2026-09-15 » → « 15 sept. 2026 »
 export function dateLisible(iso: string | null | undefined): string {
@@ -62,4 +62,63 @@ export function correspondAuFiltre(fiche: FicheCerveau, filtre: string): boolean
     ].join(' '),
   );
   return mots.every((m) => texte.includes(m));
+}
+
+// --- Fiches de paie → budget ------------------------------------------------
+
+export const CATEGORIE_PAIE = 'Fiche de paie';
+
+// Les fiches de paie regroupées par mois : un mois peut en compter
+// plusieurs (heures sup payées à part, deux employeurs...), le salaire du
+// mois est leur somme.
+export interface MoisDePaie {
+  cle: string; // « AAAA-MM »
+  libelle: string; // « Septembre 2026 »
+  fiches: FicheCerveau[]; // celles dont le montant est connu
+  incompletes: FicheCerveau[]; // celles dont le montant reste inconnu
+  total: number;
+}
+
+// Mois d'une fiche : celui de sa date (saisie ou lue), sinon de son rangement.
+function moisDeLaFiche(fiche: FicheCerveau): string {
+  return (dateFiche(fiche) ?? fiche.ajouteLe).slice(0, 7);
+}
+
+function libelleMois(cle: string): string {
+  const texte = new Date(`${cle}-15T12:00:00`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return texte.charAt(0).toUpperCase() + texte.slice(1);
+}
+
+// Mois ayant au moins une fiche de paie chiffrée, du plus récent au plus ancien.
+export function moisDePaie(fichiers: FicheCerveau[]): MoisDePaie[] {
+  const parMois = new Map<string, MoisDePaie>();
+  for (const fiche of fichiers) {
+    if (fiche.categorie !== CATEGORIE_PAIE) continue;
+    const cle = moisDeLaFiche(fiche);
+    let mois = parMois.get(cle);
+    if (!mois) {
+      mois = { cle, libelle: libelleMois(cle), fiches: [], incompletes: [], total: 0 };
+      parMois.set(cle, mois);
+    }
+    const montant = montantFiche(fiche);
+    if (montant === null) {
+      mois.incompletes.push(fiche);
+    } else {
+      mois.fiches.push(fiche);
+      mois.total = Math.round((mois.total + montant) * 100) / 100;
+    }
+  }
+  const parNom = (a: FicheCerveau, b: FicheCerveau) =>
+    a.nom.localeCompare(b.nom, 'fr', { numeric: true });
+  for (const mois of parMois.values()) mois.fiches.sort(parNom); // « 1/2 » avant « 2/2 »
+  return [...parMois.values()]
+    .filter((m) => m.fiches.length > 0)
+    .sort((a, b) => b.cle.localeCompare(a.cle));
+}
+
+// Le mois que suit le budget : celui choisi, sinon (ou s'il n'a plus de
+// fiche) le plus récent.
+export function moisDuSalaire(mois: MoisDePaie[], source: SourceSalaire): MoisDePaie | null {
+  if (source.mode !== 'fiche') return null;
+  return (source.mois ? mois.find((m) => m.cle === source.mois) : undefined) ?? mois[0] ?? null;
 }

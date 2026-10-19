@@ -1,5 +1,15 @@
-import type { PosteBudget } from '../types';
+import { montantFiche, montantLisible, type MoisDePaie } from '../data/formatCerveau';
+import type { FicheCerveau, PosteBudget, SourceSalaire } from '../types';
 import styles from './Budget.module.css';
+
+// Lien entre le salaire et les fiches de paie du second cerveau.
+export interface LiaisonSalaire {
+  source: SourceSalaire;
+  mois: MoisDePaie[]; // mois avec fiches de paie chiffrées, le plus récent d'abord
+  retenu: MoisDePaie | null; // celui que suit le salaire
+  enLecture: boolean; // une fiche de paie est en cours de lecture par la vigie
+  sansMontant: FicheCerveau[]; // fiches de paie dont le montant reste inconnu
+}
 
 interface BudgetPageProps {
   salaire: number;
@@ -7,6 +17,9 @@ interface BudgetPageProps {
   totalReparti: number;
   restant: number;
   onDefinirSalaire: (salaire: number) => void;
+  liaison: LiaisonSalaire;
+  onLierMois: (mois: string | null) => void;
+  onOuvrirCerveau: () => void;
   onAjouterPoste: () => void;
   onModifierPoste: (id: string, patch: Partial<Omit<PosteBudget, 'id'>>) => void;
   onSupprimerPoste: (id: string) => void;
@@ -93,6 +106,9 @@ export function BudgetPage({
   totalReparti,
   restant,
   onDefinirSalaire,
+  liaison,
+  onLierMois,
+  onOuvrirCerveau,
   onAjouterPoste,
   onModifierPoste,
   onSupprimerPoste,
@@ -153,21 +169,26 @@ export function BudgetPage({
             <h1 className={styles.titre}>Budget</h1>
             <p className={styles.sousTitre}>Répartis ton salaire du mois, à la barre.</p>
           </div>
-          <label className={styles.salaireBloc}>
-            <span className={styles.salaireLabel}>Salaire mensuel</span>
+          <div className={styles.salaireBloc}>
+            <label className={styles.salaireLabel} htmlFor="salaire-mensuel">
+              Salaire mensuel
+            </label>
             <div className={styles.salaireChamp}>
               <input
                 type="number"
                 inputMode="numeric"
                 min="0"
+                id="salaire-mensuel"
                 className={styles.salaireInput}
                 value={salaire === 0 ? '' : salaire}
                 onChange={(e) => onDefinirSalaire(Number(e.target.value))}
                 placeholder="0"
+                title={liaison.retenu ? 'Le modifier ici le passe en saisie manuelle' : undefined}
               />
               <span className={styles.salaireDevise}>€</span>
             </div>
-          </label>
+            <SourceDuSalaire liaison={liaison} onLierMois={onLierMois} onOuvrirCerveau={onOuvrirCerveau} />
+          </div>
         </header>
 
         <div className={styles.corps}>
@@ -419,5 +440,99 @@ function Gouvernail() {
       <circle cx="50" cy="50" r="11" fill="none" className={styles.gMoyeuBord} />
       <circle cx="50" cy="50" r="3.2" className={styles.gCentre} />
     </svg>
+  );
+}
+
+// Sous le salaire : d'où il vient, et de quoi changer de source.
+function SourceDuSalaire({
+  liaison,
+  onLierMois,
+  onOuvrirCerveau,
+}: {
+  liaison: LiaisonSalaire;
+  onLierMois: (mois: string | null) => void;
+  onOuvrirCerveau: () => void;
+}) {
+  const { source, mois, retenu, enLecture, sansMontant } = liaison;
+
+  // Saisi à la main : on propose de repasser sur les fiches de paie.
+  if (source.mode === 'manuel') {
+    return (
+      <p className={styles.source}>
+        Saisi à la main
+        {mois.length > 0 && (
+          <>
+            {' · '}
+            <button type="button" className={styles.sourceLien} onClick={() => onLierMois(null)}>
+              Prendre ma paie de {mois[0].libelle.toLowerCase()} ({montantLisible(mois[0].total)})
+            </button>
+          </>
+        )}
+      </p>
+    );
+  }
+
+  if (retenu) {
+    const plusieurs = retenu.fiches.length > 1;
+    return (
+      <div className={styles.sourceBloc}>
+        <p className={styles.source}>
+          <span className={styles.sourcePastille} aria-hidden="true" />
+          Paie de
+          <select
+            className={styles.sourceChoix}
+            value={source.mois ?? ''}
+            onChange={(e) => onLierMois(e.target.value || null)}
+            aria-label="Mois de paie utilisé pour le salaire"
+          >
+            <option value="">{retenu.libelle.toLowerCase()} (le plus récent)</option>
+            {mois.map((m) => (
+              <option key={m.cle} value={m.cle}>
+                {m.libelle.toLowerCase()} · {montantLisible(m.total)}
+                {m.fiches.length > 1 ? ` (${m.fiches.length} fiches)` : ''}
+              </option>
+            ))}
+          </select>
+        </p>
+        {plusieurs && (
+          <p className={styles.sourceDetail}>
+            {retenu.fiches.map((f) => montantLisible(montantFiche(f))).join(' + ')} ·{' '}
+            {retenu.fiches.length} fiches additionnées
+          </p>
+        )}
+        {retenu.incompletes.length > 0 && (
+          <p className={styles.sourceDetail}>
+            Pas encore compté : « {retenu.incompletes[0].nom} »
+            {retenu.incompletes.some((f) => f.analyse.etat === 'attente' || f.analyse.etat === 'en-cours')
+              ? ' (en cours de lecture)'
+              : ' (montant introuvable, ajoute-le dans la cale)'}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (enLecture) {
+    return <p className={styles.source}>La vigie lit ta fiche de paie…</p>;
+  }
+
+  if (sansMontant.length > 0) {
+    return (
+      <p className={styles.source}>
+        Montant introuvable sur « {sansMontant[0].nom} » ·{' '}
+        <button type="button" className={styles.sourceLien} onClick={onOuvrirCerveau}>
+          l'ajouter dans la cale
+        </button>
+      </p>
+    );
+  }
+
+  return (
+    <p className={styles.source}>
+      <button type="button" className={styles.sourceLien} onClick={onOuvrirCerveau}>
+        Dépose ta fiche de paie
+      </button>{' '}
+      dans le Going Merry : il se remplira tout seul.
+    </p>
   );
 }

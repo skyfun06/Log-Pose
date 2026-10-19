@@ -112,6 +112,83 @@
   color: var(--gold-300);
 }
 
+/* Source du salaire (fiche de paie du second cerveau ou saisie manuelle). */
+.source {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  max-width: 420px;
+  font-size: 15px;
+  font-style: italic;
+  text-align: right;
+  color: var(--parch-200);
+}
+
+.sourceBloc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.sourceDetail {
+  margin: 0;
+  max-width: 420px;
+  font-size: 14px;
+  font-style: italic;
+  text-align: right;
+  color: var(--parch-300);
+}
+
+.sourcePastille {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px rgba(63, 138, 76, 0.8);
+}
+
+.sourceChoix {
+  max-width: 280px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(185, 155, 94, 0.45);
+  background: rgba(10, 6, 2, 0.55);
+  color: var(--gold-100);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  font-style: normal;
+  cursor: pointer;
+}
+
+.sourceLien {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold-200);
+  font-family: inherit;
+  font-size: inherit;
+  font-style: normal;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.sourceLien:hover {
+  color: var(--gold-050);
+}
+
+.sourceChoix:focus-visible,
+.sourceLien:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-gold);
+}
+
 /* ===== Corps : deux colonnes ===== */
 .corps {
   display: flex;

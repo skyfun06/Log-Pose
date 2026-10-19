@@ -78,6 +78,10 @@ export interface PosteBudget {
   montant: number; // en euros
 }
 
+// D'où vient le salaire du budget : saisi à la main, ou lu sur les fiches de
+// paie d'un mois du second cerveau (mois « AAAA-MM », null = le plus récent).
+export type SourceSalaire = { mode: 'manuel' } | { mode: 'fiche'; mois: string | null };
+
 // --- Courrier --------------------------------------------------------------
 
 // Un mail jugé important par le tri (voir server/mails.js).

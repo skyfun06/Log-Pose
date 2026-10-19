@@ -8,10 +8,11 @@ import {
   montantLisible,
   tailleLisible,
 } from '../data/formatCerveau';
-import { urlFichier, useCerveau } from '../state/useCerveau';
+import { urlFichier, type Cerveau } from '../state/useCerveau';
 import type { FicheCerveau, InfosCerveau } from '../types';
 import { CerveauForm } from './CerveauForm';
 import { IconeCategorie, Vignette } from './CerveauIcones';
+import { GrapheCerveau } from './GrapheCerveau';
 import base from './BlocForm.module.css';
 import styles from './Cerveau.module.css';
 
@@ -20,6 +21,8 @@ const SUGGESTIONS = [
   "Les factures d'électricité",
   'Le design que j’ai rangé récemment',
 ];
+
+const CLE_AFFICHAGE = 'log-pose-cale-affichage';
 
 interface Depot {
   file: File[];
@@ -44,9 +47,9 @@ function etatLecture(fiche: FicheCerveau): string | null {
 }
 
 // Le second cerveau, sur la page du Going Merry : à gauche on demande, à
-// droite la cale où sont rangés les fichiers.
-export function SecondCerveau() {
-  const cerveau = useCerveau();
+// droite la cale où sont rangés les fichiers. L'état vit dans App : la page
+// Budget s'en sert aussi (fiches de paie).
+export function SecondCerveau({ cerveau }: { cerveau: Cerveau }) {
   const { fichiers } = cerveau;
 
   // Dépôt en cours : les fichiers qui attendent leur formulaire, un par un.
@@ -224,7 +227,7 @@ function Conversation({
   parId,
   onOuvrir,
 }: {
-  cerveau: ReturnType<typeof useCerveau>;
+  cerveau: Cerveau;
   parId: Map<string, FicheCerveau>;
   onOuvrir: (id: string) => void;
 }) {
@@ -372,6 +375,21 @@ function Cale({
 }) {
   const [filtre, setFiltre] = useState('');
   const [categorie, setCategorie] = useState<string | null>(null);
+  const [affichage, setAffichage] = useState<'graphe' | 'grille'>(() => {
+    try {
+      return localStorage.getItem(CLE_AFFICHAGE) === 'grille' ? 'grille' : 'graphe';
+    } catch {
+      return 'graphe';
+    }
+  });
+  function choisirAffichage(choix: 'graphe' | 'grille') {
+    setAffichage(choix);
+    try {
+      localStorage.setItem(CLE_AFFICHAGE, choix);
+    } catch {
+      /* préférence non gardée, tant pis */
+    }
+  }
 
   const comptes = useMemo(() => {
     const parCategorie = new Map<string, number>();
@@ -399,9 +417,26 @@ function Cale({
               : `${fichiers.length} fichier${fichiers.length > 1 ? 's' : ''} à bord.`}
           </p>
         </div>
-        <button type="button" className={styles.boutonOr} onClick={onDeposer}>
-          + Déposer
-        </button>
+        <div className={styles.enteteActions}>
+          {fichiers.length > 0 && (
+            <div className={styles.affichage} role="group" aria-label="Affichage de la cale">
+              {(['graphe', 'grille'] as const).map((choix) => (
+                <button
+                  key={choix}
+                  type="button"
+                  aria-pressed={affichage === choix}
+                  className={affichage === choix ? `${styles.affichageBouton} ${styles.affichageActif}` : styles.affichageBouton}
+                  onClick={() => choisirAffichage(choix)}
+                >
+                  {choix === 'graphe' ? 'Graphe' : 'Grille'}
+                </button>
+              ))}
+            </div>
+          )}
+          <button type="button" className={styles.boutonOr} onClick={onDeposer}>
+            + Déposer
+          </button>
+        </div>
       </header>
 
       {erreur && <p className={styles.alerte}>{erreur}</p>}
@@ -453,6 +488,12 @@ function Cale({
 
           {visibles.length === 0 ? (
             <p className={styles.rien}>Rien dans la cale ne correspond.</p>
+          ) : affichage === 'graphe' ? (
+            <GrapheCerveau
+              fichiers={visibles}
+              onOuvrir={onOuvrir}
+              onCategorie={(nom) => setCategorie(categorie === nom ? null : nom)}
+            />
           ) : (
             <ul className={styles.grille}>
               {visibles.map((f) => (

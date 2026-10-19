@@ -1,18 +1,32 @@
 // État du budget, persisté dans le localStorage.
-// Deux morceaux : le salaire mensuel et la liste des postes de répartition
-// (saisie manuelle par Louis). Indépendant du reste du jeu, comme useHabitudes.
+// Le salaire mensuel, sa source (saisi à la main ou lu sur une fiche de paie
+// du second cerveau) et la liste des postes de répartition.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { PosteBudget } from '../types';
+import type { PosteBudget, SourceSalaire } from '../types';
 
 const STORAGE_KEY = 'log-pose-budget';
 
 interface BudgetState {
   salaire: number;
+  // Par défaut, le salaire suit la dernière fiche de paie rangée dans le
+  // second cerveau ; le salaire gardé ici sert quand le serveur est éteint.
+  source: SourceSalaire;
   postes: PosteBudget[];
 }
 
-const defaultState: BudgetState = { salaire: 0, postes: [] };
+const SOURCE_PAR_DEFAUT: SourceSalaire = { mode: 'fiche', mois: null };
+
+const defaultState: BudgetState = { salaire: 0, source: SOURCE_PAR_DEFAUT, postes: [] };
+
+function sourceSaine(source: unknown): SourceSalaire {
+  const s = source as Partial<{ mode: string; mois: unknown }> | null;
+  if (s?.mode === 'manuel') return { mode: 'manuel' };
+  if (s?.mode === 'fiche') {
+    return { mode: 'fiche', mois: typeof s.mois === 'string' && /^\d{4}-\d{2}$/.test(s.mois) ? s.mois : null };
+  }
+  return SOURCE_PAR_DEFAUT;
+}
 
 function nombreSain(n: unknown): number {
   const v = Number(n);
@@ -33,7 +47,7 @@ function loadState(): BudgetState {
             montant: nombreSain(p.montant),
           }))
       : [];
-    return { salaire: nombreSain(parsed.salaire), postes };
+    return { salaire: nombreSain(parsed.salaire), source: sourceSaine(parsed.source), postes };
   } catch {
     return defaultState;
   }
@@ -50,8 +64,23 @@ export function useBudget() {
     }
   }, [state]);
 
+  // Saisie à la main : le salaire ne suit plus les fiches de paie.
   const definirSalaire = useCallback((salaire: number) => {
-    setState((prev) => ({ ...prev, salaire: nombreSain(salaire) }));
+    setState((prev) => ({ ...prev, salaire: nombreSain(salaire), source: { mode: 'manuel' } }));
+  }, []);
+
+  // Le salaire suit les fiches de paie d'un mois (null = le plus récent).
+  const lierMois = useCallback((mois: string | null) => {
+    setState((prev) => ({ ...prev, source: { mode: 'fiche', mois } }));
+  }, []);
+
+  // Recopie le total des fiches suivies (sans changer la source).
+  const synchroniserSalaire = useCallback((montant: number) => {
+    setState((prev) =>
+      prev.source.mode !== 'fiche' || prev.salaire === nombreSain(montant)
+        ? prev
+        : { ...prev, salaire: nombreSain(montant) },
+    );
   }, []);
 
   const ajouterPoste = useCallback((nom = '', montant = 0): string => {
@@ -92,10 +121,13 @@ export function useBudget() {
 
   return {
     salaire: state.salaire,
+    source: state.source,
     postes: state.postes,
     totalReparti,
     restant: state.salaire - totalReparti,
     definirSalaire,
+    lierMois,
+    synchroniserSalaire,
     ajouterPoste,
     modifierPoste,
     supprimerPoste,

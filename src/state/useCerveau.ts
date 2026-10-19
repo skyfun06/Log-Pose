@@ -203,3 +203,5 @@ export function useCerveau() {
     effacerChat,
   };
 }
+
+export type Cerveau = ReturnType<typeof useCerveau>;

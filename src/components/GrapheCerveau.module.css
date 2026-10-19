@@ -1,0 +1,135 @@
+/* Graphe du second cerveau : toile sombre façon carte des étoiles. */
+.graphe {
+  position: relative;
+  flex: 1;
+  min-height: 380px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid rgba(185, 155, 94, 0.28);
+  background:
+    radial-gradient(70% 60% at 50% 45%, rgba(231, 197, 122, 0.07), transparent 70%),
+    radial-gradient(circle at 50% 50%, rgba(10, 6, 2, 0.35), rgba(10, 6, 2, 0.7));
+}
+
+.toile {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Bulle d'infos au survol d'un nœud. */
+.bulle {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  max-width: 260px;
+  padding: 7px 11px;
+  border-radius: 9px;
+  border: 1px solid rgba(231, 197, 122, 0.5);
+  background: rgba(24, 16, 9, 0.94);
+  box-shadow: var(--shadow-md);
+  transform: translate(14px, 14px);
+  pointer-events: none;
+}
+
+.bulleNom {
+  font-family: var(--font-title);
+  font-size: 15px;
+  color: var(--parch-050);
+  overflow-wrap: anywhere;
+}
+
+.bulleMeta {
+  font-size: 14px;
+  color: var(--parch-300);
+}
+
+.commandes {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.commandes button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 9px;
+  border: 1px solid rgba(185, 155, 94, 0.45);
+  background: rgba(24, 16, 9, 0.85);
+  color: var(--gold-100);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+
+.commandes button:hover {
+  border-color: var(--gold-200);
+}
+
+.commandes button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-gold);
+}
+
+.commandes svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.legende {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  right: 56px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--parch-300);
+  pointer-events: none;
+}
+
+.pastilleCategorie,
+.pastilleFichier {
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.pastilleCategorie {
+  width: 11px;
+  height: 11px;
+  background: var(--gold-200);
+  box-shadow: 0 0 8px rgba(231, 197, 122, 0.6);
+}
+
+.pastilleFichier {
+  width: 7px;
+  height: 7px;
+  margin-left: 8px;
+  background: var(--parch-200);
+}
+
+@media (max-width: 560px) {
+  .legendeDetail {
+    display: none;
+  }
+}
