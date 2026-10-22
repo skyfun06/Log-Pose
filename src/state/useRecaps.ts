@@ -5,12 +5,15 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { API_URL } from '../config';
+import { bilanDuJour, decalerIso, suiviSemaine } from '../data/bilanJournee';
 import type {
   BlocPlanning,
   BlocRecap,
   CreneauRecap,
+  Habitude,
   HabitudeDuJour,
   JourSemaine,
+  MarquesHabitudes,
   Recap,
 } from '../types';
 
@@ -36,6 +39,29 @@ function planningDuCreneau(blocs: BlocPlanning[], creneau: CreneauRecap): BlocRe
     .filter((b) => b.jours.includes(cible))
     .sort((a, b) => a.heureDebut.localeCompare(b.heureDebut))
     .map((b) => ({ titre: b.titre, heureDebut: b.heureDebut, heureFin: b.heureFin }));
+}
+
+export interface SuiviHabitudes {
+  habitudes: Habitude[];
+  marques: MarquesHabitudes;
+  joursMalades: string[];
+}
+
+// Le jour dont le récap fait le bilan : la veille le matin, le jour même le soir.
+export function jourDuBilan(cle: string, moment: 'matin' | 'soir'): string {
+  const jour = cle.slice(0, 10);
+  return moment === 'matin' ? decalerIso(jour, -1) : jour;
+}
+
+// Bilan et objectifs de la semaine envoyés au second pour qu'il rédige.
+function contexteDuCreneau(suivi: SuiviHabitudes, creneau: CreneauRecap) {
+  const { habitudes, marques, joursMalades } = suivi;
+  const bilan = bilanDuJour(habitudes, marques, joursMalades, jourDuBilan(creneau.cle, creneau.moment));
+  const semaine = suiviSemaine(habitudes, marques, joursMalades, creneau.cle.slice(0, 10), creneau.moment === 'matin');
+  return {
+    bilan: { reussites: bilan.reussites, ratees: bilan.ratees, oubliees: bilan.oubliees },
+    semaine: semaine.filter((h) => h.statut !== 'atteint'),
+  };
 }
 
 async function appeler(init?: RequestInit): Promise<ReponseRecaps> {
@@ -80,16 +106,20 @@ export function useRecapNonLu(dernierRecap: string | null, pageRecapOuverte: boo
   return dernierRecap !== null && dernierRecap !== vu && !pageRecapOuverte;
 }
 
-export function useRecaps(blocsPlanning: BlocPlanning[], habitudesDuJour: HabitudeDuJour[]) {
+export function useRecaps(
+  blocsPlanning: BlocPlanning[],
+  habitudesDuJour: HabitudeDuJour[],
+  suivi: SuiviHabitudes,
+) {
   const [recaps, setRecaps] = useState<Recap[]>([]);
   const [creneau, setCreneau] = useState<CreneauRecap | null>(null);
   const [enPreparation, setEnPreparation] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
   // Données de l'appli lues au moment de l'envoi, sans relancer les effets.
-  const donnees = useRef({ blocsPlanning, habitudesDuJour });
+  const donnees = useRef({ blocsPlanning, habitudesDuJour, suivi });
   useEffect(() => {
-    donnees.current = { blocsPlanning, habitudesDuJour };
+    donnees.current = { blocsPlanning, habitudesDuJour, suivi };
   });
 
   const occupe = useRef(false);
@@ -100,13 +130,14 @@ export function useRecaps(blocsPlanning: BlocPlanning[], habitudesDuJour: Habitu
     setEnPreparation(true);
     setErreur(null);
     try {
-      const { blocsPlanning: blocs, habitudesDuJour: habitudes } = donnees.current;
+      const { blocsPlanning: blocs, habitudesDuJour: habitudes, suivi: suiviActuel } = donnees.current;
       const data = await appeler({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planning: planningDuCreneau(blocs, pour),
           habitudes: habitudes.map((h) => ({ nom: h.nom, etat: h.etat ?? null })),
+          contexte: contexteDuCreneau(suiviActuel, pour),
           refaire,
         }),
       });

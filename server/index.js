@@ -178,8 +178,8 @@ app.get('/api/recaps', origineLocale, async (_req, res) => {
 
 app.post('/api/recaps', origineLocale, async (req, res) => {
   try {
-    const { planning, habitudes, refaire } = req.body ?? {};
-    res.json(await creerRecap({ planning, habitudes }, { refaire: refaire === true }));
+    const { planning, habitudes, contexte, refaire } = req.body ?? {};
+    res.json(await creerRecap({ planning, habitudes, contexte }, { refaire: refaire === true }));
   } catch (err) {
     console.error('[Log Pose] Erreur récap:', err?.message ?? err);
     res.status(500).json({ error: 'Impossible de préparer le récap : ' + (err?.message ?? 'inconnue') });

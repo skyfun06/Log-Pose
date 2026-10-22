@@ -1,3 +1,6 @@
+/* Récap : une page de journal de bord. Un bandeau qui change avec le moment
+   (aube dorée le matin, nuit bleutée le soir), la lettre du second sur
+   parchemin, puis la journée en trois chiffres, la frise et les habitudes. */
 .page {
   flex: 1;
   min-height: 0;
@@ -5,62 +8,198 @@
   padding: clamp(14px, 2.4vw, 26px);
 }
 
-.carte {
+.journal {
   width: 100%;
-  max-width: 980px;
+  max-width: 1040px;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(185, 155, 94, 0.5);
   background:
     var(--paper-grain),
-    linear-gradient(180deg, rgba(44, 30, 18, 0.94), rgba(24, 16, 9, 0.96));
-  border: 1px solid rgba(185, 155, 94, 0.5);
-  border-radius: var(--radius-lg);
-  padding: clamp(16px, 2.2vw, 26px);
+    linear-gradient(180deg, rgba(44, 30, 18, 0.95), rgba(24, 16, 9, 0.97));
   box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation: entree 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* ===== En-tête ===== */
-.entete {
+@keyframes entree {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ===== Bandeau ===== */
+.bandeau {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  flex-wrap: wrap;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(185, 155, 94, 0.22);
+  gap: clamp(14px, 2.4vw, 28px);
+  padding: clamp(18px, 2.6vw, 30px) clamp(18px, 2.8vw, 34px);
+  border-bottom: 1px solid rgba(185, 155, 94, 0.35);
 }
 
-.titreBloc {
+.bandeauMatin {
+  background:
+    radial-gradient(60% 140% at 12% 100%, rgba(245, 222, 114, 0.28), transparent 70%),
+    linear-gradient(180deg, rgba(122, 74, 34, 0.55), rgba(44, 30, 18, 0.2));
+}
+
+.bandeauSoir {
+  background:
+    radial-gradient(60% 140% at 12% 100%, rgba(127, 176, 214, 0.22), transparent 70%),
+    linear-gradient(180deg, rgba(22, 32, 58, 0.7), rgba(24, 16, 9, 0.2));
+}
+
+.ciel {
+  flex-shrink: 0;
+  width: clamp(84px, 11vw, 124px);
+  height: auto;
+  overflow: visible;
+}
+
+.astre {
+  fill: var(--gold-100);
+  filter: drop-shadow(0 0 10px rgba(245, 222, 114, 0.65));
+}
+
+.bandeauSoir .astre {
+  fill: #e9eef5;
+  filter: drop-shadow(0 0 9px rgba(200, 220, 240, 0.6));
+}
+
+.rayons path {
+  stroke: var(--gold-200);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+
+.etoile {
+  fill: #e9eef5;
+  animation: scintille 3s ease-in-out infinite;
+}
+
+.etoile:nth-child(2) {
+  animation-delay: 0.8s;
+}
+
+.etoile:nth-child(3) {
+  animation-delay: 1.6s;
+}
+
+@keyframes scintille {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.vague {
+  fill: rgba(127, 176, 214, 0.32);
+}
+
+.vague2 {
+  fill: rgba(127, 176, 214, 0.18);
+}
+
+.bandeauSoir .vague {
+  fill: rgba(127, 176, 214, 0.22);
+}
+
+.bandeauTexte {
+  flex: 1;
   min-width: 0;
 }
 
-.titre {
-  margin: 0;
+.surtitre {
   font-family: var(--font-engraved);
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  font-size: clamp(22px, 2.6vw, 30px);
-  color: var(--gold-100);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-200);
+}
+
+.bandeauSoir .surtitre {
+  color: var(--sea);
+}
+
+.titre {
+  margin: 4px 0 0;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 42px);
+  line-height: 1.05;
+  color: var(--parch-050);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .sousTitre {
-  margin: 4px 0 0;
-  font-family: var(--font-body);
-  font-size: 15px;
+  margin: 6px 0 0;
+  font-size: 16px;
   font-style: italic;
   color: var(--parch-200);
 }
 
+.bandeauActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.feuilleter {
+  display: flex;
+  gap: 6px;
+}
+
+.fleche {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(185, 155, 94, 0.5);
+  background: rgba(10, 6, 2, 0.45);
+  color: var(--gold-100);
+  cursor: pointer;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+
+.fleche svg,
+.boutonRefaire svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fleche:hover:not(:disabled) {
+  border-color: var(--gold-200);
+  transform: translateY(-1px);
+}
+
+.fleche:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .boutonRefaire {
-  padding: 9px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 15px;
   border-radius: 999px;
   border: 1px solid var(--gold-deep);
   background: var(--grad-gold);
   color: #2c1e12;
   font-family: var(--font-engraved);
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.03em;
   cursor: pointer;
@@ -79,40 +218,33 @@
   filter: saturate(0.5) brightness(0.85);
 }
 
-/* ===== Historique : puces défilantes ===== */
-.historique {
+.tourne {
+  animation: tourne 1s linear infinite;
+}
+
+@keyframes tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fleche:focus-visible,
+.boutonRefaire:focus-visible,
+.puce:focus-visible,
+.lien:focus-visible,
+.mail:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-gold);
+}
+
+/* ===== Corps ===== */
+.corps {
   display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  flex-direction: column;
+  gap: 18px;
+  padding: clamp(16px, 2.4vw, 28px);
 }
 
-.puce {
-  flex-shrink: 0;
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(185, 155, 94, 0.35);
-  background: rgba(10, 6, 2, 0.4);
-  color: var(--parch-200);
-  font-size: 14px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.puce:hover {
-  color: var(--gold-100);
-  border-color: rgba(231, 197, 122, 0.6);
-}
-
-.puceActive,
-.puceActive:hover {
-  background: rgba(231, 197, 122, 0.18);
-  border-color: var(--gold-200);
-  color: var(--gold-050);
-}
-
-/* ===== Messages ===== */
 .alerte {
   margin: 0;
   padding: 10px 14px;
@@ -125,148 +257,1018 @@
 
 .attente {
   margin: 0;
-  padding: 18px 12px;
+  padding: 30px 12px;
   text-align: center;
   font-size: 18px;
   font-style: italic;
   color: var(--parch-200);
 }
 
-/* Mot du second, écrit par l'IA. */
-.mot {
+.ancien {
   margin: 0;
-  padding: 14px 18px;
-  border-left: 3px solid var(--gold-200);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  background: rgba(231, 197, 122, 0.08);
-  font-family: var(--font-title);
-  font-style: italic;
-  font-size: 18px;
-  line-height: 1.5;
-  color: var(--parch-050);
-  white-space: pre-line;
+  padding: 8px 14px;
+  border-radius: 999px;
+  align-self: flex-start;
+  background: rgba(127, 176, 214, 0.12);
+  border: 1px solid rgba(127, 176, 214, 0.35);
+  font-size: 15px;
+  color: var(--parch-100);
 }
 
-/* ===== Blocs ===== */
-.grille {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 14px;
-}
-
-.bloc {
-  min-width: 0;
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(185, 155, 94, 0.28);
-  background: rgba(10, 6, 2, 0.38);
-}
-
-.blocTitre {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 0 0 10px;
-  font-family: var(--font-engraved);
+.lien {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold-100);
+  font: inherit;
   font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* --- La lettre du second --- */
+.lettre {
+  position: relative;
+  margin: 0;
+  padding: clamp(18px, 2.4vw, 26px) clamp(20px, 3vw, 34px);
+  border-radius: 12px;
+  background:
+    var(--paper-grain),
+    radial-gradient(120% 90% at 50% 0%, var(--parch-050), var(--parch-100) 60%, var(--parch-200));
+  border: 1px solid var(--gold-deep);
+  color: var(--ink-700);
+  box-shadow: var(--shadow-md), inset 0 0 40px rgba(122, 90, 46, 0.18);
+  transform: rotate(-0.4deg);
+}
+
+.lettre::before {
+  content: '“';
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  font-family: var(--font-title);
+  font-size: 84px;
+  line-height: 1;
+  color: rgba(138, 106, 46, 0.35);
+}
+
+.mot {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(19px, 2vw, 23px);
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.signature {
+  margin-top: 10px;
+  text-align: right;
+  font-family: var(--font-engraved);
   font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--gold-deep);
+}
+
+/* --- Les trois chiffres --- */
+.indicateurs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.indicateur {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(185, 155, 94, 0.3);
+  background: rgba(10, 6, 2, 0.35);
+}
+
+.indicateurValeur {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1;
+  color: var(--gold-100);
+}
+
+.indicateurSur {
+  font-size: 22px;
+  color: var(--parch-300);
+}
+
+.indicateurLabel {
+  font-family: var(--font-engraved);
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--gold-300);
+  color: var(--parch-200);
 }
 
-.compteur {
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0;
-  text-transform: none;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: rgba(185, 155, 94, 0.16);
-  color: var(--gold-200);
-}
-
-.blocVide {
-  margin: 0;
-  font-size: 16px;
+.indicateurDetail {
+  margin-top: 4px;
+  font-size: 15px;
   font-style: italic;
   color: var(--parch-300);
 }
 
-.liste {
+.jauge {
+  margin-top: 8px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(230, 211, 166, 0.14);
+}
+
+.jauge span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--grad-gold);
+}
+
+/* --- Blocs --- */
+.grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.bloc {
+  min-width: 0;
+  padding: 16px 18px 18px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(185, 155, 94, 0.28);
+  background: rgba(10, 6, 2, 0.32);
+}
+
+.blocTitre {
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--font-engraved);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-200);
+}
+
+.compteur {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(185, 155, 94, 0.18);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--gold-100);
+}
+
+.blocVide {
+  margin: 0;
+  font-size: 17px;
+  font-style: italic;
+  color: var(--parch-300);
+}
+
+/* --- Frise du programme --- */
+.frise {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.etape {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px 18px minmax(0, 1fr);
+  gap: 0 10px;
+  padding-bottom: 14px;
+}
+
+.etape:last-child {
+  padding-bottom: 0;
+}
+
+/* Le fil de la frise relie les points. */
+.etape::before {
+  content: '';
+  position: absolute;
+  left: calc(48px + 10px + 8px);
+  top: 18px;
+  bottom: -2px;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(185, 155, 94, 0.5), rgba(185, 155, 94, 0.2));
+}
+
+.etape:last-child::before {
+  display: none;
+}
+
+.etapeHeure {
+  padding-top: 1px;
+  font-family: var(--font-engraved);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold-200);
+  text-align: right;
+}
+
+.etapePoint {
+  width: 12px;
+  height: 12px;
+  margin: 4px 0 0 3px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-300);
+  background: var(--ink-800);
+}
+
+.etapeCorps {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.etapeTitre {
+  font-family: var(--font-title);
+  font-size: 17px;
+  line-height: 1.25;
+  color: var(--parch-050);
+  overflow-wrap: anywhere;
+}
+
+.etapeMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--parch-300);
+}
+
+.etapePassee {
+  opacity: 0.5;
+}
+
+.etapePassee .etapePoint {
+  background: var(--gold-300);
+}
+
+.etapeEnCours .etapePoint {
+  border-color: var(--gold-100);
+  background: var(--gold-100);
+  box-shadow: 0 0 0 4px rgba(245, 222, 114, 0.2), 0 0 12px rgba(245, 222, 114, 0.6);
+}
+
+.etapeEnCours .etapeTitre {
+  color: var(--gold-050);
+}
+
+.enCours {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--grad-gold);
+  color: #2c1e12;
+  font-family: var(--font-engraved);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --- Check-list du jour (récap d'aujourd'hui, cochable) --- */
+.checkEntete {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.checkTitre {
+  margin: 0;
+  font-family: var(--font-engraved);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-200);
+}
+
+.checkSous {
+  margin: 3px 0 0;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--parch-300);
+}
+
+.anneau {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+}
+
+.anneau svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.anneauFond,
+.anneauPlein {
+  fill: none;
+  stroke-width: 5;
+}
+
+.anneauFond {
+  stroke: rgba(230, 211, 166, 0.14);
+}
+
+.anneauPlein {
+  stroke: var(--gold-200);
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.4s ease;
+}
+
+.anneauTexte {
+  font-family: var(--font-engraved);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gold-100);
+}
+
+.groupe + .groupe,
+.groupe + .reglees {
+  margin-top: 14px;
+}
+
+.groupeTitre {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-engraved);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--parch-300);
+}
+
+.aFaire {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 4px;
 }
 
-.ligne {
+.aFaireLigne {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: stretch;
+  gap: 4px;
 }
 
-.heure {
-  flex-shrink: 0;
-  font-family: var(--font-engraved);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--gold-200);
-  font-variant-numeric: tabular-nums;
-}
-
-.texte {
+.aFaireBouton {
+  flex: 1;
   min-width: 0;
-  font-family: var(--font-title);
-  font-size: 16px;
-  color: var(--parch-050);
-  overflow-wrap: anywhere;
-}
-
-.mail {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 9px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(185, 155, 94, 0.2);
+  align-items: center;
+  gap: 11px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(230, 211, 166, 0.05);
   color: inherit;
-  text-decoration: none;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
-.mail:hover {
-  border-color: rgba(231, 197, 122, 0.6);
-  background: rgba(10, 6, 2, 0.4);
+.aFaireBouton:hover {
+  border-color: rgba(63, 138, 76, 0.5);
+  background: rgba(63, 138, 76, 0.12);
 }
 
-.mail:focus-visible {
+.caseVide {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 1.5px solid rgba(185, 155, 94, 0.65);
+  color: transparent;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+
+.caseVide svg,
+.rater svg,
+.reglee svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Au survol, la coche apparaît : on voit ce que fait le clic. */
+.aFaireBouton:hover .caseVide {
+  border-color: #6fbf7c;
+  color: #6fbf7c;
+}
+
+.aFaireNom {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  color: var(--parch-050);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aFaireSemaine {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(127, 176, 214, 0.15);
+  font-family: var(--font-engraved);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sea);
+}
+
+.rater {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--parch-300);
+  opacity: 0.45;
+  cursor: pointer;
+  transition: opacity 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.aFaireLigne:hover .rater,
+.rater:focus-visible {
+  opacity: 1;
+}
+
+.rater:hover {
+  border-color: rgba(229, 139, 127, 0.5);
+  color: #e58b7f;
+}
+
+.aFaireBouton:focus-visible,
+.rater:focus-visible,
+.reglee:focus-visible,
+.detail summary:focus-visible {
   outline: none;
   box-shadow: var(--ring-gold);
 }
 
+/* Ce qui est déjà réglé : une ligne compacte, cliquable pour annuler. */
+.reglees {
+  padding-top: 12px;
+  border-top: 1px dashed rgba(185, 155, 94, 0.25);
+}
+
+.regleesListe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.reglee {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 3px 10px 3px 7px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.regleeFaite {
+  background: rgba(63, 138, 76, 0.18);
+  color: #a8dcb1;
+}
+
+.regleeRatee {
+  background: rgba(179, 58, 46, 0.14);
+  color: #e3a59c;
+  text-decoration: line-through;
+  text-decoration-color: rgba(229, 139, 127, 0.5);
+}
+
+.reglee:hover {
+  border-color: rgba(230, 211, 166, 0.4);
+}
+
+/* --- Colonne de droite (check-list + objectifs) --- */
+.colonne {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.blocDate {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--parch-300);
+}
+
+/* --- Priorités --- */
+.priorites {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.priorite {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.prioriteRang {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-deep);
+  background: var(--grad-gold);
+  box-shadow: var(--shadow-sm), var(--inset-top);
+  font-family: var(--font-engraved);
+  font-size: 16px;
+  font-weight: 800;
+  color: #2c1e12;
+}
+
+.prioriteCorps {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.prioriteHeure {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--parch-300);
+}
+
+.prioriteTexte {
+  font-family: var(--font-title);
+  font-size: 18px;
+  line-height: 1.25;
+  color: var(--parch-050);
+}
+
+.conseil {
+  margin: 16px 0 0;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border-left: 3px solid var(--sea);
+  background: rgba(127, 176, 214, 0.1);
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--parch-100);
+}
+
+.conseilTitre {
+  display: block;
+  margin-bottom: 2px;
+  font-family: var(--font-engraved);
+  font-size: 11px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sea);
+}
+
+/* --- Bilan du jour --- */
+.sousTitreBloc {
+  margin: 14px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-engraved);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--parch-200);
+}
+
+.blocTitre + .sousTitreBloc {
+  margin-top: 0;
+}
+
+.pastilleVerte,
+.pastilleRouge {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.pastilleVerte {
+  background: #6fbf7c;
+  box-shadow: 0 0 6px rgba(111, 191, 124, 0.7);
+}
+
+.pastilleRouge {
+  background: #e58b7f;
+}
+
+.reussites,
+.rattraper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.reussite {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: rgba(63, 138, 76, 0.13);
+}
+
+.reussiteNom {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  color: #d4f0d9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Série de jours d'affilée : une petite flamme. */
+.serie {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(224, 134, 52, 0.2);
+  font-family: var(--font-engraved);
+  font-size: 12px;
+  font-weight: 800;
+  color: #f2b06b;
+}
+
+.serie svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.hebdoBadge {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(127, 176, 214, 0.15);
+  font-size: 12px;
+  color: var(--sea);
+}
+
+.rattraper li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 10px;
+  border-radius: 9px;
+  font-size: 16px;
+}
+
+.rattraperRate {
+  background: rgba(179, 58, 46, 0.14);
+  color: #f0c2bb;
+}
+
+.rattraperOubli {
+  background: rgba(230, 211, 166, 0.05);
+  color: var(--parch-200);
+}
+
+.rattraperEtat {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--parch-300);
+}
+
+/* --- Objectifs de la semaine --- */
+.objectifs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.objectif {
+  --statut: var(--gold-200);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.objectifHaut {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.objectifNom {
+  min-width: 0;
+  font-size: 16px;
+  color: var(--parch-050);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.objectifCompte {
+  flex-shrink: 0;
+  font-family: var(--font-engraved);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--parch-100);
+}
+
+.objectifJauge {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(230, 211, 166, 0.12);
+}
+
+.objectifJauge span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--statut);
+}
+
+.objectifStatut {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--statut);
+}
+
+.statut-atteint {
+  --statut: #6fbf7c;
+}
+
+.statut-en-route {
+  --statut: var(--gold-200);
+}
+
+.statut-serre {
+  --statut: #f2b06b;
+}
+
+.statut-hors-portee {
+  --statut: #e58b7f;
+}
+
+/* --- Courrier --- */
+.mails {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mail {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(185, 155, 94, 0.25);
+  background: rgba(10, 6, 2, 0.3);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.mail:hover {
+  transform: translateX(2px);
+  border-color: rgba(231, 197, 122, 0.6);
+}
+
+/* Sceau de cire avec l'initiale de l'expéditeur. */
+.sceau {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d0574a, var(--red-deep));
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.4);
+  font-family: var(--font-engraved);
+  font-weight: 800;
+  font-size: 15px;
+  color: #fbe3d8;
+}
+
+.mailCorps {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .expediteur {
   font-family: var(--font-engraved);
+  font-size: 13px;
   font-weight: 700;
-  font-size: 12px;
   letter-spacing: 0.04em;
   color: var(--gold-200);
+}
+
+.objet {
+  font-family: var(--font-title);
+  font-size: 17px;
+  color: var(--parch-050);
+  overflow-wrap: anywhere;
 }
 
 .raison {
   font-size: 15px;
   font-style: italic;
-  color: var(--parch-200);
+  color: var(--parch-300);
 }
 
-.pied {
-  margin: 0;
-  text-align: center;
-  font-size: 14px;
+/* --- Journal des récaps --- */
+.historique {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(185, 155, 94, 0.2);
+}
+
+.historiqueTitre {
+  font-family: var(--font-engraved);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--parch-300);
+}
+
+.puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 155, 94, 0.35);
+  background: transparent;
+  color: var(--parch-200);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.puce:hover {
+  border-color: var(--gold-200);
+}
+
+.puceActive {
+  border-color: var(--gold-deep);
+  background: var(--grad-gold);
+  color: #2c1e12;
+}
+
+.puceSoleil,
+.puceLune {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.puceSoleil {
+  background: var(--gold-100);
+  box-shadow: 0 0 5px rgba(245, 222, 114, 0.8);
+}
+
+.puceLune {
+  background: #c9d6e6;
+  box-shadow: inset -3px -1px 0 #4a5a75;
+}
+
+.puceActive .puceSoleil {
+  background: #8a5a12;
+  box-shadow: none;
+}
+
+/* ===== Petit écran ===== */
+@media (max-width: 760px) {
+  .bandeau {
+    flex-wrap: wrap;
+  }
+
+  .ciel {
+    width: 72px;
+  }
+
+  .bandeauActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .indicateurs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .indicateur {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 2px 12px;
+  }
+
+  .indicateurValeur {
+    grid-row: span 2;
+    align-self: center;
+  }
+
+  .jauge {
+    grid-column: 2;
+  }
+
+  .grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lettre {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journal,
+  .etoile,
+  .tourne {
+    animation: none;
+  }
 }

@@ -99,7 +99,15 @@ function App() {
     (f) => f.categorie === CATEGORIE_PAIE && montantFiche(f) === null,
   );
 
-  const recaps = useRecaps(blocsPlanning, habitudesDuJour);
+  const toutesHabitudes = useMemo(
+    () => [...habitudesQuotidiennes, ...habitudesHebdomadaires],
+    [habitudesQuotidiennes, habitudesHebdomadaires],
+  );
+  const recaps = useRecaps(blocsPlanning, habitudesDuJour, {
+    habitudes: toutesHabitudes,
+    marques,
+    joursMalades,
+  });
   const recapNonLu = useRecapNonLu(recaps.recaps[0]?.cle ?? null, vue === 'recap');
 
   // ⚠️ TEMPORAIRE — mesure des dimensions rendues (à RETIRER après usage).
@@ -182,7 +190,16 @@ function App() {
           </main>
         )}
 
-        {vue === 'recap' && <RecapPage {...recaps} />}
+        {vue === 'recap' && (
+          <RecapPage
+            {...recaps}
+            habitudesDuJour={habitudesDuJour}
+            onCocherHabitude={cocherAujourdhui}
+            toutesHabitudes={toutesHabitudes}
+            marquesHabitudes={marques}
+            joursMalades={joursMalades}
+          />
+        )}
 
         {vue === 'planning' && (
           <PlanningPage

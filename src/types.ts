@@ -122,6 +122,12 @@ export interface CreneauRecap {
   depuis: string; // ISO : les mails reçus après cette date sont « nouveaux »
 }
 
+// Un créneau du programme retenu comme priorité, repris mot pour mot.
+export interface BlocPrioritaire {
+  titre: string;
+  heureDebut: string;
+}
+
 export interface BlocRecap {
   titre: string;
   heureDebut: string;
@@ -137,6 +143,8 @@ export interface Recap {
   habitudes: { nom: string; etat: EtatHabitude | null }[];
   courrier: { configure: boolean; nouveaux: MailImportant[]; nonLus: number };
   mot: string | null; // mot d'introduction écrit par l'IA
+  priorites?: BlocPrioritaire[]; // créneaux clés choisis par l'IA (absents des vieux récaps)
+  conseil?: string | null; // conseil de l'IA pour la suite
   erreurs: string[];
 }
 
