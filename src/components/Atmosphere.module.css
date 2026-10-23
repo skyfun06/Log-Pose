@@ -1,0 +1,22 @@
+/* Par-dessus le contenu de la page (l'air passe devant les cartes), mais
+   sous les barres du haut et du bas (z-index 5) et les fenêtres. Jamais
+   cliquable. */
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+/* Lueur d'éclair (ère Empereur). */
+.flash {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(120% 90% at 50% 0%, rgba(200, 160, 255, 0.22), rgba(126, 64, 196, 0.06) 60%, transparent);
+}

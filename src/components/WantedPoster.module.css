@@ -1,4 +1,22 @@
 .colonne {
+  /* Largeur fluide, calée sur la HAUTEUR dispo pour que l'affiche + les boutons
+     tiennent toujours dans l'écran (ratio affiche = 0.738). Le terme soustrait
+     (~250px) réserve la place des barres haut/bas, du padding, et des atouts +
+     bouton sous l'affiche. Plafonnée en largeur pour ne pas exploser sur 2K. */
+  width: clamp(200px, min(38vw, (100svh - 290px) * 0.738), 540px);
+  height: 100%;
+  min-height: 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.4vh, 12px);
+}
+
+/* L'affiche est clouée au mur, légèrement de travers. */
+/* (C'est un bouton : il ouvre le panneau d'ascension.) */
+.affiche {
   /* Case photo : coïncide avec le cadre imprimé sous "WANTED" (mesuré sur affiche-wanted.png) */
   --photo-top: 22%;
   --photo-left: 14%;
@@ -18,24 +36,14 @@
   --prime-taille: 11.5cqw;
   --prime-sub-taille: 3.8cqw;
 
-  /* Largeur fluide, calée sur la HAUTEUR dispo pour que l'affiche + les boutons
-     tiennent toujours dans l'écran (ratio affiche = 0.738). Le terme soustrait
-     (~250px) réserve la place des barres haut/bas, du padding, et des atouts +
-     bouton sous l'affiche. Plafonnée en largeur pour ne pas exploser sur 2K. */
-  width: clamp(200px, min(38vw, (100svh - 290px) * 0.738), 540px);
-  height: 100%;
-  min-height: 0;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(8px, 1.4vh, 12px);
-}
-
-/* L'affiche est clouée au mur, légèrement de travers. */
-.affiche {
   position: relative;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: inherit;
+  color: inherit;
   width: 100%;
   flex-shrink: 0;
   /* Conteneur de référence pour dimensionner le texte de l'affiche (cqw). */
@@ -304,9 +312,211 @@
   transform: translateY(0);
 }
 
+/* L'affiche encaisse un gain : petit sursaut, la prime s'illumine. */
+.encaisse {
+  animation: encaisse 0.55s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.encaisse .montantPrime {
+  animation: brille 1.2s ease-out;
+}
+
+@keyframes encaisse {
+  30% {
+    transform: rotate(0.6deg) scale(1.025);
+  }
+  60% {
+    transform: rotate(-2.2deg) scale(0.995);
+  }
+}
+
+@keyframes brille {
+  20% {
+    color: #8a5a10;
+    text-shadow:
+      0 0 10px rgba(245, 222, 114, 0.9),
+      0 0 24px rgba(245, 222, 114, 0.6);
+  }
+}
+
+/* ===== Marques du rang (voir data/paliers.ts) ===== */
+
+/* Épithète : tamponnée à l'encre rouge en bas de la photo. */
+.epithete {
+  position: absolute;
+  right: 5%;
+  bottom: 7%;
+  max-width: 86%;
+  padding: 0.6cqw 2.2cqw;
+  border: 0.7cqw double rgba(150, 30, 22, 0.85);
+  border-radius: 1cqw;
+  transform: rotate(-5deg);
+  font-family: var(--font-engraved);
+  font-weight: 800;
+  font-size: 4.2cqw;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8f1d14;
+  background: rgba(238, 224, 190, 0.86);
+  box-shadow: 0 0.4cqw 1cqw rgba(40, 20, 10, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Cachet de cire posé sur le petit texte du bas, frappé du numéro de palier.
+   Sa cire change avec l'ère. */
+.sceau {
+  --cire: #a3281e;
+  --cire-clair: #d44a3a;
+  --cire-fonce: #5e120c;
+  --frappe: rgba(255, 220, 200, 0.75);
+
+  position: absolute;
+  left: 9%;
+  top: 84%;
+  width: 15cqw;
+  height: 15cqw;
+  display: grid;
+  place-items: center;
+  border-radius: 46% 54% 50% 50% / 52% 48% 54% 46%;
+  background: radial-gradient(circle at 36% 30%, var(--cire-clair), var(--cire) 55%, var(--cire-fonce) 100%);
+  box-shadow:
+    inset 0 0 0 1.6cqw rgba(0, 0, 0, 0.12),
+    inset 0 -0.8cqw 1.2cqw rgba(0, 0, 0, 0.35),
+    0 0.6cqw 1.2cqw rgba(40, 20, 10, 0.45);
+  transform: rotate(-12deg);
+}
+
+.sceau::before {
+  content: '';
+  position: absolute;
+  inset: 2.4cqw;
+  border-radius: 50%;
+  border: 0.45cqw dashed var(--frappe);
+  opacity: 0.6;
+}
+
+.sceauNumero {
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 6cqw;
+  line-height: 1;
+  color: var(--frappe);
+  text-shadow: 0 -0.2cqw 0 rgba(0, 0, 0, 0.35);
+}
+
+[data-ere='grand-line'] .sceau {
+  --cire: #1f4f7a;
+  --cire-clair: #3d7fb6;
+  --cire-fonce: #0d2740;
+  --frappe: #f5de72;
+}
+
+[data-ere='nouveau-monde'] .sceau {
+  --cire: #1c1614;
+  --cire-clair: #4a3c36;
+  --cire-fonce: #070505;
+  --frappe: #e0574a;
+}
+
+[data-ere='empereur'] .sceau {
+  --cire: #5a2a8c;
+  --cire-clair: #8c55c8;
+  --cire-fonce: #2a1045;
+  --frappe: #ffe27a;
+}
+
+[data-ere='roi'] .sceau {
+  --cire: #c99a2e;
+  --cire-clair: #ffe38a;
+  --cire-fonce: #7a5520;
+  --frappe: #3b2a18;
+}
+
+/* Aura derrière l'affiche : rien dans l'East Blue, puis de plus en plus
+   intense. */
+.aura {
+  position: absolute;
+  inset: -7%;
+  z-index: -1;
+  border-radius: 12%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+[data-ere='grand-line'].affiche {
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 1px #f5de72)
+    drop-shadow(0 0 8px rgba(245, 222, 114, 0.45));
+}
+
+[data-ere='nouveau-monde'] .aura {
+  inset: 3%;
+  opacity: 1;
+  box-shadow:
+    0 0 30px 14px rgba(255, 96, 78, 0.7),
+    0 0 90px 34px rgba(200, 30, 20, 0.45);
+  animation: haki 3.2s ease-in-out infinite;
+}
+
+/* Haki des rois : halo pourpre + éclairs qui crépitent tout autour. */
+[data-ere='empereur'] .aura {
+  inset: 3%;
+  opacity: 1;
+  box-shadow:
+    0 0 34px 16px rgba(150, 90, 230, 0.55),
+    0 0 100px 34px rgba(60, 20, 110, 0.5);
+  animation: haki 1.6s steps(5) infinite;
+}
+
+[data-ere='empereur'] .aura::before {
+  content: '';
+  position: absolute;
+  inset: -16%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0 11deg,
+    rgba(214, 180, 255, 0.85) 11.5deg,
+    transparent 12.5deg 26deg
+  );
+  mask-image: radial-gradient(closest-side, transparent 55%, #000 70%, transparent 100%);
+  animation: tourne 9s steps(24) infinite;
+}
+
+/* Roi : rayons dorés qui tournent lentement derrière l'affiche. */
+[data-ere='roi'] .aura {
+  inset: -24%;
+  opacity: 1;
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(from 0deg, rgba(255, 224, 138, 0.5) 0 6deg, transparent 6deg 18deg),
+    radial-gradient(closest-side, rgba(255, 224, 138, 0.6), transparent 75%);
+  mask-image: radial-gradient(closest-side, #000 40%, transparent 100%);
+  animation: tourne 40s linear infinite;
+}
+
+@keyframes haki {
+  50% {
+    opacity: 0.55;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes tourne {
+  to {
+    rotate: 360deg;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .affiche {
     transition: none;
+  }
+
+  .aura,
+  .aura::before {
+    animation: none !important;
   }
 }
 

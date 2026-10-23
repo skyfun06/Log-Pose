@@ -1,7 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { iles } from '../data/iles';
+import { indexPalier } from '../data/paliers';
 import { PROGRAMME_CONSEILLE, VERSION_PROGRAMME } from '../data/programme';
-import type { BlocPlanning, JourSemaine, Mission, StatutMission } from '../types';
+import type {
+  BlocPlanning,
+  Difficulte,
+  Etape,
+  Gain,
+  Ile,
+  JourSemaine,
+  Mission,
+  StatutMission,
+} from '../types';
 
 const STORAGE_KEY = 'log-pose-state';
 
@@ -18,12 +28,30 @@ function dateDuJour(): string {
 
 // Avant de remplacer l'emploi du temps par le programme conseillé, l'ancien
 // est mis de côté ici (on peut le restaurer à la main au besoin).
+// Remise à zéro de la prime demandée par Louis : augmenter ce numéro vide le
+// registre des gains une fois, au prochain chargement (les butins promis et le
+// reste de l'état sont gardés).
+const VERSION_REMISE_PRIME = 3;
+
 const CLE_SAUVEGARDE_PLANNING = 'log-pose-planning-avant-programme';
 
 interface GameState {
-  prime: number;
+  // Registre des gains : la prime en est la somme (on peut annuler un gain).
+  gains: Gain[];
+  // Dernier palier dont la cérémonie a été vue : tant qu'il est en retard sur
+  // le palier atteint, la cérémonie s'affiche (même après rechargement).
+  palierCelebre: number;
+  // Date (ISO) à laquelle chaque palier a été atteint.
+  atteintLe: Record<number, string>;
+  // Récompense réelle que Louis se promet pour chaque palier.
+  butins: Record<number, string>;
+  versionRemisePrime?: number;
   currentIslandId: number;
   logPose: Record<number, number>;
+  // Îles conquises sur la carte : id → date (ISO) de la conquête.
+  ilesConquises: Record<number, string>;
+  // Étapes de la quête de chaque île (objectifs à cocher).
+  etapes: Record<number, Etape[]>;
   blocsPlanning: BlocPlanning[];
   statutsMissions: Record<string, StatutMission>;
   dateStatuts: string;
@@ -32,9 +60,15 @@ interface GameState {
 }
 
 const defaultState: GameState = {
-  prime: 0,
+  gains: [],
+  palierCelebre: 0,
+  atteintLe: {},
+  butins: {},
+  versionRemisePrime: VERSION_REMISE_PRIME,
   currentIslandId: iles[0].id,
   logPose: {},
+  ilesConquises: {},
+  etapes: etapesCompletes({}),
   blocsPlanning: PROGRAMME_CONSEILLE,
   statutsMissions: {},
   dateStatuts: dateDuJour(),
@@ -54,18 +88,80 @@ function programmeAJour(parsed: Partial<GameState>): BlocPlanning[] {
   return PROGRAMME_CONSEILLE;
 }
 
+// Une île sans étapes réglées reçoit les étapes suggérées (une seule fois :
+// elles sont ensuite enregistrées et modifiables).
+function etapesSuggerees(ile: Ile): Etape[] {
+  const maintenant = new Date().toISOString();
+  return ile.etapesSuggerees.map((e, i) => ({
+    id: `sugg-${ile.id}-${i}`,
+    texte: e.texte,
+    difficulte: e.difficulte,
+    creeLe: maintenant,
+  }));
+}
+
+function etapesCompletes(etapes: Record<number, Etape[]>): Record<number, Etape[]> {
+  const complet = { ...etapes };
+  for (const ile of iles)
+    if (!Array.isArray(complet[ile.id])) complet[ile.id] = etapesSuggerees(ile);
+  return complet;
+}
+
+// Toutes les étapes de l'île visée sont faites : l'île est conquise et le
+// navire met le cap sur la suivante.
+function avecConquete(etat: GameState): GameState {
+  const id = etat.currentIslandId;
+  const liste = etat.etapes[id] ?? [];
+  if (etat.ilesConquises[id] || liste.length === 0 || liste.some((e) => !e.faiteLe)) return etat;
+  const idx = iles.findIndex((i) => i.id === id);
+  const suivante = iles[idx + 1];
+  return {
+    ...etat,
+    ilesConquises: { ...etat.ilesConquises, [id]: new Date().toISOString() },
+    currentIslandId: suivante ? suivante.id : id,
+  };
+}
+
+// Avancement vers l'île visée : part (pondérée par la difficulté) des étapes
+// faites.
+export function avancementEtapes(liste: Etape[]): number {
+  const total = liste.reduce((t, e) => t + e.difficulte, 0);
+  if (total === 0) return 0;
+  return liste.reduce((t, e) => t + (e.faiteLe ? e.difficulte : 0), 0) / total;
+}
+
+export interface ResultatEtape {
+  faite: boolean; // l'étape vient d'être cochée (et non décochée)
+  difficulte: Difficulte;
+  conquise: Ile | null; // île conquise par ce coup
+}
+
+function somme(gains: Gain[]): number {
+  return Math.round(gains.reduce((total, g) => total + g.montant, 0) * 100) / 100;
+}
+
 function loadState(): GameState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState;
     const parsed = JSON.parse(raw) as Partial<GameState>;
+    // L'ancien compteur « prime » (sans registre) est abandonné : passer au
+    // registre des gains repart de 0 €.
+    const remise = (parsed.versionRemisePrime ?? 0) < VERSION_REMISE_PRIME;
+    const gains = Array.isArray(parsed.gains) && !remise ? parsed.gains : defaultState.gains;
     return {
-      prime: typeof parsed.prime === 'number' ? parsed.prime : defaultState.prime,
+      gains,
+      palierCelebre: Math.min(parsed.palierCelebre ?? 0, indexPalier(somme(gains))),
+      atteintLe: remise ? {} : (parsed.atteintLe ?? defaultState.atteintLe),
+      versionRemisePrime: VERSION_REMISE_PRIME,
+      butins: parsed.butins ?? defaultState.butins,
       currentIslandId:
         typeof parsed.currentIslandId === 'number'
           ? parsed.currentIslandId
           : defaultState.currentIslandId,
       logPose: parsed.logPose ?? defaultState.logPose,
+      ilesConquises: parsed.ilesConquises ?? defaultState.ilesConquises,
+      etapes: etapesCompletes(parsed.etapes ?? {}),
       blocsPlanning: programmeAJour(parsed),
       statutsMissions: parsed.statutsMissions ?? defaultState.statutsMissions,
       dateStatuts: parsed.dateStatuts ?? defaultState.dateStatuts,
@@ -104,9 +200,140 @@ export function useGameState() {
       }));
   }, [state.blocsPlanning, state.statutsMissions]);
 
-  const ajouterGain = useCallback((montant: number) => {
+  const ajouterGain = useCallback((montant: number, note?: string) => {
     if (!Number.isFinite(montant) || montant <= 0) return;
-    setState((prev) => ({ ...prev, prime: prev.prime + montant }));
+    setState((prev) => {
+      const date = new Date().toISOString();
+      const gain: Gain = { id: crypto.randomUUID(), montant, date, ...(note ? { note } : {}) };
+      const gains = [...prev.gains, gain];
+      // Date d'atteinte des paliers franchis par ce gain.
+      const avant = indexPalier(somme(prev.gains));
+      const apres = indexPalier(somme(gains));
+      const atteintLe = { ...prev.atteintLe };
+      for (let i = avant + 1; i <= apres; i++) atteintLe[i] ??= date;
+      return { ...prev, gains, atteintLe };
+    });
+  }, []);
+
+  // Annuler un gain (erreur de saisie) : si la prime retombe sous un palier,
+  // celui-ci redevient à conquérir (et sa cérémonie rejouera).
+  const supprimerGain = useCallback((id: string) => {
+    setState((prev) => {
+      const gains = prev.gains.filter((g) => g.id !== id);
+      const index = indexPalier(somme(gains));
+      const atteintLe = Object.fromEntries(
+        Object.entries(prev.atteintLe).filter(([i]) => Number(i) <= index),
+      );
+      return { ...prev, gains, atteintLe, palierCelebre: Math.min(prev.palierCelebre, index) };
+    });
+  }, []);
+
+  // Repartir de 0 € (les butins promis sont gardés).
+  const remettrePrimeAZero = useCallback(() => {
+    setState((prev) => ({ ...prev, gains: [], atteintLe: {}, palierCelebre: 0 }));
+  }, []);
+
+  // Miroir de l'état pour connaître le résultat d'une action avant le rendu.
+  const etatRef = useRef(state);
+  etatRef.current = state;
+
+  // Coche ou décoche une étape de l'île visée ; la dernière étape cochée
+  // conquiert l'île.
+  const basculerEtape = useCallback((ileId: number, etapeId: string): ResultatEtape | null => {
+    const prev = etatRef.current;
+    if (ileId !== prev.currentIslandId || prev.ilesConquises[ileId]) return null;
+    const etape = (prev.etapes[ileId] ?? []).find((e) => e.id === etapeId);
+    if (!etape) return null;
+    const faite = !etape.faiteLe;
+    const liste = (prev.etapes[ileId] ?? []).map((e) =>
+      e.id === etapeId ? { ...e, faiteLe: faite ? new Date().toISOString() : undefined } : e,
+    );
+    const suivant = avecConquete({ ...prev, etapes: { ...prev.etapes, [ileId]: liste } });
+    etatRef.current = suivant;
+    setState(suivant);
+    return {
+      faite,
+      difficulte: etape.difficulte,
+      conquise: suivant.ilesConquises[ileId] ? (iles.find((i) => i.id === ileId) ?? null) : null,
+    };
+  }, []);
+
+  const ajouterEtape = useCallback((ileId: number, texte: string, difficulte: Difficulte) => {
+    if (!texte.trim()) return;
+    setState((prev) => {
+      const etape: Etape = {
+        id: crypto.randomUUID(),
+        texte: texte.trim(),
+        difficulte,
+        creeLe: new Date().toISOString(),
+      };
+      return {
+        ...prev,
+        etapes: { ...prev.etapes, [ileId]: [...(prev.etapes[ileId] ?? []), etape] },
+      };
+    });
+  }, []);
+
+  const modifierEtape = useCallback(
+    (ileId: number, etapeId: string, patch: { texte?: string; difficulte?: Difficulte }) => {
+      setState((prev) => ({
+        ...prev,
+        etapes: {
+          ...prev.etapes,
+          [ileId]: (prev.etapes[ileId] ?? []).map((e) =>
+            e.id === etapeId ? { ...e, ...patch, texte: patch.texte?.trim() || e.texte } : e,
+          ),
+        },
+      }));
+    },
+    [],
+  );
+
+  const supprimerEtape = useCallback((ileId: number, etapeId: string) => {
+    setState((prev) =>
+      avecConquete({
+        ...prev,
+        etapes: {
+          ...prev.etapes,
+          [ileId]: (prev.etapes[ileId] ?? []).filter((e) => e.id !== etapeId),
+        },
+      }),
+    );
+  }, []);
+
+  // Annule la dernière conquête : le navire repart vers cette île, dont la
+  // dernière étape cochée redevient à faire.
+  const revenirIle = useCallback(() => {
+    setState((prev) => {
+      const idx = iles.findIndex((i) => i.id === prev.currentIslandId);
+      const actuelleConquise = prev.ilesConquises[prev.currentIslandId] !== undefined;
+      const cible = actuelleConquise ? iles[idx] : iles[idx - 1];
+      if (!cible || !prev.ilesConquises[cible.id]) return prev;
+      const ilesConquises = { ...prev.ilesConquises };
+      delete ilesConquises[cible.id];
+      const liste = prev.etapes[cible.id] ?? [];
+      const derniere = liste
+        .filter((e) => e.faiteLe)
+        .sort((a, b) => (b.faiteLe ?? '').localeCompare(a.faiteLe ?? ''))[0];
+      const etapes = {
+        ...prev.etapes,
+        [cible.id]: liste.map((e) => (e.id === derniere?.id ? { ...e, faiteLe: undefined } : e)),
+      };
+      return { ...prev, ilesConquises, etapes, currentIslandId: cible.id };
+    });
+  }, []);
+
+  const celebrerPalier = useCallback(() => {
+    setState((prev) => ({ ...prev, palierCelebre: indexPalier(somme(prev.gains)) }));
+  }, []);
+
+  const definirButin = useCallback((index: number, texte: string) => {
+    setState((prev) => {
+      const butins = { ...prev.butins };
+      if (texte.trim()) butins[index] = texte;
+      else delete butins[index];
+      return { ...prev, butins };
+    });
   }, []);
 
   const validerMission = useCallback((id: string) => {
@@ -194,16 +421,32 @@ export function useGameState() {
     });
   }, []);
 
-  const bounty = state.prime * 1000;
+  const prime = somme(state.gains);
+  const bounty = prime * 1000;
   const currentIle = iles.find((i) => i.id === state.currentIslandId) ?? iles[0];
   const logPoseActuel = state.logPose[state.currentIslandId] ?? 0;
 
   return {
-    prime: state.prime,
+    prime,
     bounty,
+    gains: state.gains,
+    palierCelebre: state.palierCelebre,
+    atteintLe: state.atteintLe,
+    butins: state.butins,
+    supprimerGain,
+    remettrePrimeAZero,
+    celebrerPalier,
+    definirButin,
     currentIle,
     totalIles: iles.length,
     logPose: logPoseActuel,
+    ilesConquises: state.ilesConquises,
+    etapes: state.etapes,
+    basculerEtape,
+    ajouterEtape,
+    modifierEtape,
+    supprimerEtape,
+    revenirIle,
     missions,
     blocsPlanning: state.blocsPlanning,
     ajouterGain,

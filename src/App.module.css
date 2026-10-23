@@ -14,7 +14,8 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(120% 90% at 50% 32%, transparent 42%, rgba(21, 13, 5, 0.55) 100%),
+    var(--teinte-ere),
+    radial-gradient(120% 90% at 50% 32%, transparent 42%, color-mix(in srgb, var(--ink-900) 55%, transparent) 100%),
     linear-gradient(180deg, rgba(21, 13, 5, 0.35) 0%, transparent 22%, transparent 78%, rgba(21, 13, 5, 0.4) 100%);
 }
 

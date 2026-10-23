@@ -1,0 +1,685 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 6, 2, 0.6);
+  backdrop-filter: blur(3px);
+  animation: fondu 0.18s ease both;
+}
+
+.panneau {
+  position: relative;
+  width: min(820px, 100%);
+  max-height: calc(100svh - 32px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: var(--paper-grain), linear-gradient(180deg, var(--ink-700), var(--ink-800));
+  border: var(--border-gold);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 230, 180, 0.08);
+  color: var(--parch-100);
+  overflow: hidden;
+  animation: surgir 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fermer {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-deep);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--gold-200);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ===== En-tête : le personnage ===== */
+.tete {
+  display: flex;
+  gap: clamp(14px, 3vw, 28px);
+  align-items: center;
+  padding: 22px clamp(16px, 3vw, 28px) 18px;
+  background: radial-gradient(120% 140% at 10% 0%, color-mix(in srgb, var(--ere-accent) 18%, transparent), transparent 60%);
+  border-bottom: 1px solid rgba(185, 155, 94, 0.25);
+}
+
+.teteNavire {
+  flex: 0 0 clamp(120px, 26%, 200px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.nomNavire {
+  font-family: var(--font-engraved);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+}
+
+.teteInfos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ere {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ere-accent);
+}
+
+.rang {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: clamp(22px, 3.4vw, 30px);
+  color: var(--parch-050);
+}
+
+.epithete {
+  font-family: var(--font-title);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--gold-200);
+}
+
+.prime {
+  margin-top: 6px;
+  font-family: var(--font-engraved);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--gold-100);
+}
+
+.primeEuros {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--parch-300);
+}
+
+.jauge {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jaugeRail {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.jaugeRemplie {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold-400), var(--gold-100));
+  box-shadow: 0 0 10px rgba(231, 197, 122, 0.6);
+}
+
+.jaugeTexte {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--parch-300);
+}
+
+/* ===== Onglets ===== */
+.onglets {
+  display: flex;
+  gap: 6px;
+  padding: 10px clamp(16px, 3vw, 28px) 0;
+  border-bottom: 1px solid rgba(185, 155, 94, 0.25);
+}
+
+.onglet,
+.ongletActif {
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: none;
+  color: var(--parch-300);
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ongletActif {
+  color: var(--gold-100);
+  border-color: rgba(185, 155, 94, 0.35);
+  background: rgba(231, 197, 122, 0.08);
+}
+
+.corps {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px clamp(16px, 3vw, 28px) 22px;
+}
+
+/* ===== Route des primes ===== */
+.route {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.etape {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(185, 155, 94, 0.22);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* Fil qui relie les étapes. */
+.etape:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 30px;
+  top: 46px;
+  bottom: -12px;
+  width: 2px;
+  background: rgba(185, 155, 94, 0.25);
+}
+
+.etape[data-etat='atteint']:not(:last-child)::after {
+  background: var(--gold-300);
+}
+
+.etape[data-etat='vise'] {
+  border-color: var(--gold-200);
+  background: rgba(231, 197, 122, 0.08);
+  box-shadow: 0 0 0 3px rgba(231, 197, 122, 0.12);
+}
+
+.etape[data-etat='loin'] .etapeCorps {
+  opacity: 0.62;
+}
+
+.medaille {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 15px;
+  background: #2a1b0c;
+  border: 1.5px solid rgba(231, 197, 122, 0.45);
+  color: var(--gold-300);
+}
+
+.etape[data-etat='atteint'] .medaille {
+  background: radial-gradient(circle at 35% 30%, #fff1bf, var(--gold-200) 45%, var(--gold-400) 100%);
+  border-color: #7a5520;
+  color: #3b2a18;
+}
+
+/* La médaille d'une étape lointaine porte déjà la couleur de son ère. */
+.etape[data-ere='grand-line'] .medaille { box-shadow: 0 0 0 2px rgba(95, 208, 194, 0.35); }
+.etape[data-ere='nouveau-monde'] .medaille { box-shadow: 0 0 0 2px rgba(224, 87, 74, 0.4); }
+.etape[data-ere='empereur'] .medaille { box-shadow: 0 0 0 2px rgba(176, 124, 240, 0.45); }
+.etape[data-ere='roi'] .medaille { box-shadow: 0 0 0 2px rgba(255, 224, 138, 0.55); }
+
+.etapeCorps {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.etapeTete {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.etapeTitre {
+  font-family: var(--font-title);
+  font-size: 18px;
+  color: var(--parch-050);
+}
+
+.etapeTitre em {
+  color: var(--gold-200);
+  font-size: 15px;
+}
+
+.etapeSeuil {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold-100);
+  white-space: nowrap;
+}
+
+.etapeSeuil span {
+  font-family: var(--font-body);
+  color: var(--parch-300);
+}
+
+.deblocages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.deblocages li {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 155, 94, 0.35);
+  background: rgba(231, 197, 122, 0.07);
+  font-size: 14px;
+  color: var(--parch-200);
+}
+
+.deblocages li[data-genre='ere'] {
+  border-color: var(--ere-accent);
+  color: var(--parch-050);
+}
+
+.etapePied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.atteint,
+.vise,
+.loin {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.atteint {
+  color: #8fcf8a;
+}
+
+.vise {
+  color: var(--gold-100);
+}
+
+.loin {
+  color: var(--parch-300);
+}
+
+.butin {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.butinEtiquette {
+  font-family: var(--font-engraved);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+  white-space: nowrap;
+}
+
+.butin input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px dashed rgba(185, 155, 94, 0.45);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--parch-050);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.butin input::placeholder {
+  color: rgba(217, 192, 144, 0.5);
+}
+
+.butinObtenu input {
+  border-style: solid;
+  border-color: rgba(143, 207, 138, 0.5);
+}
+
+/* ===== Registre des gains ===== */
+.vide {
+  margin: 12px 0;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--parch-300);
+  text-align: center;
+}
+
+.registre {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.gain {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 4px;
+  border-bottom: 1px solid rgba(185, 155, 94, 0.18);
+}
+
+.gainMontant {
+  min-width: 90px;
+  font-family: var(--font-engraved);
+  font-weight: 800;
+  font-size: 15px;
+  color: #8fcf8a;
+  font-variant-numeric: tabular-nums;
+}
+
+.gainInfos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gainNote {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--parch-050);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gainDate {
+  font-size: 13px;
+  color: var(--parch-300);
+}
+
+.supprimer {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(185, 155, 94, 0.4);
+  background: none;
+  color: var(--parch-300);
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.supprimer:hover {
+  color: #ff9c8f;
+  border-color: #ff9c8f;
+}
+
+.confirmer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-style: italic;
+  color: #ffb3a8;
+}
+
+.confirmer button {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-deep);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--gold-200);
+  cursor: pointer;
+}
+
+.remise {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.boutonRemise {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 156, 143, 0.45);
+  background: none;
+  color: #ffb3a8;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.boutonRemise:hover {
+  background: rgba(255, 156, 143, 0.1);
+}
+
+/* ===== Équipage et exploits ===== */
+.bilan {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.bilan div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 6px;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(185, 155, 94, 0.22);
+}
+
+.bilan strong {
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 24px;
+  color: var(--gold-100);
+}
+
+.bilan span {
+  font-size: 13px;
+  color: var(--parch-300);
+}
+
+.explication {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--parch-200);
+}
+
+.explication strong {
+  color: var(--gold-100);
+}
+
+.equipage {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 8px;
+}
+
+.membre {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(185, 155, 94, 0.35);
+  background: radial-gradient(120% 140% at 0% 50%, rgba(231, 197, 122, 0.12), transparent 60%), rgba(0, 0, 0, 0.18);
+}
+
+.membreVerrouille {
+  border-style: dashed;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.membreVerrouille .membreTexte {
+  opacity: 0.6;
+}
+
+.membreTexte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.membreTitre {
+  font-family: var(--font-title);
+  font-size: 17px;
+  color: var(--parch-050);
+}
+
+.membreApport {
+  font-size: 14px;
+  color: var(--parch-200);
+}
+
+.membreCitation {
+  font-family: var(--font-title);
+  font-size: 13px;
+  color: var(--gold-200);
+}
+
+.membreJours {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--gold-300);
+}
+
+.exploits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.exploit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 4px;
+  border-bottom: 1px solid rgba(185, 155, 94, 0.18);
+}
+
+.exploitIcone {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff1bf, var(--gold-200) 45%, var(--gold-400) 100%);
+  border: 1px solid #7a5520;
+  color: #3b2a18;
+  font-weight: 900;
+  font-size: 15px;
+}
+
+.exploit[data-genre='ile'] .exploitIcone {
+  background: radial-gradient(circle at 35% 30%, #ff9c8f, var(--red) 60%, var(--red-deep));
+  color: #fff4e0;
+}
+
+.exploitTexte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.exploitTexte strong {
+  font-family: var(--font-title);
+  font-size: 16px;
+  color: var(--parch-050);
+}
+
+.exploitTexte span {
+  font-size: 13px;
+  color: var(--parch-300);
+}
+
+.exploitDate {
+  font-size: 13px;
+  color: var(--parch-300);
+  white-space: nowrap;
+}
+
+@keyframes fondu {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+@media (max-width: 600px) {
+  .tete {
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 40px;
+  }
+
+  .teteNavire {
+    flex-basis: auto;
+    width: 60%;
+    align-self: center;
+  }
+}

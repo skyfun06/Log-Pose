@@ -1,0 +1,467 @@
+.overlay {
+  --ere-accent: #e7c57a;
+
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: hidden auto;
+  background: radial-gradient(circle at 50% 45%, rgba(40, 26, 10, 0.75), rgba(8, 5, 2, 0.94));
+  backdrop-filter: blur(4px);
+  animation: fondu 0.3s ease both;
+}
+
+/* La cérémonie montre déjà la couleur de la nouvelle ère (le site, lui,
+   bascule quand on lève l'ancre). */
+.overlay[data-ere='grand-line'] {
+  --ere-accent: #5fd0c2;
+}
+
+.overlay[data-ere='nouveau-monde'] {
+  --ere-accent: #e0574a;
+}
+
+.overlay[data-ere='empereur'] {
+  --ere-accent: #b07cf0;
+}
+
+.overlay[data-ere='roi'] {
+  --ere-accent: #ffe08a;
+}
+
+/* Rayons de lumière qui tournent derrière le journal, teintés par l'ère. */
+.rayons {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 160vmax;
+  height: 160vmax;
+  translate: -50% -50%;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--ere-accent) 24%, transparent) 0 7deg,
+    transparent 7deg 20deg
+  );
+  mask-image: radial-gradient(closest-side, #000 10%, transparent 70%);
+  animation: tourne 60s linear infinite;
+}
+
+.journal {
+  position: relative;
+  z-index: 3;
+  width: min(880px, 100%);
+  max-height: calc(100svh - 32px);
+  display: flex;
+  flex-direction: column;
+  padding: clamp(14px, 2.4vw, 26px) clamp(16px, 3vw, 30px);
+  background: var(--paper-grain), linear-gradient(180deg, #f3e8cc, #e4d3a8);
+  color: #2a1d10;
+  border-radius: 4px;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.7),
+    inset 0 0 60px rgba(120, 85, 40, 0.25);
+  animation: tournoie 0.8s cubic-bezier(0.2, 0.9, 0.25, 1.1) both;
+}
+
+/* Manchette sur une ligne : le nom du journal et l'édition. */
+.manchette {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding-bottom: 6px;
+  border-bottom: 3px double #2a1d10;
+}
+
+.nomJournal {
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: clamp(14px, 2vw, 19px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.edition {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--red-deep);
+}
+
+.une {
+  margin: 10px 0 12px;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(24px, 4.2vw, 42px);
+  line-height: 1.04;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.corps {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 30px);
+  align-items: center;
+}
+
+/* ===== L'affiche ===== */
+.colonneAffiche {
+  position: relative;
+  /* Calée sur la hauteur dispo pour que tout tienne sans défiler. */
+  width: clamp(170px, min(30vw, (100svh - 260px) * 0.738), 320px);
+}
+
+.affiche {
+  cursor: default;
+}
+
+.affiche:hover {
+  transform: rotate(-1.4deg);
+}
+
+/* Tampon rouge qui s'abat sur l'affiche. */
+.tampon {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  z-index: 2;
+  padding: 6px 14px;
+  border: 4px double #a3231a;
+  border-radius: 6px;
+  color: #a3231a;
+  background: rgba(243, 232, 204, 0.82);
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: clamp(15px, 2.2vw, 22px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  box-shadow: 0 4px 12px rgba(60, 20, 10, 0.3);
+  animation: frappe 0.42s cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+
+@keyframes frappe {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-24deg) scale(3.2);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-12deg) scale(0.92);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(-12deg) scale(1);
+  }
+}
+
+/* Le journal encaisse le coup de tampon. */
+.secoue {
+  animation:
+    tournoie 0.8s cubic-bezier(0.2, 0.9, 0.25, 1.1) both,
+    secousse 0.45s ease-out 0.36s;
+}
+
+@keyframes secousse {
+  20% {
+    translate: -7px 3px;
+  }
+  40% {
+    translate: 6px -4px;
+  }
+  60% {
+    translate: -4px 2px;
+  }
+  80% {
+    translate: 2px -1px;
+  }
+}
+
+/* ===== Colonne de droite ===== */
+.colonneDroite {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.chapeau {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.recompenses {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  perspective: 800px;
+}
+
+/* Une récompense : carte qui se retourne quand le tampon a frappé. */
+.recompense {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  min-height: 118px;
+  padding: 10px 8px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(42, 29, 16, 0.35);
+  background: rgba(255, 250, 235, 0.6);
+  text-align: center;
+}
+
+/* Avant le tampon : cartes face cachée, qui attendent d'être retournées. */
+.recompenses:not(.revelees) .recompense {
+  position: relative;
+  background:
+    repeating-linear-gradient(45deg, rgba(231, 197, 122, 0.08) 0 6px, transparent 6px 12px),
+    linear-gradient(180deg, #4a3520, #2c1e12);
+  border-color: #8a6a2e;
+  animation: attente 1.6s ease-in-out infinite;
+}
+
+.recompenses:not(.revelees) .recompense > * {
+  visibility: hidden;
+}
+
+.recompenses:not(.revelees) .recompense::after {
+  content: '?';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 34px;
+  color: #e7c57a;
+  text-shadow: 0 0 12px rgba(231, 197, 122, 0.6);
+}
+
+@keyframes attente {
+  50% {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.revelees .recompense {
+  animation: retourne 0.55s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+}
+
+@keyframes retourne {
+  from {
+    opacity: 0;
+    transform: rotateY(90deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(0);
+  }
+}
+
+.recompense[data-genre='cap'] {
+  border-style: dashed;
+  background: rgba(255, 250, 235, 0.3);
+}
+
+.recompenseEtiquette {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--red-deep);
+}
+
+.recompenseValeur {
+  font-family: var(--font-title);
+  font-size: 17px;
+  line-height: 1.15;
+}
+
+.medaille {
+  width: 44px;
+  height: 44px;
+  margin-bottom: auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff1bf, #e7c57a 45%, #c08a2e 100%);
+  border: 1px solid #7a5520;
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 248, 220, 0.35),
+    0 3px 6px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 20px;
+}
+
+.timbre {
+  margin-bottom: auto;
+  max-width: 100%;
+  padding: 4px 10px;
+  border: 3px double #a3231a;
+  border-radius: 5px;
+  color: #a3231a;
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 14px;
+  text-transform: uppercase;
+  transform: rotate(-5deg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navire {
+  --sea: #7fb0d6;
+
+  width: 110px;
+  margin-bottom: auto;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #2a1d10;
+}
+
+.nuancier {
+  width: 64px;
+  height: 40px;
+  margin-bottom: auto;
+  border-radius: 6px;
+  border: 1px solid #2a1d10;
+  background: linear-gradient(135deg, #2c1e12, #c9a24e);
+}
+
+.nuancier[data-ere='grand-line'] {
+  background: linear-gradient(135deg, #1b2729 30%, #5fd0c2 100%);
+}
+
+.nuancier[data-ere='nouveau-monde'] {
+  background: linear-gradient(135deg, #2a110e 30%, #e0574a 100%);
+}
+
+.nuancier[data-ere='empereur'] {
+  background: linear-gradient(135deg, #1f122d 30%, #b07cf0 100%);
+}
+
+.nuancier[data-ere='roi'] {
+  background: linear-gradient(135deg, #1c1810 30%, #ffe08a 100%);
+}
+
+.prochain {
+  margin-bottom: auto;
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 17px;
+  opacity: 0.7;
+}
+
+.butin {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px dashed rgba(143, 44, 34, 0.6);
+  border-radius: 6px;
+  background: rgba(179, 58, 46, 0.08);
+  font-style: italic;
+  font-size: 16px;
+}
+
+.butin span {
+  font-family: var(--font-engraved);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--red-deep);
+}
+
+.bouton {
+  align-self: flex-start;
+  padding: 12px 34px;
+  border-radius: 999px;
+  border: 1px solid #8a6a2e;
+  background: linear-gradient(180deg, #4a3520 0%, #2c1e12 100%);
+  color: #f5de72;
+  font-family: var(--font-engraved);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.12s ease,
+    filter 0.12s ease;
+}
+
+.bouton:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+@keyframes fondu {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes tournoie {
+  from {
+    opacity: 0;
+    transform: rotate(-720deg) scale(0.05);
+  }
+}
+
+@keyframes tourne {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@media (max-width: 680px) {
+  .journal {
+    max-height: none;
+  }
+
+  .corps {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .colonneAffiche {
+    width: min(240px, 70vw);
+  }
+
+  .bouton {
+    align-self: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tampon,
+  .journal,
+  .rayons,
+  .recompense {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+}

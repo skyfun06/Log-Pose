@@ -9,7 +9,11 @@
   border-radius: var(--radius);
   background:
     var(--paper-grain),
-    linear-gradient(180deg, rgba(44, 30, 18, 0.95), rgba(24, 16, 9, 0.97));
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ink-700) 95%, transparent),
+      color-mix(in srgb, var(--ink-800) 97%, transparent)
+    );
   border: 1px solid rgba(185, 155, 94, 0.45);
   box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 230, 180, 0.07);
   color: var(--parch-100);

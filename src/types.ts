@@ -7,6 +7,22 @@ export interface Ile {
   quete: string;
   backgroundImage: string;
   couleurFallback: string;
+  // Étapes proposées tant que Louis n'a pas réglé les siennes.
+  etapesSuggerees: { texte: string; difficulte: Difficulte }[];
+}
+
+// Difficulté d'un objectif : 1 = facile, 2 = costaud, 3 = exploit. Plus c'est
+// dur, plus le navire avance et plus la victoire est fêtée.
+export type Difficulte = 1 | 2 | 3;
+
+// Une étape (objectif) de la quête d'une île. Les cocher toutes fait accoster
+// le navire : l'île est conquise.
+export interface Etape {
+  id: string;
+  texte: string;
+  difficulte: Difficulte;
+  creeLe: string; // ISO
+  faiteLe?: string; // ISO
 }
 
 export type StatutMission = 'pending' | 'done' | 'failed';
@@ -29,6 +45,14 @@ export interface BlocPlanning {
   questWeight: number;
   // Créneau verrouillé (ex : horaires de travail) : ni modifiable ni supprimable.
   fixe?: boolean;
+}
+
+// Un gain réel inscrit au registre (la prime est la somme des gains).
+export interface Gain {
+  id: string;
+  montant: number; // euros
+  date: string; // ISO
+  note?: string; // d'où vient l'argent
 }
 
 // --- Habitudes -------------------------------------------------------------

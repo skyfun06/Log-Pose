@@ -1,0 +1,99 @@
+.navire {
+  display: block;
+  overflow: visible;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mat {
+  stroke: var(--gold-300);
+  stroke-width: 1.6;
+}
+
+.voile {
+  fill: var(--parch-100);
+  stroke: var(--gold-deep);
+  stroke-width: 0.8;
+}
+
+.coque {
+  fill: var(--ink-600);
+  stroke: var(--gold-300);
+  stroke-width: 1.2;
+}
+
+.bordage {
+  fill: none;
+  stroke: var(--gold-deep);
+  stroke-width: 0.8;
+}
+
+.sabord {
+  fill: var(--ink-900);
+  stroke: var(--gold-deep);
+  stroke-width: 0.4;
+}
+
+.pavillon {
+  fill: var(--ink-900);
+  stroke: var(--gold-300);
+  stroke-width: 0.6;
+}
+
+.crane {
+  fill: var(--parch-050);
+}
+
+.fanion {
+  fill: var(--red);
+}
+
+.lanterne {
+  fill: var(--gold-100);
+  filter: drop-shadow(0 0 2px var(--gold-100));
+}
+
+.vague {
+  fill: none;
+  stroke: var(--sea);
+  stroke-width: 1.2;
+  opacity: 0.7;
+}
+
+.vagueLoin {
+  opacity: 0.35;
+}
+
+/* Vaisseau-amiral : voiles et coque rehaussées d'or. */
+.dore .voile {
+  fill: var(--gold-050);
+  stroke: var(--gold-400);
+}
+
+.dore .coque {
+  stroke: var(--gold-100);
+  stroke-width: 1.6;
+}
+
+/* Le navire tangue doucement. */
+.navire > :not(.vague) {
+  transform-box: view-box;
+  transform-origin: 60px 60px;
+  animation: tangage 5s ease-in-out infinite;
+}
+
+@keyframes tangage {
+  0%,
+  100% {
+    transform: rotate(-1.6deg) translateY(0);
+  }
+  50% {
+    transform: rotate(1.6deg) translateY(1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navire > :not(.vague) {
+    animation: none;
+  }
+}

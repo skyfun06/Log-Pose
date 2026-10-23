@@ -1,0 +1,350 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: hidden auto;
+  background: rgba(10, 6, 2, 0.65);
+  backdrop-filter: blur(4px);
+  animation: fondu 0.25s ease both;
+}
+
+.rapport {
+  position: relative;
+  z-index: 3;
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 22px 22px;
+  border-radius: var(--radius-lg);
+  background: var(--paper-grain), linear-gradient(180deg, var(--ink-700), var(--ink-800));
+  border: var(--border-gold);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 230, 180, 0.08);
+  color: var(--parch-100);
+  animation: surgir 0.4s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+.tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.surtitre {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+}
+
+.date {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 22px;
+  color: var(--parch-050);
+}
+
+.date::first-letter {
+  text-transform: uppercase;
+}
+
+/* ===== Série ===== */
+.serie {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: radial-gradient(120% 140% at 0% 50%, rgba(224, 102, 47, 0.25), rgba(0, 0, 0, 0.2) 70%);
+  border: 1px solid rgba(224, 102, 47, 0.4);
+  animation: monte 0.45s ease-out 0.15s both;
+}
+
+.flamme svg {
+  display: block;
+  width: 46px;
+  height: 46px;
+  fill: #ff7a35;
+  filter: drop-shadow(0 0 8px rgba(255, 122, 53, 0.8));
+  transform-origin: 50% 90%;
+  animation: flamme 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes flamme {
+  to {
+    transform: scale(1.1, 0.93) rotate(-5deg);
+  }
+}
+
+.serieEteinte {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(185, 155, 94, 0.3);
+}
+
+.serieEteinte .flamme svg {
+  fill: rgba(231, 197, 122, 0.3);
+  filter: none;
+  animation: none;
+}
+
+.serieTexte {
+  display: flex;
+  flex-direction: column;
+}
+
+.serieTexte strong {
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 28px;
+  line-height: 1.05;
+  color: var(--gold-100);
+}
+
+.serieTexte span {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--parch-200);
+}
+
+.intertitre {
+  margin: 0 0 6px;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-200);
+}
+
+.hier {
+  animation: monte 0.45s ease-out 0.3s both;
+}
+
+.tuiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.tuiles div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(185, 155, 94, 0.22);
+  text-align: center;
+}
+
+.tuiles strong {
+  font-family: var(--font-engraved);
+  font-weight: 900;
+  font-size: 20px;
+  color: var(--parch-050);
+}
+
+.tuiles span {
+  font-size: 13px;
+  color: var(--parch-300);
+}
+
+.etapes {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.etapes li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(179, 58, 46, 0.18);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.vide {
+  margin: 0;
+  font-style: italic;
+  color: var(--parch-300);
+}
+
+.equipage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(185, 155, 94, 0.22);
+  animation: monte 0.45s ease-out 0.45s both;
+}
+
+.equipageTexte {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+}
+
+.equipageTexte strong {
+  color: var(--gold-100);
+}
+
+.jauge {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.jauge span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold-400), var(--gold-100));
+  transform-origin: left;
+  animation: remplit 1s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both;
+}
+
+@keyframes remplit {
+  from {
+    scale: 0 1;
+  }
+}
+
+.cap {
+  animation: monte 0.45s ease-out 0.6s both;
+}
+
+.cap p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.capEtape {
+  margin-top: 4px !important;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--parch-200);
+}
+
+.capEtape strong {
+  color: var(--parch-050);
+}
+
+.bouton {
+  align-self: center;
+  margin-top: 4px;
+  padding: 11px 30px;
+  border-radius: 999px;
+  border: 1px solid #8a6a2e;
+  background: var(--grad-gold);
+  color: #2c1e12;
+  font-family: var(--font-engraved);
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), var(--inset-top);
+  transition:
+    transform 0.12s ease,
+    filter 0.12s ease;
+}
+
+.bouton:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* ===== Nouvelle recrue ===== */
+.recrue {
+  align-items: center;
+  text-align: center;
+  background:
+    radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--ere-accent) 22%, transparent), transparent 70%),
+    var(--paper-grain),
+    linear-gradient(180deg, var(--ink-700), var(--ink-800));
+}
+
+.recruePortrait {
+  margin: 6px 0;
+  animation: arrive 0.8s cubic-bezier(0.3, 1.5, 0.5, 1) 0.2s both;
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-30deg);
+  }
+}
+
+.recrueNom {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 30px;
+  color: var(--parch-050);
+}
+
+.recrueApport {
+  margin: 0;
+  font-size: 16px;
+  color: var(--parch-200);
+}
+
+.citation {
+  margin: 4px 0 0;
+  font-family: var(--font-title);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--gold-200);
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+}
+
+@keyframes monte {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+@keyframes fondu {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rapport,
+  .serie,
+  .hier,
+  .equipage,
+  .cap,
+  .jauge span,
+  .recruePortrait,
+  .flamme svg {
+    animation: none;
+  }
+}

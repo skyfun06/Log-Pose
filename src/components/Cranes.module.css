@@ -1,0 +1,23 @@
+.cranes {
+  display: inline-flex;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.cranes svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Encre sur parchemin (carte, conquête) ; or sur bois sombre ailleurs. */
+.craneOn path {
+  fill: var(--encre, var(--gold-200));
+}
+
+.craneOff path {
+  fill: color-mix(in srgb, var(--encre, var(--gold-200)) 22%, transparent);
+}
+
+.craneOeil {
+  fill: var(--crane-oeil, #2c1e12);
+}

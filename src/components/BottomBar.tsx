@@ -1,8 +1,10 @@
 import { BERRYS_PAR_EURO, PALIERS, positionPalier } from '../data/paliers';
+import { Navire } from './Navire';
 import styles from './BottomBar.module.css';
 
 interface BottomBarProps {
   prime: number; // euros gagnés
+  onOuvrirAscension: () => void;
 }
 
 const euros = (n: number) => `${Math.ceil(n).toLocaleString('fr-FR')} €`;
@@ -10,25 +12,37 @@ const berrys = (euros: number) => `฿ ${(euros * BERRYS_PAR_EURO).toLocaleStrin
 
 // Barre des paliers : le rang atteint, la piste de tous les paliers, et ce
 // qu'il reste à gagner pour le suivant.
-export function BottomBar({ prime }: BottomBarProps) {
+export function BottomBar({ prime, onOuvrirAscension }: BottomBarProps) {
   const { index, actuel, suivant, avancement, reste } = positionPalier(prime);
+  // Dans la dernière ligne droite : le prochain palier s'illumine.
+  const proche = suivant !== null && avancement >= 0.85;
   // Remplissage de la piste : paliers espacés régulièrement, plus la part
   // déjà parcourue vers le suivant.
   const remplissage = ((index + avancement) / (PALIERS.length - 1)) * 100;
 
   return (
     <footer className={styles.bar}>
-      <div className={styles.rang}>
+      <button
+        type="button"
+        className={styles.rang}
+        onClick={onOuvrirAscension}
+        title="Voir l'ascension"
+      >
+        <Navire niveau={actuel.navire} className={styles.navire} />
         <span className={styles.medaille} aria-hidden="true">
           {index + 1}
         </span>
         <span className={styles.rangTexte}>
-          <span className={styles.etiquette}>Rang</span>
+          <span className={styles.etiquette}>Rang · voir l'ascension</span>
           <span className={styles.titre}>{actuel.titre}</span>
         </span>
-      </div>
+      </button>
 
-      <div className={styles.piste} role="img" aria-label={`Palier ${index + 1} sur ${PALIERS.length}`}>
+      <div
+        className={styles.piste}
+        role="img"
+        aria-label={`Palier ${index + 1} sur ${PALIERS.length}`}
+      >
         <div className={styles.rail}>
           <div className={styles.remplissage} style={{ width: `${remplissage}%` }} />
         </div>
@@ -51,16 +65,19 @@ export function BottomBar({ prime }: BottomBarProps) {
         ))}
       </div>
 
-      <div className={styles.prochain}>
+      <div className={proche ? `${styles.prochain} ${styles.proche}` : styles.prochain}>
         {suivant ? (
           <>
             <span className={styles.etiquette}>
               Prochain palier · {Math.floor(avancement * 100)} %
             </span>
             <span className={styles.prochainTitre}>
-              {suivant.titre} <span className={styles.prochainMontant}>{berrys(suivant.seuil)}</span>
+              {suivant.titre}{' '}
+              <span className={styles.prochainMontant}>{berrys(suivant.seuil)}</span>
             </span>
-            <span className={styles.reste}>encore {euros(reste)} à gagner</span>
+            <span className={styles.reste}>
+              {proche ? `plus que ${euros(reste)} !` : `encore ${euros(reste)} à gagner`}
+            </span>
           </>
         ) : (
           <>
