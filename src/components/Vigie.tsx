@@ -161,7 +161,7 @@ export function RapportVigie({
           <section className={styles.cap}>
             <h3 className={styles.intertitre}>Cap du jour</h3>
             <p>
-              Île {cap.ile.numero} · <strong>{cap.ile.titre}</strong> ·{' '}
+              Île {cap.ile.numero} · <strong>{cap.ile.nom}</strong> ({cap.ile.titre}) ·{' '}
               {Math.round(cap.avancement * 100)} % du trajet
             </p>
             {cap.etape && (

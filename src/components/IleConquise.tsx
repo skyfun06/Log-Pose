@@ -74,7 +74,7 @@ export function IleConquise({
 
         <span className={styles.tampon}>{finale ? 'Voyage accompli' : 'Île conquise'}</span>
         <span className={styles.repere}>
-          Île {ile.numero} · {ile.arc}
+          Île {ile.numero} · {ile.nom}
         </span>
         <h2 className={styles.titre}>{ile.titre}</h2>
 
@@ -117,7 +117,7 @@ export function IleConquise({
 
         {suivante ? (
           <p className={styles.suite}>
-            Prochain cap : <strong>île {suivante.numero}</strong> · {suivante.titre}
+            Prochain cap : <strong>{suivante.nom}</strong> · {suivante.titre}
           </p>
         ) : (
           <p className={styles.suite}>Toutes les îles sont à toi. Le One Piece t'attend.</p>

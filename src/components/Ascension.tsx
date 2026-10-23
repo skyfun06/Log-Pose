@@ -416,8 +416,8 @@ function Exploits({
       liste.push({
         date: ilesConquises[ile.id],
         genre: 'ile',
-        titre: ile.titre,
-        detail: `Île ${ile.numero} conquise`,
+        titre: ile.nom,
+        detail: `Île ${ile.numero} conquise · ${ile.titre}`,
       });
     }
     for (const e of etapes[ile.id] ?? []) {
@@ -429,7 +429,7 @@ function Exploits({
           date: e.faiteLe,
           genre: 'etape',
           titre: e.texte,
-          detail: ile.titre,
+          detail: ile.nom,
           difficulte: 3,
         });
       }

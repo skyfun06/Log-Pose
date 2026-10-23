@@ -46,10 +46,26 @@
 }
 
 /* Le dessin déborde des bords du parchemin seulement à l'intérieur du cadre. */
-.dessin > svg {
+/* La carte défile à l'horizontale ; fondu sur les bords pour suggérer la suite. */
+.defilement {
+  position: absolute;
+  inset: 12px 14px 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: grab;
+  scrollbar-width: thin;
+  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+}
+
+.defilement:active {
+  cursor: grabbing;
+}
+
+.defilement > svg {
   display: block;
-  width: 100%;
   height: 100%;
+  width: auto;
+  max-width: none;
   overflow: hidden;
 }
 
@@ -423,7 +439,7 @@
     translate: -60px 110px;
   }
   to {
-    translate: 1060px 40px;
+    translate: calc(var(--largeur-carte, 1000px) + 60px) 40px;
   }
 }
 
@@ -432,7 +448,7 @@
     translate: -60px 60px;
   }
   to {
-    translate: 1060px 140px;
+    translate: calc(var(--largeur-carte, 1000px) + 60px) 140px;
   }
 }
 
@@ -441,7 +457,7 @@
     translate: -60px 150px;
   }
   to {
-    translate: 1060px 80px;
+    translate: calc(var(--largeur-carte, 1000px) + 60px) 80px;
   }
 }
 
@@ -469,7 +485,7 @@
     translate: -200px 0;
   }
   to {
-    translate: 1200px 0;
+    translate: calc(var(--largeur-carte, 1000px) + 200px) 0;
   }
 }
 
@@ -827,13 +843,46 @@
   line-height: 1.15;
 }
 
-.ficheQuete {
-  margin: 0 0 10px;
+.ficheObjectif {
+  margin: 0 0 6px;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--rouge-route);
+}
+
+.ficheSituation {
+  margin: 0 0 8px;
   font-family: var(--font-title);
   font-style: italic;
   font-size: 14px;
   line-height: 1.35;
   color: rgba(59, 42, 24, 0.8);
+}
+
+.ficheQuete,
+.fichePourquoi {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.fichePourquoi {
+  padding: 6px 9px;
+  border-left: 3px solid var(--rouge-route);
+  background: rgba(179, 58, 46, 0.07);
+  font-size: 14px;
+}
+
+.ficheQuete span,
+.fichePourquoi span {
+  margin-right: 4px;
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
 }
 
 .ficheJauge {

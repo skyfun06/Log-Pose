@@ -22,9 +22,15 @@ interface CarteMarineProps {
   onFinNavigation?: () => void;
 }
 
-// Repère du dessin (unités du viewBox SVG).
-const L = 1000;
+// Repère du dessin (unités du viewBox SVG). La carte s'allonge avec le
+// nombre d'îles : on la fait défiler, et elle suit le navire.
 const H = 420;
+const PREMIERE_ILE = 190;
+const ESPACEMENT = 178;
+
+function largeurCarte(n: number) {
+  return PREMIERE_ILE + (n - 1) * ESPACEMENT + 240;
+}
 
 const ECHELLE_ILE = 1.3;
 
@@ -34,7 +40,7 @@ const MOUILLAGE = 50;
 const APPROCHE = 46;
 
 // Village de départ, avant la première île.
-const DEPART = { x: 34, y: 330 };
+const DEPART = { x: 60, y: 322 };
 
 // Largeur du dessin du navire selon son niveau : la barque est petite dans
 // son cadre, on la grossit davantage que le vaisseau-amiral.
@@ -46,26 +52,22 @@ const SILHOUETTES = [
   'M-36 2c0-11 13-17 22-13 4-8 17-11 24-4 10-4 22 3 22 13 6 8-1 17-11 16-7 7-21 6-27 0-10 4-24 0-25-8-4 0-6-2-5-4z',
 ];
 
-// Petites vagues dessinées çà et là sur la mer (x, y, délai d'animation).
-const VAGUES: [number, number, number][] = [
-  [60, 90, 0],
-  [210, 330, 1.2],
-  [330, 60, 2.1],
-  [470, 345, 0.6],
-  [560, 120, 1.8],
-  [690, 335, 2.6],
-  [780, 230, 0.3],
-  [140, 220, 2.9],
-  [880, 318, 1.5],
-  [420, 250, 3.4],
-  [620, 300, 0.9],
-  [960, 200, 2.2],
-];
+// Petites vagues dessinées çà et là sur la mer (x, y, délai d'animation),
+// réparties pseudo-aléatoirement mais toujours aux mêmes endroits.
+function vagues(largeur: number): [number, number, number][] {
+  const liste: [number, number, number][] = [];
+  for (let k = 0; k < Math.round(largeur / 85); k++) {
+    const x = 40 + ((k * 211) % (largeur - 80));
+    const y = 50 + ((k * 137) % 300);
+    liste.push([x, y, (k * 0.7) % 4]);
+  }
+  return liste;
+}
 
 function positions(n: number) {
   const ys = [250, 140, 262, 150, 244, 146, 258];
   return Array.from({ length: n }, (_, i) => ({
-    x: n === 1 ? L / 2 : 150 + (i * 730) / (n - 1),
+    x: PREMIERE_ILE + i * ESPACEMENT,
     y: ys[i % ys.length],
   }));
 }
@@ -180,6 +182,7 @@ export function CarteMarine({
   onOuvrirCarnet,
   onFinNavigation,
 }: CarteMarineProps) {
+  const L = largeurCarte(iles.length);
   const pts = positions(iles.length);
   const indexActuel = Math.max(
     0,
@@ -197,6 +200,8 @@ export function CarteMarine({
   });
   const redLines = mers.slice(1).map((m) => (pts[m.debut - 1].x + pts[m.debut].x) / 2);
 
+  const defilement = useRef<HTMLDivElement>(null);
+  const glisse = useRef<{ x: number; depart: number; bouge: boolean } | null>(null);
   const routeRef = useRef<SVGPathElement>(null);
   const bateau = useRef<SVGGElement>(null);
   const sillage = useRef<SVGPathElement>(null);
@@ -243,6 +248,20 @@ export function CarteMarine({
     }
   }
 
+  // Fait défiler la carte pour amener le point x (unités SVG) vers le centre.
+  const centrerSur = useCallback(
+    (x: number, doux: boolean) => {
+      const el = defilement.current;
+      if (!el) return;
+      const echelle = el.scrollWidth / L;
+      el.scrollTo({
+        left: x * echelle - el.clientWidth * 0.45,
+        behavior: doux ? 'smooth' : 'instant',
+      });
+    },
+    [L],
+  );
+
   const placer = useCallback(
     (d: number, sens: 1 | -1, trace: number, sillageVisible: boolean) => {
       const chemin = routeRef.current;
@@ -257,6 +276,8 @@ export function CarteMarine({
         `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${sens} 1)`,
       );
       traceFaite.current?.setAttribute('stroke-dasharray', `${trace.toFixed(1)} ${geo.total + 20}`);
+      // En route, la carte suit le navire (sauf si on la fait glisser).
+      if (sillageVisible && !glisse.current?.bouge) centrerSur(p.x, false);
       if (sillage.current) {
         const long = 120;
         const debut = sens === 1 ? Math.max(0, dd - long) : dd;
@@ -269,7 +290,7 @@ export function CarteMarine({
         );
       }
     },
-    [geo],
+    [geo, centrerSur],
   );
 
   // Navigation : quand la cible change, le navire file le long de la route ;
@@ -278,6 +299,10 @@ export function CarteMarine({
   useEffect(() => {
     if (!geo || cible === null) return;
     const but = cible;
+    if (position.current === null) {
+      const chemin = routeRef.current;
+      if (chemin) centrerSur(chemin.getPointAtLength(but).x, false);
+    }
     const depart = position.current ?? but;
     // Point de départ de la prochaine traversée, même sans navigation (premier
     // affichage) : sans ça, le prochain changement ferait sauter le navire.
@@ -323,7 +348,28 @@ export function CarteMarine({
     };
     id = requestAnimationFrame(image);
     return () => cancelAnimationFrame(id);
-  }, [geo, cible, placer]);
+  }, [geo, cible, placer, centrerSur]);
+
+  // La molette verticale fait défiler la carte à l'horizontale.
+  useEffect(() => {
+    const el = defilement.current;
+    if (!el) return;
+    const molette = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    el.addEventListener('wheel', molette, { passive: false });
+    return () => el.removeEventListener('wheel', molette);
+  }, []);
+
+  // Côté où poser la fiche : à l'opposé de l'île telle qu'elle est à l'écran.
+  function coteFiche(i: number): 'gauche' | 'droite' {
+    const el = defilement.current;
+    if (!el) return 'droite';
+    const x = pts[i].x * (el.scrollWidth / L) - el.scrollLeft;
+    return x < el.clientWidth / 2 ? 'droite' : 'gauche';
+  }
 
   useEffect(() => {
     if (arrivee === null) return;
@@ -355,7 +401,7 @@ export function CarteMarine({
       setBravo({
         cle: Date.now(),
         titre: 'Terre !',
-        detail: `${ile.titre} est en vue`,
+        detail: `${ile.nom} est en vue`,
         exploit: true,
       });
     } else {
@@ -368,245 +414,292 @@ export function CarteMarine({
     }
   }
 
-  const indexAnnulable = toutConquis ? indexActuel : indexActuel - 1;
+  // Seule la conquête la plus récente peut être annulée.
+  const derniereConquete = Object.entries(ilesConquises).sort((a, b) =>
+    b[1].localeCompare(a[1]),
+  )[0];
+  const indexAnnulable = derniereConquete
+    ? iles.findIndex((i) => i.id === Number(derniereConquete[0]))
+    : -1;
 
   return (
     <section className={styles.carte} aria-label="Carte du voyage">
       <div className={styles.dessin}>
-        <svg
-          viewBox={`0 0 ${L} ${H}`}
-          preserveAspectRatio="xMidYMid meet"
-          role="img"
-          aria-label={`Route des îles : cap sur l'île ${ileActuelle.numero}, ${Math.round(avancement * 100)} % du trajet`}
-          onClick={() => setFiche(null)}
+        <div
+          ref={defilement}
+          className={styles.defilement}
+          onPointerDown={(e) => {
+            if (e.pointerType !== 'mouse' || e.button !== 0) return;
+            glisse.current = { x: e.clientX, depart: e.currentTarget.scrollLeft, bouge: false };
+          }}
+          onPointerMove={(e) => {
+            const g = glisse.current;
+            if (!g) return;
+            const dx = e.clientX - g.x;
+            if (Math.abs(dx) > 4) g.bouge = true;
+            if (g.bouge) e.currentTarget.scrollLeft = g.depart - dx;
+          }}
+          onPointerUp={() => {
+            // Le clic qui termine un glissé ne doit pas ouvrir d'île.
+            const g = glisse.current;
+            setTimeout(() => {
+              if (glisse.current === g) glisse.current = null;
+            }, 0);
+          }}
+          onPointerLeave={() => (glisse.current = null)}
+          onClickCapture={(e) => {
+            if (glisse.current?.bouge) e.stopPropagation();
+          }}
         >
-          <defs>
-            <mask
-              id="carte-route-faite"
-              maskUnits="userSpaceOnUse"
-              x="0"
-              y="0"
-              width={L}
-              height={H}
-            >
-              <path
-                ref={traceFaite}
-                d={route}
-                className={styles.masqueRoute}
-                strokeDasharray={`0 ${L * 4}`}
-              />
-            </mask>
-            <filter id="carte-flou" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="14" />
-            </filter>
-          </defs>
-
-          <g className={styles.rhumbs}>
-            {Array.from({ length: 16 }, (_, i) => {
-              const a = (i * Math.PI) / 8;
-              return (
-                <line
-                  key={i}
-                  x1={930}
-                  y1={70}
-                  x2={930 + Math.cos(a) * 1400}
-                  y2={70 + Math.sin(a) * 1400}
+          <svg
+            viewBox={`0 0 ${L} ${H}`}
+            style={{ aspectRatio: `${L} / ${H}`, ['--largeur-carte' as string]: `${L}px` }}
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label={`Route des îles : cap sur l'île ${ileActuelle.numero}, ${Math.round(avancement * 100)} % du trajet`}
+            onClick={() => setFiche(null)}
+          >
+            <defs>
+              <mask
+                id="carte-route-faite"
+                maskUnits="userSpaceOnUse"
+                x="0"
+                y="0"
+                width={L}
+                height={H}
+              >
+                <path
+                  ref={traceFaite}
+                  d={route}
+                  className={styles.masqueRoute}
+                  strokeDasharray={`0 ${L * 4}`}
                 />
+              </mask>
+              <filter id="carte-flou" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="14" />
+              </filter>
+            </defs>
+
+            <g className={styles.rhumbs}>
+              {Array.from({ length: 16 }, (_, i) => {
+                const a = (i * Math.PI) / 8;
+                return (
+                  <line
+                    key={i}
+                    x1={L - 70}
+                    y1={70}
+                    x2={L - 70 + Math.cos(a) * 1400}
+                    y2={70 + Math.sin(a) * 1400}
+                  />
+                );
+              })}
+            </g>
+
+            {vagues(L).map(([x, y, delai], i) => (
+              <path
+                key={i}
+                d={`M${x - 12} ${y}q6 -5 12 0t12 0`}
+                className={styles.vaguelette}
+                style={{ animationDelay: `-${delai}s` }}
+              />
+            ))}
+
+            {mers.map((m) => {
+              const x = (pts[m.debut].x + pts[m.fin].x) / 2;
+              return (
+                <text key={m.arc + m.debut} x={x} y={H - 16} className={styles.mer}>
+                  {m.arc}
+                </text>
               );
             })}
-          </g>
 
-          {VAGUES.map(([x, y, delai], i) => (
-            <path
-              key={i}
-              d={`M${x - 12} ${y}q6 -5 12 0t12 0`}
-              className={styles.vaguelette}
-              style={{ animationDelay: `-${delai}s` }}
-            />
-          ))}
+            {redLines.map((x) => (
+              <g key={x} className={styles.redLine}>
+                <path d={redLine(x)} />
+                <text x={x} y={60} className={styles.redLineNom} transform={`rotate(90 ${x} 60)`}>
+                  RED LINE
+                </text>
+              </g>
+            ))}
 
-          {mers.map((m) => {
-            const x = (pts[m.debut].x + pts[m.fin].x) / 2;
-            return (
-              <text key={m.arc + m.debut} x={x} y={H - 16} className={styles.mer}>
-                {m.arc}
-              </text>
-            );
-          })}
-
-          {redLines.map((x) => (
-            <g key={x} className={styles.redLine}>
-              <path d={redLine(x)} />
-              <text x={x} y={60} className={styles.redLineNom} transform={`rotate(90 ${x} 60)`}>
-                RED LINE
+            {/* Village de départ. */}
+            <g aria-hidden="true">
+              <path
+                d={`M${DEPART.x - 24} ${DEPART.y + 12}q24 -18 48 0z`}
+                className={styles.villageTerre}
+              />
+              <path
+                d={`M${DEPART.x - 13} ${DEPART.y + 5}v-10l7 -6l7 6v10z`}
+                className={styles.villageMaison}
+              />
+              <path
+                d={`M${DEPART.x + 3} ${DEPART.y + 7}v-7l5 -4l5 4v7z`}
+                className={styles.villageMaison}
+              />
+              <text x={DEPART.x} y={DEPART.y + 32} className={styles.villageNom}>
+                Départ
               </text>
             </g>
-          ))}
 
-          {/* Village de départ. */}
-          <g aria-hidden="true">
+            {/* Route : pointillés à venir, trait rouge révélé jusqu'au navire. */}
+            <path ref={routeRef} d={route} className={styles.routeAVenir} />
+            <path d={route} className={styles.routeFaite} mask="url(#carte-route-faite)" />
             <path
-              d={`M${DEPART.x - 24} ${DEPART.y + 12}q24 -18 48 0z`}
-              className={styles.villageTerre}
+              ref={sillage}
+              d={route}
+              className={navigue ? `${styles.sillage} ${styles.sillageVisible}` : styles.sillage}
             />
-            <path
-              d={`M${DEPART.x - 13} ${DEPART.y + 5}v-10l7 -6l7 6v10z`}
-              className={styles.villageMaison}
-            />
-            <path
-              d={`M${DEPART.x + 3} ${DEPART.y + 7}v-7l5 -4l5 4v7z`}
-              className={styles.villageMaison}
-            />
-            <text x={DEPART.x} y={DEPART.y + 32} className={styles.villageNom}>
-              Départ
-            </text>
-          </g>
 
-          {/* Route : pointillés à venir, trait rouge révélé jusqu'au navire. */}
-          <path ref={routeRef} d={route} className={styles.routeAVenir} />
-          <path d={route} className={styles.routeFaite} mask="url(#carte-route-faite)" />
-          <path
-            ref={sillage}
-            d={route}
-            className={navigue ? `${styles.sillage} ${styles.sillageVisible}` : styles.sillage}
-          />
-
-          {iles.map((ile, i) => {
-            const { x, y } = pts[i];
-            const conquise = ilesConquises[ile.id] !== undefined;
-            const etat = conquise ? 'passee' : i === indexActuel ? 'actuelle' : 'avenir';
-            const lignes = deuxLignes(ile.titre);
-            const derniere = i === iles.length - 1;
-            const liste = etapes[ile.id] ?? [];
-            const faites = liste.filter((e) => e.faiteLe).length;
-            return (
-              <g
-                key={ile.id}
-                className={[styles.ile, styles[etat], fiche === i ? styles.choisie : ''].join(' ')}
-                role="button"
-                tabIndex={0}
-                aria-label={`Île ${ile.numero} : ${ile.titre}, ${faites} étapes sur ${liste.length}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setFiche((f) => (f === i ? null : i));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
+            {iles.map((ile, i) => {
+              const { x, y } = pts[i];
+              const conquise = ilesConquises[ile.id] !== undefined;
+              const etat = conquise ? 'passee' : i === indexActuel ? 'actuelle' : 'avenir';
+              const lignes = deuxLignes(ile.nom);
+              const derniere = i === iles.length - 1;
+              const liste = etapes[ile.id] ?? [];
+              const faites = liste.filter((e) => e.faiteLe).length;
+              return (
+                <g
+                  key={ile.id}
+                  className={[styles.ile, styles[etat], fiche === i ? styles.choisie : ''].join(
+                    ' ',
+                  )}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Île ${ile.numero}, ${ile.nom} : ${ile.titre}, ${faites} étapes sur ${liste.length}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setFiche((f) => (f === i ? null : i));
-                  }
-                }}
-              >
-                <circle cx={x} cy={y + 20} r="62" className={styles.zoneClic} />
-                <g transform={`translate(${x} ${y}) scale(${ECHELLE_ILE * 1.35})`}>
-                  <path d={SILHOUETTES[i % SILHOUETTES.length]} className={styles.rivage} />
-                </g>
-                <g transform={`translate(${x} ${y}) scale(${ECHELLE_ILE})`}>
-                  <path d={SILHOUETTES[i % SILHOUETTES.length]} className={styles.terre} />
-                </g>
-                <path d={`M${x + 8} ${y - 4}q2 -14 -2 -24`} className={styles.palmierTronc} />
-                <path
-                  d={`M${x + 6} ${y - 28}q-10 -2 -16 6M${x + 6} ${y - 28}q10 -4 16 3M${x + 6} ${y - 28}q-2 -10 -10 -12M${x + 6} ${y - 28}q6 -8 14 -7`}
-                  className={styles.palmierFeuilles}
-                />
-                {conquise && (
-                  <g className={styles.drapeau} transform={`translate(${x - 14} ${y - 6})`}>
-                    <line x1="0" y1="0" x2="0" y2="-34" className={styles.hampe} />
-                    <path
-                      d="M0 -34q8 -3 16 0t14 0v12q-7 3 -14 0t-16 0z"
-                      className={styles.etendard}
-                    />
-                    <circle cx="13" cy="-28" r="2.4" className={styles.etendardCrane} />
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setFiche((f) => (f === i ? null : i));
+                    }
+                  }}
+                >
+                  <circle cx={x} cy={y + 20} r="62" className={styles.zoneClic} />
+                  <g transform={`translate(${x} ${y}) scale(${ECHELLE_ILE * 1.35})`}>
+                    <path d={SILHOUETTES[i % SILHOUETTES.length]} className={styles.rivage} />
                   </g>
-                )}
-                {derniere && !conquise && (
+                  <g transform={`translate(${x} ${y}) scale(${ECHELLE_ILE})`}>
+                    <path d={SILHOUETTES[i % SILHOUETTES.length]} className={styles.terre} />
+                  </g>
+                  <path d={`M${x + 8} ${y - 4}q2 -14 -2 -24`} className={styles.palmierTronc} />
                   <path
-                    d={`M${x - 11} ${y - 11} l22 22 M${x + 11} ${y - 11} l-22 22`}
-                    className={styles.croix}
+                    d={`M${x + 6} ${y - 28}q-10 -2 -16 6M${x + 6} ${y - 28}q10 -4 16 3M${x + 6} ${y - 28}q-2 -10 -10 -12M${x + 6} ${y - 28}q6 -8 14 -7`}
+                    className={styles.palmierFeuilles}
                   />
-                )}
-                {/* Pastilles d'étapes : une par étape, pleine quand elle est faite. */}
-                {liste.map((e, k) => (
-                  <circle
-                    key={e.id}
-                    cx={x + (k - (liste.length - 1) / 2) * 11}
-                    cy={y + 36}
-                    r="3.6"
-                    className={e.faiteLe ? styles.pastilleFaite : styles.pastille}
-                  />
-                ))}
-                <text x={x} y={y + 60} className={styles.numero}>
-                  {ile.numero}
-                </text>
-                {lignes.map((l, k) => (
-                  <text key={l} x={x} y={y + 82 + k * 22} className={styles.nomIle}>
-                    {l}
+                  {conquise && (
+                    <g className={styles.drapeau} transform={`translate(${x - 14} ${y - 6})`}>
+                      <line x1="0" y1="0" x2="0" y2="-34" className={styles.hampe} />
+                      <path
+                        d="M0 -34q8 -3 16 0t14 0v12q-7 3 -14 0t-16 0z"
+                        className={styles.etendard}
+                      />
+                      <circle cx="13" cy="-28" r="2.4" className={styles.etendardCrane} />
+                    </g>
+                  )}
+                  {derniere && !conquise && (
+                    <path
+                      d={`M${x - 11} ${y - 11} l22 22 M${x + 11} ${y - 11} l-22 22`}
+                      className={styles.croix}
+                    />
+                  )}
+                  {/* Pastilles d'étapes : une par étape, pleine quand elle est faite. */}
+                  {liste.map((e, k) => (
+                    <circle
+                      key={e.id}
+                      cx={x + (k - (liste.length - 1) / 2) * 11}
+                      cy={y + 36}
+                      r="3.6"
+                      className={e.faiteLe ? styles.pastilleFaite : styles.pastille}
+                    />
+                  ))}
+                  <text x={x} y={y + 60} className={styles.numero}>
+                    {ile.numero}
                   </text>
-                ))}
+                  {lignes.map((l, k) => (
+                    <text key={l} x={x} y={y + 82 + k * 22} className={styles.nomIle}>
+                      {l}
+                    </text>
+                  ))}
+                </g>
+              );
+            })}
+
+            <g className={styles.mouettes} aria-hidden="true">
+              <path
+                d="M0 0q6 -6 12 0q6 -6 12 0"
+                className={`${styles.mouette} ${styles.mouette1}`}
+              />
+              <path
+                d="M0 0q5 -5 10 0q5 -5 10 0"
+                className={`${styles.mouette} ${styles.mouette2}`}
+              />
+              <path d="M0 0q4 -4 8 0q4 -4 8 0" className={`${styles.mouette} ${styles.mouette3}`} />
+            </g>
+
+            <g
+              ref={bateau}
+              className={styles.bateau}
+              transform={`translate(${DEPART.x} ${DEPART.y})`}
+            >
+              <ellipse cx="0" cy="4" rx="34" ry="7" className={styles.remous} />
+              <ellipse
+                cx="0"
+                cy="4"
+                rx="34"
+                ry="7"
+                className={`${styles.remous} ${styles.remous2}`}
+              />
+              {arrivee && (
+                <ellipse key={arrivee} cx="0" cy="4" rx="34" ry="7" className={styles.gerbe} />
+              )}
+              <g
+                className={navigue ? `${styles.coqueBateau} ${styles.enRoute}` : styles.coqueBateau}
+              >
+                <Navire
+                  niveau={niveauNavire}
+                  sansVagues
+                  x={-TAILLE_NAVIRE[niveauNavire] / 2}
+                  y={-TAILLE_NAVIRE[niveauNavire] * 0.51}
+                  width={TAILLE_NAVIRE[niveauNavire]}
+                  height={TAILLE_NAVIRE[niveauNavire] * 0.633}
+                />
               </g>
-            );
-          })}
+            </g>
 
-          <g className={styles.mouettes} aria-hidden="true">
-            <path d="M0 0q6 -6 12 0q6 -6 12 0" className={`${styles.mouette} ${styles.mouette1}`} />
-            <path d="M0 0q5 -5 10 0q5 -5 10 0" className={`${styles.mouette} ${styles.mouette2}`} />
-            <path d="M0 0q4 -4 8 0q4 -4 8 0" className={`${styles.mouette} ${styles.mouette3}`} />
-          </g>
-
-          <g
-            ref={bateau}
-            className={styles.bateau}
-            transform={`translate(${DEPART.x} ${DEPART.y})`}
-          >
-            <ellipse cx="0" cy="4" rx="34" ry="7" className={styles.remous} />
-            <ellipse
-              cx="0"
-              cy="4"
-              rx="34"
-              ry="7"
-              className={`${styles.remous} ${styles.remous2}`}
-            />
-            {arrivee && (
-              <ellipse key={arrivee} cx="0" cy="4" rx="34" ry="7" className={styles.gerbe} />
-            )}
-            <g className={navigue ? `${styles.coqueBateau} ${styles.enRoute}` : styles.coqueBateau}>
-              <Navire
-                niveau={niveauNavire}
-                sansVagues
-                x={-TAILLE_NAVIRE[niveauNavire] / 2}
-                y={-TAILLE_NAVIRE[niveauNavire] * 0.51}
-                width={TAILLE_NAVIRE[niveauNavire]}
-                height={TAILLE_NAVIRE[niveauNavire] * 0.633}
+            <g className={styles.nuages} filter="url(#carte-flou)" aria-hidden="true">
+              <ellipse
+                cx="0"
+                cy="110"
+                rx="120"
+                ry="38"
+                className={`${styles.nuage} ${styles.nuage1}`}
+              />
+              <ellipse
+                cx="0"
+                cy="300"
+                rx="160"
+                ry="44"
+                className={`${styles.nuage} ${styles.nuage2}`}
               />
             </g>
-          </g>
 
-          <g className={styles.nuages} filter="url(#carte-flou)" aria-hidden="true">
-            <ellipse
-              cx="0"
-              cy="110"
-              rx="120"
-              ry="38"
-              className={`${styles.nuage} ${styles.nuage1}`}
-            />
-            <ellipse
-              cx="0"
-              cy="300"
-              rx="160"
-              ry="44"
-              className={`${styles.nuage} ${styles.nuage2}`}
-            />
-          </g>
-
-          <RoseDesVents x={930} y={70} r={44} />
-        </svg>
+            <RoseDesVents x={L - 70} y={70} r={44} />
+          </svg>
+        </div>
 
         {/* Cap et carnet, en haut à gauche. */}
         <div className={styles.entete}>
           <button
             type="button"
             className={styles.cap}
-            onClick={() => setFiche(indexActuel)}
+            onClick={() => {
+              if (geo) centrerSur(pts[indexActuel].x, true);
+              setFiche(indexActuel);
+            }}
             title="Voir les étapes de la quête"
           >
             <span className={styles.capEtiquette}>
@@ -659,7 +752,7 @@ export function CarteMarine({
           <FicheIle
             key={fiche}
             ile={iles[fiche]}
-            cote={pts[fiche].x < L / 2 ? 'droite' : 'gauche'}
+            cote={fiche === indexActuel ? 'droite' : coteFiche(fiche)}
             etat={
               ilesConquises[iles[fiche].id]
                 ? 'conquise'
@@ -733,7 +826,7 @@ function FicheIle({
     <aside
       className={styles.fiche}
       data-cote={cote}
-      aria-label={`Île ${ile.numero} : ${ile.titre}`}
+      aria-label={`Île ${ile.numero} : ${ile.nom}`}
       onClick={(e) => e.stopPropagation()}
     >
       <button type="button" className={styles.ficheFermer} onClick={onFermer} aria-label="Fermer">
@@ -743,8 +836,15 @@ function FicheIle({
         Île {ile.numero} · {ile.arc}
         {etat === 'visee' && ' · cap actuel'}
       </span>
-      <h3 className={styles.ficheTitre}>{ile.titre}</h3>
-      <p className={styles.ficheQuete}>{ile.quete}</p>
+      <h3 className={styles.ficheTitre}>{ile.nom}</h3>
+      <p className={styles.ficheObjectif}>{ile.titre}</p>
+      <p className={styles.ficheSituation}>{ile.situation}</p>
+      <p className={styles.ficheQuete}>
+        <span>Quête</span> {ile.quete}
+      </p>
+      <p className={styles.fichePourquoi}>
+        <span>Pourquoi</span> {ile.pourquoi}
+      </p>
 
       {etat === 'visee' && (
         <div className={styles.ficheJauge} title={`${Math.round(avancement * 100)} % du trajet`}>

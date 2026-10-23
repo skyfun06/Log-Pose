@@ -33,6 +33,15 @@ function dateDuJour(): string {
 // reste de l'état sont gardés).
 const VERSION_REMISE_PRIME = 3;
 
+// Version des étapes suggérées : à chaque nouvelle version, les îles dont les
+// étapes sont encore les suggestions d'origine (rien coché, rien modifié)
+// reçoivent les nouvelles. Les étapes de Louis ne sont jamais touchées.
+const VERSION_ETAPES = 2;
+
+// Remise à zéro du voyage demandée par Louis : augmenter ce numéro efface une
+// fois les conquêtes et remet les étapes suggérées (rien de coché).
+const VERSION_REMISE_VOYAGE = 1;
+
 const CLE_SAUVEGARDE_PLANNING = 'log-pose-planning-avant-programme';
 
 interface GameState {
@@ -52,6 +61,8 @@ interface GameState {
   ilesConquises: Record<number, string>;
   // Étapes de la quête de chaque île (objectifs à cocher).
   etapes: Record<number, Etape[]>;
+  versionEtapes?: number;
+  versionRemiseVoyage?: number;
   blocsPlanning: BlocPlanning[];
   statutsMissions: Record<string, StatutMission>;
   dateStatuts: string;
@@ -69,6 +80,8 @@ const defaultState: GameState = {
   logPose: {},
   ilesConquises: {},
   etapes: etapesCompletes({}),
+  versionEtapes: VERSION_ETAPES,
+  versionRemiseVoyage: VERSION_REMISE_VOYAGE,
   blocsPlanning: PROGRAMME_CONSEILLE,
   statutsMissions: {},
   dateStatuts: dateDuJour(),
@@ -100,6 +113,22 @@ function etapesSuggerees(ile: Ile): Etape[] {
   }));
 }
 
+function etapesAJour(etapes: Record<number, Etape[]>, version: number): Record<number, Etape[]> {
+  if (version >= VERSION_ETAPES) return etapes;
+  const garde: Record<number, Etape[]> = {};
+  for (const [id, liste] of Object.entries(etapes)) {
+    const intactes = liste.every((e) => e.id.startsWith('sugg-') && !e.faiteLe);
+    if (!intactes) garde[Number(id)] = liste;
+  }
+  return garde;
+}
+
+// L'île visée : la première de la route qui n'est pas conquise (la dernière
+// quand tout est conquis).
+function ileVisee(conquises: Record<number, string>): number {
+  return (iles.find((i) => !conquises[i.id]) ?? iles[iles.length - 1]).id;
+}
+
 function etapesCompletes(etapes: Record<number, Etape[]>): Record<number, Etape[]> {
   const complet = { ...etapes };
   for (const ile of iles)
@@ -113,13 +142,8 @@ function avecConquete(etat: GameState): GameState {
   const id = etat.currentIslandId;
   const liste = etat.etapes[id] ?? [];
   if (etat.ilesConquises[id] || liste.length === 0 || liste.some((e) => !e.faiteLe)) return etat;
-  const idx = iles.findIndex((i) => i.id === id);
-  const suivante = iles[idx + 1];
-  return {
-    ...etat,
-    ilesConquises: { ...etat.ilesConquises, [id]: new Date().toISOString() },
-    currentIslandId: suivante ? suivante.id : id,
-  };
+  const ilesConquises = { ...etat.ilesConquises, [id]: new Date().toISOString() };
+  return { ...etat, ilesConquises, currentIslandId: ileVisee(ilesConquises) };
 }
 
 // Avancement vers l'île visée : part (pondérée par la difficulté) des étapes
@@ -148,6 +172,7 @@ function loadState(): GameState {
     // L'ancien compteur « prime » (sans registre) est abandonné : passer au
     // registre des gains repart de 0 €.
     const remise = (parsed.versionRemisePrime ?? 0) < VERSION_REMISE_PRIME;
+    const remiseVoyage = (parsed.versionRemiseVoyage ?? 0) < VERSION_REMISE_VOYAGE;
     const gains = Array.isArray(parsed.gains) && !remise ? parsed.gains : defaultState.gains;
     return {
       gains,
@@ -155,13 +180,14 @@ function loadState(): GameState {
       atteintLe: remise ? {} : (parsed.atteintLe ?? defaultState.atteintLe),
       versionRemisePrime: VERSION_REMISE_PRIME,
       butins: parsed.butins ?? defaultState.butins,
-      currentIslandId:
-        typeof parsed.currentIslandId === 'number'
-          ? parsed.currentIslandId
-          : defaultState.currentIslandId,
+      currentIslandId: ileVisee(remiseVoyage ? {} : (parsed.ilesConquises ?? {})),
       logPose: parsed.logPose ?? defaultState.logPose,
-      ilesConquises: parsed.ilesConquises ?? defaultState.ilesConquises,
-      etapes: etapesCompletes(parsed.etapes ?? {}),
+      ilesConquises: remiseVoyage ? {} : (parsed.ilesConquises ?? defaultState.ilesConquises),
+      etapes: etapesCompletes(
+        remiseVoyage ? {} : etapesAJour(parsed.etapes ?? {}, parsed.versionEtapes ?? 1),
+      ),
+      versionEtapes: VERSION_ETAPES,
+      versionRemiseVoyage: VERSION_REMISE_VOYAGE,
       blocsPlanning: programmeAJour(parsed),
       statutsMissions: parsed.statutsMissions ?? defaultState.statutsMissions,
       dateStatuts: parsed.dateStatuts ?? defaultState.dateStatuts,
@@ -305,21 +331,22 @@ export function useGameState() {
   // dernière étape cochée redevient à faire.
   const revenirIle = useCallback(() => {
     setState((prev) => {
-      const idx = iles.findIndex((i) => i.id === prev.currentIslandId);
-      const actuelleConquise = prev.ilesConquises[prev.currentIslandId] !== undefined;
-      const cible = actuelleConquise ? iles[idx] : iles[idx - 1];
-      if (!cible || !prev.ilesConquises[cible.id]) return prev;
+      const derniere = Object.entries(prev.ilesConquises).sort((x, y) =>
+        y[1].localeCompare(x[1]),
+      )[0];
+      if (!derniere) return prev;
+      const cibleId = Number(derniere[0]);
       const ilesConquises = { ...prev.ilesConquises };
-      delete ilesConquises[cible.id];
-      const liste = prev.etapes[cible.id] ?? [];
-      const derniere = liste
+      delete ilesConquises[cibleId];
+      const liste = prev.etapes[cibleId] ?? [];
+      const etape = liste
         .filter((e) => e.faiteLe)
-        .sort((a, b) => (b.faiteLe ?? '').localeCompare(a.faiteLe ?? ''))[0];
+        .sort((x, y) => (y.faiteLe ?? '').localeCompare(x.faiteLe ?? ''))[0];
       const etapes = {
         ...prev.etapes,
-        [cible.id]: liste.map((e) => (e.id === derniere?.id ? { ...e, faiteLe: undefined } : e)),
+        [cibleId]: liste.map((e) => (e.id === etape?.id ? { ...e, faiteLe: undefined } : e)),
       };
-      return { ...prev, ilesConquises, etapes, currentIslandId: cible.id };
+      return { ...prev, ilesConquises, etapes, currentIslandId: ileVisee(ilesConquises) };
     });
   }, []);
 

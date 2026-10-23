@@ -2,9 +2,11 @@ export interface Ile {
   id: number;
   numero: number;
   arc: string;
-  titre: string;
+  nom: string; // nom de l'île sur la carte (« Île de l'Aube »)
+  titre: string; // l'objectif de vie qu'elle représente
   situation: string;
   quete: string;
+  pourquoi: string; // l'idée derrière la quête
   backgroundImage: string;
   couleurFallback: string;
   // Étapes proposées tant que Louis n'a pas réglé les siennes.
