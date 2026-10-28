@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { avancementEtapes, type ResultatEtape } from '../state/useGameState';
 import type { Difficulte, Etape, Ile } from '../types';
 import { NOMS_DIFFICULTE } from '../data/difficulte';
@@ -161,6 +161,24 @@ interface Geometrie {
   iles: number[]; // distance de chaque île le long de la route
 }
 
+// Géométrie déjà mesurée, par tracé de route.
+const geometries = new Map<string, Geometrie>();
+
+// Un seul parcours de la route (un point tous les 2 px) : pour chaque île, la
+// distance du point le plus proche.
+function mesurerRoute(chemin: SVGPathElement, pts: { x: number; y: number }[]): Geometrie {
+  const total = chemin.getTotalLength();
+  const meilleurs = pts.map(() => ({ distance: 0, ecart: Infinity }));
+  for (let d = 0; d <= total; d += 2) {
+    const q = chemin.getPointAtLength(d);
+    pts.forEach((p, i) => {
+      const e = (q.x - p.x) ** 2 + (q.y - p.y) ** 2;
+      if (e < meilleurs[i].ecart) meilleurs[i] = { distance: d, ecart: e };
+    });
+  }
+  return { total, iles: meilleurs.map((m) => m.distance) };
+}
+
 interface Bravo {
   cle: number;
   titre: string;
@@ -207,33 +225,29 @@ export function CarteMarine({
   const sillage = useRef<SVGPathElement>(null);
   const traceFaite = useRef<SVGPathElement>(null);
   const finNavigation = useRef(onFinNavigation);
-  finNavigation.current = onFinNavigation;
+  useLayoutEffect(() => {
+    finNavigation.current = onFinNavigation;
+  });
 
-  const [geo, setGeo] = useState<Geometrie | null>(null);
+  const [geo, setGeo] = useState<Geometrie | null>(() => geometries.get(route) ?? null);
   const [navigue, setNavigue] = useState(false);
   const [arrivee, setArrivee] = useState<number | null>(null);
   const [fiche, setFiche] = useState<number | null>(null);
+  const [coteDeLaFiche, setCoteDeLaFiche] = useState<'gauche' | 'droite'>('droite');
   const [bravo, setBravo] = useState<Bravo | null>(null);
 
-  // Mesure la route : où chaque île se trouve le long du tracé.
+  // Mesure la route : où chaque île se trouve le long du tracé (une seule fois
+  // par tracé, puis gardé en mémoire pour les retours sur la carte).
   useLayoutEffect(() => {
     const chemin = routeRef.current;
     if (!chemin) return;
-    const total = chemin.getTotalLength();
-    const distances = pts.map((p) => {
-      let meilleur = 0;
-      let ecart = Infinity;
-      for (let d = 0; d <= total; d += 2) {
-        const q = chemin.getPointAtLength(d);
-        const e = (q.x - p.x) ** 2 + (q.y - p.y) ** 2;
-        if (e < ecart) [ecart, meilleur] = [e, d];
-      }
-      return meilleur;
-    });
-    setGeo({ total, iles: distances });
-    // pts ne dépend que du nombre d'îles, déjà reflété par la route.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [route]);
+    let g = geometries.get(route);
+    if (!g) {
+      g = mesurerRoute(chemin, positions(iles.length));
+      geometries.set(route, g);
+    }
+    setGeo(g);
+  }, [route, iles.length]);
 
   // Où le navire doit être : entre le dernier mouillage et l'île visée, selon
   // la part des étapes faites. Tout conquis : au mouillage de la dernière île.
@@ -370,6 +384,11 @@ export function CarteMarine({
     const x = pts[i].x * (el.scrollWidth / L) - el.scrollLeft;
     return x < el.clientWidth / 2 ? 'droite' : 'gauche';
   }
+  // Mesuré au clic (la position à l'écran dépend du défilement).
+  function basculerFiche(i: number) {
+    setCoteDeLaFiche(coteFiche(i));
+    setFiche((f) => (f === i ? null : i));
+  }
 
   useEffect(() => {
     if (arrivee === null) return;
@@ -453,7 +472,7 @@ export function CarteMarine({
         >
           <svg
             viewBox={`0 0 ${L} ${H}`}
-            style={{ aspectRatio: `${L} / ${H}`, ['--largeur-carte' as string]: `${L}px` }}
+            style={{ aspectRatio: `${L} / ${H}`, '--largeur-carte': `${L}px` } as CSSProperties}
             preserveAspectRatio="xMidYMid meet"
             role="img"
             aria-label={`Route des îles : cap sur l'île ${ileActuelle.numero}, ${Math.round(avancement * 100)} % du trajet`}
@@ -569,12 +588,12 @@ export function CarteMarine({
                   aria-label={`Île ${ile.numero}, ${ile.nom} : ${ile.titre}, ${faites} étapes sur ${liste.length}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setFiche((f) => (f === i ? null : i));
+                    basculerFiche(i);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      setFiche((f) => (f === i ? null : i));
+                      basculerFiche(i);
                     }
                   }}
                 >
@@ -752,7 +771,7 @@ export function CarteMarine({
           <FicheIle
             key={fiche}
             ile={iles[fiche]}
-            cote={fiche === indexActuel ? 'droite' : coteFiche(fiche)}
+            cote={fiche === indexActuel ? 'droite' : coteDeLaFiche}
             etat={
               ilesConquises[iles[fiche].id]
                 ? 'conquise'

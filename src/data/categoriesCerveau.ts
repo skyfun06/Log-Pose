@@ -1,5 +1,5 @@
-// Catégories du second cerveau. Pour en ajouter une : une entrée ici (le
-// serveur accepte n'importe quel nom).
+// Catégories de base du second cerveau. Louis peut en créer d'autres depuis le
+// formulaire (state/useCategoriesCerveau.ts) ; le serveur accepte n'importe quel nom.
 
 export interface CategorieCerveau {
   nom: string;
@@ -9,6 +9,8 @@ export interface CategorieCerveau {
   avecMontant?: boolean;
   // Exemple de note affiché dans le formulaire.
   exempleNote: string;
+  // Créée par Louis (supprimable).
+  perso?: boolean;
 }
 
 export const CATEGORIES_CERVEAU: CategorieCerveau[] = [
@@ -67,8 +69,8 @@ export const CATEGORIES_CERVEAU: CategorieCerveau[] = [
   },
 ];
 
-export function categorie(nom: string): CategorieCerveau {
-  return CATEGORIES_CERVEAU.find((c) => c.nom === nom) ?? CATEGORIES_CERVEAU[CATEGORIES_CERVEAU.length - 1];
+export function categorie(nom: string, liste: CategorieCerveau[] = CATEGORIES_CERVEAU): CategorieCerveau {
+  return liste.find((c) => c.nom === nom) ?? CATEGORIES_CERVEAU[CATEGORIES_CERVEAU.length - 1];
 }
 
 // Devine la catégorie d'après le nom du fichier (simple point de départ :

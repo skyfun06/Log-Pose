@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import type { FormEvent, Ref } from 'react';
-import photoAffiche from '../assets/photo-affiche.png';
+import photoAffiche from '../assets/photo-affiche.webp';
 import { BERRYS_PAR_EURO, PALIERS } from '../data/paliers';
 import { ARRIVEE_PIECES, jaillirPieces, rejouer, texteFlottant } from './effetsGain';
 import { useCompteur } from './useCompteur';
@@ -169,7 +169,7 @@ export function AfficheWanted({
       tabIndex={onClick ? 0 : -1}
     >
       <span className={styles.aura} aria-hidden="true" />
-      <img src="/assets/affiche-wanted.png" alt="Avis de recherche" className={styles.cadre} />
+      <img src="/assets/affiche-wanted.webp" alt="Avis de recherche" className={styles.cadre} />
 
       <div className={styles.zonePhoto}>
         <img

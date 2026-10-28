@@ -14,6 +14,7 @@ import type {
   HabitudeDuJour,
   MarquesHabitudes,
 } from '../types';
+import { enregistrer } from './synchro';
 
 const STORAGE_KEY = 'log-pose-habitudes';
 
@@ -121,7 +122,7 @@ export function useHabitudes() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      enregistrer(STORAGE_KEY, JSON.stringify(state));
     } catch {
       /* quota : tant pis, l'écran reste à jour */
     }

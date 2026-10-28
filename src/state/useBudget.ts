@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PosteBudget, SourceSalaire } from '../types';
+import { enregistrer } from './synchro';
 
 const STORAGE_KEY = 'log-pose-budget';
 
@@ -58,7 +59,7 @@ export function useBudget() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      enregistrer(STORAGE_KEY, JSON.stringify(state));
     } catch {
       /* quota : tant pis */
     }

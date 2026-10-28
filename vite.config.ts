@@ -1,10 +1,17 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  // React Compiler : mémorise tout seul les composants, pour que seul ce qui
+  // change soit redessiné (changement d'onglet, rafraîchissements en fond…).
+  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
   server: {
+    // Écoute aussi hors de ce PC, pour ouvrir le site depuis le téléphone via
+    // Tailscale (adresse en 100.x.x.x ou nom en .ts.net).
+    host: true,
+    allowedHosts: ['.ts.net'],
     proxy: {
       // Proxy vers le serveur relais (server/index.js, « npm run server ») :
       // le front appelle « /api/... » et Vite relaie vers localhost:3001.

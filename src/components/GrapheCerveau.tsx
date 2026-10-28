@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { dateFiche, dateLisible } from '../data/formatCerveau';
+import { lierFichiers } from '../data/liensCerveau';
 import type { FicheCerveau } from '../types';
 import styles from './GrapheCerveau.module.css';
 
 // Graphe du second cerveau, façon Obsidian : chaque fichier est un point relié
-// à sa catégorie (gros nœud doré) et aux fichiers qui partagent ses mots-clés.
+// à sa catégorie (gros nœud doré) et aux fichiers qui lui ressemblent vraiment
+// (voir data/liensCerveau.ts).
 // Simulation de forces maison (répulsion, ressorts, rappel au centre) dessinée
 // sur un canvas : on glisse les nœuds, on zoome à la molette, on déplace le
 // fond ; le survol allume les voisins et estompe le reste.
@@ -28,38 +30,8 @@ interface Lien {
   longueur: number;
   force: number;
   categorie: boolean; // fichier → catégorie (sinon fichier ↔ fichier)
+  communs?: string[]; // fichier ↔ fichier : les termes qui les relient
 }
-
-// --- Liens entre fichiers ---------------------------------------------------
-
-const MOTS_VIDES = new Set(
-  'les des une pour avec dans sur par fichier document fiche projet style'.split(' '),
-);
-
-function normaliser(texte: string) {
-  return texte
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '');
-}
-
-// Les mots-clés lus par la vigie, plus les mots marquants du nom et de la note.
-function motsDe(fiche: FicheCerveau): Set<string> {
-  const mots = new Set<string>();
-  const ajouter = (texte: string) => {
-    for (const mot of normaliser(texte).split(/[^a-z0-9]+/)) {
-      if (mot.length >= 4 && !MOTS_VIDES.has(mot)) mots.add(mot);
-    }
-  };
-  if (fiche.analyse.etat === 'faite') fiche.analyse.motsCles.forEach(ajouter);
-  ajouter(fiche.nom);
-  ajouter(fiche.note);
-  return mots;
-}
-
-// Chaque fichier garde ses 3 plus proches voisins (au moins 2 mots en commun).
-const VOISINS_MAX = 3;
-const MOTS_COMMUNS_MIN = 2;
 
 function construire(fichiers: FicheCerveau[]) {
   const noeuds: Omit<Noeud, 'x' | 'y' | 'vx' | 'vy' | 'fixe'>[] = [];
@@ -97,32 +69,16 @@ function construire(fichiers: FicheCerveau[]) {
     });
   }
 
-  const mots = fichiers.map(motsDe);
-  const dejaLies = new Set<string>();
-  fichiers.forEach((_, i) => {
-    const proches = fichiers
-      .map((__, j) => {
-        if (j === i) return { j, communs: 0 };
-        let communs = 0;
-        for (const m of mots[i]) if (mots[j].has(m)) communs++;
-        return { j, communs };
-      })
-      .filter((p) => p.communs >= MOTS_COMMUNS_MIN)
-      .sort((p, q) => q.communs - p.communs)
-      .slice(0, VOISINS_MAX);
-    for (const { j, communs } of proches) {
-      const cle = i < j ? `${i}-${j}` : `${j}-${i}`;
-      if (dejaLies.has(cle)) continue;
-      dejaLies.add(cle);
-      liens.push({
-        a: debutFichiers + i,
-        b: debutFichiers + j,
-        longueur: 60,
-        force: Math.min(0.5, 0.1 * communs),
-        categorie: false,
-      });
-    }
-  });
+  for (const { a, b, score, communs } of lierFichiers(fichiers)) {
+    liens.push({
+      a: debutFichiers + a,
+      b: debutFichiers + b,
+      longueur: 60,
+      force: 0.1 + 0.4 * score,
+      categorie: false,
+      communs,
+    });
+  }
 
   // Plus un fichier a de voisins, plus son point est gros (comme Obsidian).
   const degre = new Map<number, number>();
@@ -180,7 +136,14 @@ export function GrapheCerveau({
 }) {
   const conteneur = useRef<HTMLDivElement>(null);
   const toile = useRef<HTMLCanvasElement>(null);
-  const [survol, setSurvol] = useState<{ nom: string; meta: string; x: number; y: number } | null>(null);
+  const [survol, setSurvol] = useState<{
+    nom: string;
+    meta: string;
+    // Fichiers reliés, et pourquoi.
+    lies: { nom: string; par: string }[];
+    x: number;
+    y: number;
+  } | null>(null);
 
   // Le graphe n'est reconstruit que si les fichiers, leurs noms ou leurs
   // mots-clés changent (pas à chaque rafraîchissement de la liste).
@@ -473,7 +436,10 @@ export function GrapheCerveau({
         }
         // Bulle pour les fichiers ; une catégorie a déjà son étiquette.
         const n = e.noeuds[i];
-        setSurvol(n.type === 'fichier' ? { nom: n.nom, meta: n.meta, x: cx, y: cy } : null);
+        const lies = e.liens
+          .filter((l) => l.communs && (l.a === i || l.b === i))
+          .map((l) => ({ nom: e.noeuds[l.a === i ? l.b : l.a].nom, par: l.communs!.slice(0, 3).join(', ') }));
+        setSurvol(n.type === 'fichier' ? { nom: n.nom, meta: n.meta, lies, x: cx, y: cy } : null);
       } else {
         setSurvol(null);
       }
@@ -583,7 +549,7 @@ export function GrapheCerveau({
         ref={toile}
         className={styles.toile}
         role="img"
-        aria-label={`Graphe de ${fichiers.length} fichiers reliés par catégorie et par mots-clés communs. La vue grille liste les mêmes fichiers.`}
+        aria-label={`Graphe de ${fichiers.length} fichiers reliés par catégorie et par sujets communs. La vue grille liste les mêmes fichiers.`}
       />
       {survol && (
         <div
@@ -593,6 +559,11 @@ export function GrapheCerveau({
         >
           <span className={styles.bulleNom}>{survol.nom}</span>
           <span className={styles.bulleMeta}>{survol.meta}</span>
+          {survol.lies.map((l) => (
+            <span key={l.nom} className={styles.bulleLien}>
+              ↔ {l.nom} <span className={styles.bulleMeta}>· {l.par}</span>
+            </span>
+          ))}
         </div>
       )}
       <div className={styles.commandes}>

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import {
-  CATEGORIES_CERVEAU,
-  categorie as trouverCategorie,
-  devinerCategorie,
-  nomDepuisFichier,
-} from '../data/categoriesCerveau';
+import { categorie as trouverCategorie, devinerCategorie, nomDepuisFichier } from '../data/categoriesCerveau';
 import { tailleLisible } from '../data/formatCerveau';
+import {
+  creerCategorie,
+  ICONES_PERSO,
+  LONGUEUR_MAX_CATEGORIE,
+  supprimerCategorie,
+  useCategoriesCerveau,
+} from '../state/useCategoriesCerveau';
 import type { FicheCerveau, InfosCerveau } from '../types';
 import { IconeCategorie, Vignette } from './CerveauIcones';
 import base from './BlocForm.module.css';
@@ -47,16 +49,47 @@ export function CerveauForm({ fichier, position, fiche, onValider, onAnnuler }: 
     return () => URL.revokeObjectURL(url);
   }, [fichier]);
 
-  // Échap ferme la popup.
+  const categories = useCategoriesCerveau();
+  const choix = trouverCategorie(categorie, categories);
+
+  // Création d'une catégorie, dans un petit encart sous la liste.
+  const [creation, setCreation] = useState(false);
+  const [nouveauNom, setNouveauNom] = useState('');
+  const [nouvelleIcone, setNouvelleIcone] = useState(ICONES_PERSO[0]);
+  const [erreurCategorie, setErreurCategorie] = useState('');
+
+  function fermerCreation() {
+    setCreation(false);
+    setNouveauNom('');
+    setNouvelleIcone(ICONES_PERSO[0]);
+    setErreurCategorie('');
+  }
+
+  function creer() {
+    const probleme = creerCategorie(nouveauNom, nouvelleIcone);
+    if (probleme) {
+      setErreurCategorie(probleme);
+      return;
+    }
+    setCategorie(nouveauNom.trim().replace(/\s+/g, ' '));
+    fermerCreation();
+  }
+
+  function supprimer(nom: string) {
+    if (!window.confirm(`Supprimer la catégorie « ${nom} » ? Les fichiers déjà rangés dedans la gardent.`)) return;
+    supprimerCategorie(nom);
+  }
+
+  // Échap ferme l'encart de création s'il est ouvert, sinon la popup.
   useEffect(() => {
     const surTouche = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !envoi) onAnnuler();
+      if (e.key !== 'Escape' || envoi) return;
+      if (creation) fermerCreation();
+      else onAnnuler();
     };
     window.addEventListener('keydown', surTouche);
     return () => window.removeEventListener('keydown', surTouche);
-  }, [envoi, onAnnuler]);
-
-  const choix = trouverCategorie(categorie);
+  }, [envoi, creation, onAnnuler]);
   const avecMontant = choix.avecMontant || montant !== '';
 
   async function valider(e: FormEvent) {
@@ -139,20 +172,98 @@ export function CerveauForm({ fichier, position, fiche, onValider, onAnnuler }: 
         <div className={base.champLabel}>
           Catégorie
           <div className={styles.categories} role="radiogroup" aria-label="Catégorie">
-            {CATEGORIES_CERVEAU.map((c) => (
-              <button
-                key={c.nom}
-                type="button"
-                role="radio"
-                aria-checked={categorie === c.nom}
-                className={categorie === c.nom ? `${styles.categorie} ${styles.categorieActive}` : styles.categorie}
-                onClick={() => setCategorie(c.nom)}
-              >
-                <IconeCategorie nom={c.nom} className={styles.categorieIcone} />
-                {c.nom}
-              </button>
+            {categories.map((c) => (
+              <span key={c.nom} className={styles.categorieCase}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={categorie === c.nom}
+                  className={categorie === c.nom ? `${styles.categorie} ${styles.categorieActive}` : styles.categorie}
+                  onClick={() => setCategorie(c.nom)}
+                >
+                  <IconeCategorie nom={c.nom} className={styles.categorieIcone} />
+                  <span className={styles.categorieNom}>{c.nom}</span>
+                </button>
+                {c.perso && (
+                  <button
+                    type="button"
+                    className={styles.categorieSupprimer}
+                    onClick={() => supprimer(c.nom)}
+                    aria-label={`Supprimer la catégorie ${c.nom}`}
+                    title="Supprimer cette catégorie"
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
             ))}
+            {!creation && (
+              <button
+                type="button"
+                className={`${styles.categorie} ${styles.categorieNouvelle}`}
+                onClick={() => setCreation(true)}
+              >
+                + Nouvelle
+              </button>
+            )}
           </div>
+          {creation && (
+            <div className={styles.creation}>
+              <div className={styles.creationLigne}>
+                <input
+                  type="text"
+                  className={base.champ}
+                  value={nouveauNom}
+                  onChange={(e) => {
+                    setNouveauNom(e.target.value);
+                    setErreurCategorie('');
+                  }}
+                  onKeyDown={(e) => {
+                    // Entrée crée la catégorie au lieu d'envoyer le formulaire.
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      creer();
+                    }
+                  }}
+                  maxLength={LONGUEUR_MAX_CATEGORIE}
+                  placeholder="Nom de la catégorie"
+                  aria-label="Nom de la nouvelle catégorie"
+                  autoFocus
+                />
+                <button type="button" className={styles.creationValider} onClick={creer}>
+                  Créer
+                </button>
+                <button type="button" className={styles.creationAnnuler} onClick={fermerCreation}>
+                  Annuler
+                </button>
+              </div>
+              <div className={styles.icones} role="radiogroup" aria-label="Icône de la catégorie">
+                {ICONES_PERSO.map((icone) => (
+                  <button
+                    key={icone}
+                    type="button"
+                    role="radio"
+                    aria-checked={nouvelleIcone === icone}
+                    className={nouvelleIcone === icone ? `${styles.icone} ${styles.iconeActive}` : styles.icone}
+                    onClick={() => setNouvelleIcone(icone)}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d={icone} />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+              {erreurCategorie && <p className={base.erreur}>{erreurCategorie}</p>}
+            </div>
+          )}
         </div>
 
         <div className={styles.ligne}>

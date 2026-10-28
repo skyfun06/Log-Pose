@@ -48,6 +48,16 @@
   color: var(--parch-300);
 }
 
+/* Pourquoi ce fichier est relié à ses voisins. */
+.bulleLien {
+  font-size: 13px;
+  color: var(--parch-050);
+}
+
+.bulleLien .bulleMeta {
+  font-size: 13px;
+}
+
 .commandes {
   position: absolute;
   top: 10px;

@@ -1,10 +1,12 @@
 import { categorie } from '../data/categoriesCerveau';
 import { formatFichier } from '../data/formatCerveau';
+import { useCategoriesCerveau } from '../state/useCategoriesCerveau';
 import { urlFichier } from '../state/useCerveau';
 import type { FicheCerveau } from '../types';
 
 // Icône d'une catégorie, gravée au trait (couleur héritée du texte).
 export function IconeCategorie({ nom, className }: { nom: string; className?: string }) {
+  const categories = useCategoriesCerveau();
   return (
     <svg
       className={className}
@@ -16,7 +18,7 @@ export function IconeCategorie({ nom, className }: { nom: string; className?: st
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d={categorie(nom).icone} />
+      <path d={categorie(nom, categories).icone} />
     </svg>
   );
 }

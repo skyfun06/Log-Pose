@@ -121,6 +121,136 @@
   height: 17px;
 }
 
+/* Case d'une catégorie : son bouton, et la croix des catégories perso. */
+.categorieCase {
+  position: relative;
+  display: flex;
+}
+
+.categorieCase > .categorie {
+  flex: 1;
+  min-width: 0;
+}
+
+.categorieNom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categorieSupprimer {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #b99b5e;
+  background: #f4e8cc;
+  color: var(--ink-600);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.categorieCase:hover .categorieSupprimer,
+.categorieSupprimer:focus-visible {
+  opacity: 1;
+}
+
+/* Écran tactile : pas de survol, la croix reste visible. */
+@media (hover: none) {
+  .categorieSupprimer {
+    opacity: 1;
+  }
+}
+
+.categorieNouvelle {
+  justify-content: center;
+  border-style: dashed;
+  background: transparent;
+  color: var(--gold-deep);
+}
+
+/* --- Création d'une catégorie --- */
+.creation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px dashed rgba(122, 90, 46, 0.55);
+  background: rgba(185, 155, 94, 0.12);
+}
+
+.creationLigne {
+  display: flex;
+  gap: 6px;
+}
+
+.creationLigne input {
+  flex: 1;
+  min-width: 0;
+}
+
+.creationValider,
+.creationAnnuler {
+  flex-shrink: 0;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid var(--ink-600);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.creationValider {
+  background: var(--grad-ink);
+  color: var(--gold-100);
+}
+
+.creationAnnuler {
+  border-color: #b99b5e;
+  background: transparent;
+  color: var(--ink-600);
+}
+
+.icones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.icone {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 9px;
+  border: 1px solid #b99b5e;
+  background: rgba(185, 155, 94, 0.12);
+  color: var(--ink-600);
+  cursor: pointer;
+}
+
+.icone svg {
+  width: 19px;
+  height: 19px;
+}
+
+.iconeActive {
+  border-color: var(--ink-600);
+  background: var(--grad-ink);
+  color: var(--gold-100);
+}
+
 /* --- Champs --- */
 .ligne {
   display: flex;

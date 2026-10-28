@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CATEGORIES_CERVEAU } from '../data/categoriesCerveau';
+import { useCategoriesCerveau } from '../state/useCategoriesCerveau';
 import {
   correspondAuFiltre,
   dateFiche,
@@ -391,6 +391,7 @@ function Cale({
     }
   }
 
+  const toutesCategories = useCategoriesCerveau();
   const comptes = useMemo(() => {
     const parCategorie = new Map<string, number>();
     for (const f of fichiers) parCategorie.set(f.categorie, (parCategorie.get(f.categorie) ?? 0) + 1);
@@ -402,8 +403,8 @@ function Cale({
   );
   // Catégories connues d'abord, puis celles venues d'ailleurs.
   const categories = [
-    ...CATEGORIES_CERVEAU.map((c) => c.nom).filter((n) => comptes.has(n)),
-    ...[...comptes.keys()].filter((n) => !CATEGORIES_CERVEAU.some((c) => c.nom === n)),
+    ...toutesCategories.map((c) => c.nom).filter((n) => comptes.has(n)),
+    ...[...comptes.keys()].filter((n) => !toutesCategories.some((c) => c.nom === n)),
   ];
 
   return (
