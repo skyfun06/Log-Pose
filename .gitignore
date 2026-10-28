@@ -36,3 +36,9 @@ server/.cache-*.json
 
 # Second cerveau : tes fichiers et leur index restent sur ta machine
 server/cerveau/
+
+# Données synchronisées entre le PC et le téléphone (habitudes, jeu, budget)
+server/.donnees.json*
+
+# Comptes reliés de l'onglet Réseaux (jetons d'accès TikTok, YouTube…)
+server/.reseau-*.json*

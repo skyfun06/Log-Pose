@@ -181,7 +181,53 @@ export type Vue =
   | 'habitudes'
   | 'budget'
   | 'courrier'
+  | 'reseaux'
   | 'going-merry';
+
+// --- Réseaux ---------------------------------------------------------------
+
+// Plateformes de l'onglet « Réseaux » (voir server/reseaux/index.js).
+export type IdReseau = 'tiktok' | 'instagram' | 'youtube';
+
+// Un compte tel que vu par le serveur. « manque » : autorisations non
+// accordées ; « destination » : où atterrit une vidéo envoyée (« tes
+// brouillons TikTok ») ; « conseil » : quoi faire ensuite.
+export interface EtatReseau {
+  id: IdReseau;
+  nom: string;
+  configure: boolean;
+  connecte: boolean;
+  manque: string[];
+  destination: string;
+  conseil: string | null;
+  publique?: boolean; // la vidéo sort tout de suite en public (pas de brouillon)
+  legende?: boolean; // la légende saisie dans Log Pose est reprise
+}
+
+export interface VideoReseau {
+  id: string;
+  titre: string;
+  publieeLe: string; // ISO
+  couverture: string | null;
+  lien: string | null;
+  duree: number; // secondes
+  vues: number;
+  likes: number | null; // null = la plateforme ne le donne pas
+  commentaires: number | null;
+  partages: number | null;
+}
+
+export interface StatsReseau {
+  compte: {
+    nom: string;
+    avatar: string | null;
+    abonnes: number;
+    likes: number | null;
+    videos: number;
+  };
+  videos: VideoReseau[]; // publiques, les plus récentes d'abord
+  releveLe: string; // ISO
+}
 
 // --- Second cerveau ---------------------------------------------------------
 

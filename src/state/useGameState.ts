@@ -12,6 +12,7 @@ import type {
   Mission,
   StatutMission,
 } from '../types';
+import { enregistrer } from './synchro';
 
 const STORAGE_KEY = 'log-pose-state';
 
@@ -36,7 +37,7 @@ const VERSION_REMISE_PRIME = 3;
 // Version des étapes suggérées : à chaque nouvelle version, les îles dont les
 // étapes sont encore les suggestions d'origine (rien coché, rien modifié)
 // reçoivent les nouvelles. Les étapes de Louis ne sont jamais touchées.
-const VERSION_ETAPES = 2;
+const VERSION_ETAPES = 4;
 
 // Remise à zéro du voyage demandée par Louis : augmenter ce numéro efface une
 // fois les conquêtes et remet les étapes suggérées (rien de coché).
@@ -202,7 +203,7 @@ export function useGameState() {
   const [state, setState] = useState<GameState>(loadState);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    enregistrer(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
   useEffect(() => {

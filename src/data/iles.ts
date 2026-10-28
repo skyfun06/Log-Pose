@@ -1,17 +1,23 @@
 import type { Ile } from '../types';
 
-// Le voyage : 15 îles en trois mers, de plus en plus exigeantes.
-//  - East Blue : se construire (journées, argent, premier revenu, études, compétence) ;
-//  - Grand Line : lancer le business (idée, structure, visibilité, clients, réputation) ;
-//  - Nouveau Monde : grandir et se libérer (récurrence, équipe, systèmes, liberté).
+// Le voyage : 15 îles en trois mers, calées sur le vrai projet de Louis
+// (abonnement à 40 €/mois pour faire monter la note des commerces sous
+// 4 étoiles, démarchés en physique entre Nice et Cannes).
+//  - East Blue : préparer le lancement (novembre-décembre 2026) : site final,
+//    son parcours raconté en vidéo, futurs démarcheurs réunis, premiers
+//    commerces engagés pour janvier, société au 1er janvier ;
+//  - Grand Line : conquérir (dès janvier 2027) : premiers clients, démarcheurs
+//    recrutés par le parrainage, recommandations, 1 000 € par mois ;
+//  - Nouveau Monde : grandir puis passer à la suite : 1 500 € net par mois
+//    (plus jamais de patron), équipe sur toute la Côte, entreprise suivante.
 // Chaque île a une quête courte (3 à 4 étapes) pour avancer souvent. L'ordre
 // du tableau est l'ordre de la route ; les id ne servent que de clés (les
 // anciennes îles 1 à 5 gardent les leurs pour ne rien perdre).
 
-const FOND = '/assets/ile1.png';
+const FOND = '/assets/ile1.webp';
 
 export const iles: Ile[] = [
-  // ===== East Blue : se construire =====
+  // ===== East Blue : préparer le lancement (novembre-décembre 2026) =====
   {
     id: 6,
     numero: 1,
@@ -35,270 +41,280 @@ export const iles: Ile[] = [
     id: 7,
     numero: 2,
     arc: 'East Blue',
-    nom: 'Île du Coffre',
-    titre: 'Prendre le contrôle de mon argent',
+    nom: 'Chantier Naval',
+    titre: 'Mettre le site en version finale',
     situation:
-      'Un pirate sans coffre ne va pas loin. Sur cette île, on apprend à savoir où part chaque berry.',
-    quete: 'Construire un budget et une première réserve.',
+      'Le navire est construit, il reste les derniers coups de rabot. Mi-novembre, il doit pouvoir prendre la mer sans prendre l’eau.',
+    quete: 'Peaufiner le site et le mettre en ligne en version finale avant le 20 novembre.',
     pourquoi:
-      'Maîtriser ses dépenses libère de l’énergie et du courage : on ose davantage quand on a un filet de sécurité.',
+      'Un commerçant qui voit un bug ne signe pas, un futur démarcheur qui voit un site bancal ne s’engage pas. Le site, c’est ta crédibilité.',
     etapesSuggerees: [
-      { texte: 'Répartir mon salaire dans le budget', difficulte: 1 },
-      { texte: 'Suivre mes dépenses pendant un mois', difficulte: 2 },
-      { texte: 'Mettre 300 € de côté', difficulte: 2 },
-      { texte: "Avoir un mois de dépenses d'avance", difficulte: 3 },
+      { texte: 'Lister les dernières choses à peaufiner', difficulte: 1 },
+      { texte: 'Faire tout le parcours client moi-même, du début au paiement', difficulte: 2 },
+      { texte: 'Corriger tout ce qui accroche', difficulte: 2 },
+      { texte: 'Mettre en ligne la version finale', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#2C1E12',
+    couleurFallback: '#2A1E2C',
   },
   {
     id: 1,
     numero: 3,
     arc: 'East Blue',
-    nom: 'Port du Premier Berry',
-    titre: 'Gagner mon premier euro par moi-même',
+    nom: 'Île des Projecteurs',
+    titre: 'Faire de mon parcours une série que les gens suivent',
     situation:
-      "Le salaire paie le voyage, mais ici il s'agit d'autre chose : prouver qu'on peut créer de la valeur seul, sans patron.",
-    quete: 'Encaisser un premier revenu hors salaire, aussi petit soit-il.',
+      "Un jeune qui arrête les cours pour monter sa boîte et devenir riche : c’est déjà une histoire. Sur cette île, tu la racontes chaque jour, et les gens s’attachent.",
+    quete: 'Trouver mon format, tenir 30 jours d’affilée et passer les 1 000 abonnés.',
     pourquoi:
-      'Le premier euro gagné seul change tout : on passe de « je voudrais » à « je sais le faire ».',
+      'Tes futurs démarcheurs ont ton âge et scrollent TikTok. S’ils te voient avancer jour après jour, ils voudront embarquer avec toi.',
     etapesSuggerees: [
-      { texte: 'Lister 5 choses que je sais faire et qui rendent service', difficulte: 1 },
-      { texte: 'Proposer un service à mon entourage', difficulte: 2 },
-      { texte: 'Encaisser mon premier euro', difficulte: 3 },
+      { texte: 'Trouver mon format signature (série « Jour X », mes chiffres…)', difficulte: 1 },
+      { texte: 'Tenir 30 jours d’affilée à une vidéo par jour', difficulte: 2 },
+      { texte: 'Faire une vidéo à 10 000 vues', difficulte: 2 },
+      { texte: 'Passer 1 000 abonnés (TikTok, Insta et YouTube réunis)', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#2C1E12',
+    couleurFallback: '#2C241E',
   },
   {
     id: 2,
     numero: 4,
     arc: 'East Blue',
-    nom: 'Archipel du Savoir',
-    titre: 'Réussir ma rentrée à la fac',
+    nom: 'Taverne des Recrues',
+    titre: 'Réunir mes futurs démarcheurs avant le lancement',
     situation:
-      "Une île exigeante : s'inscrire, s'organiser et tenir le rythme des cours en parallèle du reste.",
-    quete: 'Valider mon inscription et tenir mes premières semaines de cours.',
+      'Dans la taverne, des jeunes motivés qui veulent passer à l’action écoutent ton histoire. En janvier, ils démarchent avec toi.',
+    quete: 'Avoir 5 personnes prêtes à démarcher avec moi dès janvier.',
     pourquoi:
-      'Les études sont une arme à long terme. Les tenir en parallèle prouve que tu sais mener plusieurs combats à la fois.',
+      'Seul, tu pousses quelques portes par jour. Si ton équipage est prêt le jour du lancement, tu démarres à plusieurs dès la première semaine.',
     etapesSuggerees: [
-      { texte: 'Caler les cours dans mon emploi du temps', difficulte: 1 },
-      { texte: "M'inscrire officiellement", difficulte: 2 },
-      { texte: 'Tenir les 4 premières semaines sans retard', difficulte: 3 },
+      { texte: 'Publier la vidéo qui annonce le programme de parrainage', difficulte: 1 },
+      { texte: 'Créer le groupe des futurs démarcheurs (Snap, WhatsApp ou Discord)', difficulte: 1 },
+      { texte: 'Avoir 20 personnes intéressées dans le groupe', difficulte: 2 },
+      { texte: '5 personnes qui s’engagent à démarcher en janvier', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#1E2C2A',
+    couleurFallback: '#1E242C',
   },
   {
     id: 8,
     numero: 5,
     arc: 'East Blue',
-    nom: 'Île de la Forge',
-    titre: 'Forger une compétence qui se vend',
+    nom: 'Île des Premières Portes',
+    titre: 'Rôder mon pitch sur le terrain avant janvier',
     situation:
-      "Dans les forges de l'East Blue, on façonne l'arme qu'on emportera sur Grand Line : un savoir-faire pour lequel des gens sont prêts à payer.",
-    quete: 'Choisir une compétence et produire un premier travail dont je suis fier.',
+      'Décembre, entre Nice et Cannes. Avant la vraie conquête, tu pousses tes premières portes pour apprendre ce qui fait dire oui à un commerçant.',
+    quete: 'Avoir 3 commerces qui s’engagent à démarrer dès le 2 janvier.',
     pourquoi:
-      'Un business repose sur un savoir-faire. Plus ta lame est affûtée, plus les clients viendront à toi.',
+      'Un pitch se travaille sur le terrain, pas dans sa tête. Et commencer janvier avec 3 clients déjà d’accord, c’est un lancement qui démarre en trombe.',
     etapesSuggerees: [
-      { texte: 'Choisir la compétence à travailler', difficulte: 1 },
-      { texte: 'Y consacrer 10 heures de pratique', difficulte: 2 },
-      { texte: 'Réaliser un projet démonstration à montrer', difficulte: 3 },
+      { texte: 'Écrire mon pitch de 30 secondes et les réponses aux objections', difficulte: 1 },
+      { texte: 'Acheter les lunettes Meta et filmer ma première sortie terrain', difficulte: 2 },
+      { texte: 'Présenter le système à 20 commerces sous 4 étoiles', difficulte: 2 },
+      { texte: '3 commerces qui s’engagent à démarrer en janvier', difficulte: 3 },
     ],
     backgroundImage: FOND,
     couleurFallback: '#2C241E',
   },
-
-  // ===== Grand Line : lancer le business =====
   {
     id: 9,
     numero: 6,
-    arc: 'Grand Line',
-    nom: 'Île des Idées',
-    titre: 'Trouver une idée qui répond à un vrai besoin',
+    arc: 'East Blue',
+    nom: 'Île du Pavillon',
+    titre: 'Avoir une vraie société le 1er janvier',
     situation:
-      "Les courants de Grand Line sont imprévisibles. Pour ne pas s'y perdre, il faut un cap : un problème réel que des gens veulent voir résolu.",
-    quete: 'Valider une idée de business auprès de vraies personnes.',
+      'Dernière escale de l’East Blue : le navire reçoit son nom et ses papiers. Le 1er janvier, il est en règle pour encaisser.',
+    quete: 'Choisir le statut et être prêt à encaisser des abonnements dès le 1er janvier.',
     pourquoi:
-      'La plupart des projets échouent faute de clients, pas faute de travail. Écouter avant de construire évite des mois perdus.',
+      'Les papiers ne rapportent rien, mais sans eux rien ne rapporte. Tout régler en décembre, c’est démarcher dès le 2 janvier.',
     etapesSuggerees: [
-      { texte: 'Lister 10 problèmes que je pourrais résoudre', difficulte: 1 },
-      { texte: 'Interroger 5 personnes concernées', difficulte: 2 },
-      { texte: "Choisir l'idée la plus demandée", difficulte: 2 },
-      { texte: 'Obtenir un premier « je paierais pour ça »', difficulte: 3 },
+      { texte: 'Choisir le statut (micro-entreprise ou société) avec un avis pro', difficulte: 1 },
+      { texte: 'Préparer le dossier de création pour le 1er janvier', difficulte: 2 },
+      { texte: 'Ouvrir le compte pro et le paiement par abonnement', difficulte: 2 },
+      { texte: 'Avoir le SIRET et un premier paiement test reçu', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#1E2C2A',
+    couleurFallback: '#2A1E2C',
   },
+
+  // ===== Grand Line : conquérir la Côte d'Azur (à partir de janvier 2027) =====
   {
     id: 3,
     numero: 7,
     arc: 'Grand Line',
-    nom: 'Chantier Naval',
-    titre: 'Lancer officiellement le business',
+    nom: 'Premier Abordage',
+    titre: 'Signer mon premier client payant',
     situation:
-      'Sur ce chantier, le projet devient un vrai navire : un nom, un statut, une offre claire.',
-    quete: 'Créer la structure et une offre que l’on peut acheter.',
+      'Janvier, les rues de Nice. On pousse la porte, on parle au gérant, on encaisse les refus, et on revient le lendemain.',
+    quete: 'Démarcher 50 commerces et signer le premier abonnement à 40 €.',
     pourquoi:
-      'Tant que ce n’est pas officiel, c’est un rêve. Une offre claire avec un prix, c’est un business.',
+      'Le premier client payant transforme le projet en entreprise. Après lui, tu ne te demandes plus si ça marche : tu sais.',
     etapesSuggerees: [
-      { texte: 'Définir mon offre et mon prix', difficulte: 2 },
-      { texte: 'Ouvrir un moyen d’encaisser les paiements', difficulte: 1 },
-      { texte: 'Créer mon statut (micro-entreprise)', difficulte: 2 },
-      { texte: 'Sortir la première version de mon produit', difficulte: 3 },
+      { texte: 'Démarcher 20 commerces en une semaine', difficulte: 1 },
+      { texte: 'Filmer une journée de démarchage avec les lunettes Meta', difficulte: 2 },
+      { texte: 'Démarcher 50 commerces au total', difficulte: 2 },
+      { texte: 'Signer mon premier abonnement payant', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#2A1E2C',
+    couleurFallback: '#2C241E',
   },
   {
     id: 10,
     numero: 8,
     arc: 'Grand Line',
-    nom: 'Île de la Vitrine',
-    titre: 'Me rendre visible',
+    nom: 'Comptoir des Marchands',
+    titre: 'Atteindre 10 clients (400 € par mois)',
     situation:
-      'Un navire que personne ne voit ne fait pas de prises. Ici, on hisse son pavillon pour que les bons clients le repèrent.',
-    quete: 'Avoir une vitrine en ligne et commencer à publier.',
+      'Le grand marché de la Côte : maintenant que tu sais signer, il faut le refaire encore et encore, avec méthode.',
+    quete: 'Signer 10 clients et garder un rythme de démarchage fixe.',
     pourquoi:
-      'La visibilité travaille pour toi pendant que tu dors. Chaque publication est une bouteille à la mer qui peut ramener un client.',
+      'Dix clients, c’est la preuve que ce n’était pas de la chance. Tu connais ton taux de réussite : tu sais combien de portes pousser.',
     etapesSuggerees: [
-      { texte: 'Créer ma page ou mon portfolio', difficulte: 2 },
-      { texte: 'Publier 5 contenus utiles', difficulte: 2 },
-      { texte: 'Recevoir un premier contact entrant', difficulte: 3 },
+      { texte: 'Fixer mon rythme : 10 commerces démarchés par jour', difficulte: 1 },
+      { texte: 'Tenir ce rythme 2 semaines d’affilée', difficulte: 2 },
+      { texte: 'Atteindre 5 clients', difficulte: 2 },
+      { texte: 'Atteindre 10 clients', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#2A1E2C',
+    couleurFallback: '#2C241E',
   },
   {
     id: 4,
     numero: 9,
     arc: 'Grand Line',
-    nom: 'Comptoir des Marchands',
-    titre: 'Décrocher mes premiers clients payants',
+    nom: 'Île des Recrues',
+    titre: 'Lancer mes premiers démarcheurs sur le terrain',
     situation:
-      'Le grand marché de Grand Line : il faut aller au contact, proposer, essuyer des refus et revenir.',
-    quete: 'Signer mes trois premiers clients payants.',
+      'Les recrues de la taverne t’ont vu démarcher chaque jour. Maintenant, elles poussent les portes à leur tour.',
+    quete: 'Former l’équipage de la taverne et avoir un premier client signé par un démarcheur.',
     pourquoi:
-      'Chaque client prouve que ton offre a de la valeur. Les refus font partie du chemin : chacun te rapproche du oui.',
+      'Tu ne peux pousser que quelques portes par jour. Chaque démarcheur multiplie ta force sans multiplier tes heures.',
     etapesSuggerees: [
-      { texte: 'Lister 50 prospects', difficulte: 1 },
-      { texte: 'Contacter 20 prospects', difficulte: 2 },
-      { texte: 'Signer un premier client', difficulte: 3 },
-      { texte: 'Signer trois clients', difficulte: 3 },
+      { texte: 'Fixer la commission d’un démarcheur par client signé', difficulte: 1 },
+      { texte: 'Former 3 démarcheurs à ma méthode, sur le terrain avec moi', difficulte: 2 },
+      { texte: 'Un premier client signé par un démarcheur', difficulte: 3 },
+      { texte: '5 clients signés par les démarcheurs en un mois', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#2C241E',
+    couleurFallback: '#1E242C',
   },
   {
     id: 11,
     numero: 10,
     arc: 'Grand Line',
     nom: 'Île des Rumeurs',
-    titre: 'Faire parler de moi',
-    situation: 'Sur cette île, les nouvelles voyagent vite. Un client satisfait en amène d’autres.',
-    quete: 'Transformer mes clients en ambassadeurs.',
+    titre: 'Des clients qui restent et qui en ramènent',
+    situation:
+      'Sur la Côte, les commerçants se parlent. Un client content en amène un autre ; un client déçu en fait fuir dix.',
+    quete: 'Garder tous mes clients 3 mois et décrocher des clients par recommandation.',
     pourquoi:
-      'La recommandation est le canal le plus puissant et le moins cher. Ta réputation devient ta voile.',
+      'Avec un abonnement, garder un client vaut autant qu’en signer un nouveau. Les résultats parlent, les commerçants répètent.',
     etapesSuggerees: [
-      { texte: 'Demander un avis à chaque client', difficulte: 1 },
-      { texte: 'Obtenir 3 témoignages', difficulte: 2 },
-      { texte: 'Décrocher un client par recommandation', difficulte: 3 },
+      { texte: 'Envoyer chaque mois ses résultats à chaque client', difficulte: 1 },
+      { texte: 'Publier 3 études de cas avant/après', difficulte: 2 },
+      { texte: 'Passer un mois complet sans aucune résiliation', difficulte: 2 },
+      { texte: 'Signer 3 clients venus par recommandation', difficulte: 3 },
+    ],
+    backgroundImage: FOND,
+    couleurFallback: '#1E242C',
+  },
+  {
+    id: 12,
+    numero: 11,
+    arc: 'Grand Line',
+    nom: 'Île des Marées',
+    titre: 'Atteindre 25 clients (1 000 € par mois)',
+    situation:
+      'Les abonnements reviennent chaque mois, comme les marées. Ici, le revenu ne repart plus de zéro le 1er du mois.',
+    quete: 'Atteindre 1 000 € d’abonnements par mois.',
+    pourquoi:
+      'À 1 000 € par mois, le business commence à payer ta vie. Tu peux décider en confiance de prolonger le job… ou pas.',
+    etapesSuggerees: [
+      { texte: 'Atteindre 15 clients', difficulte: 2 },
+      { texte: 'Avoir 5 démarcheurs actifs', difficulte: 2 },
+      { texte: 'Atteindre 25 clients, soit 1 000 € par mois', difficulte: 3 },
     ],
     backgroundImage: FOND,
     couleurFallback: '#1E242C',
   },
 
-  // ===== Nouveau Monde : grandir et se libérer =====
-  {
-    id: 12,
-    numero: 11,
-    arc: 'Nouveau Monde',
-    nom: 'Île des Marées',
-    titre: 'Créer un revenu qui revient chaque mois',
-    situation:
-      'Les marées reviennent toujours. Dans le Nouveau Monde, on construit des revenus qui reviennent eux aussi.',
-    quete: 'Atteindre 1 000 € de revenu récurrent par mois.',
-    pourquoi: 'Un revenu récurrent apporte de la sérénité : tu ne repars plus de zéro chaque mois.',
-    etapesSuggerees: [
-      { texte: 'Créer une offre récurrente (abonnement, suivi)', difficulte: 2 },
-      { texte: 'Signer 3 clients récurrents', difficulte: 2 },
-      { texte: 'Atteindre 1 000 € récurrents par mois', difficulte: 3 },
-    ],
-    backgroundImage: FOND,
-    couleurFallback: '#1E242C',
-  },
+  // ===== Nouveau Monde : grandir puis passer à la suite =====
   {
     id: 13,
     numero: 12,
     arc: 'Nouveau Monde',
-    nom: "Île de l'Équipage",
-    titre: "M'entourer des bonnes personnes",
+    nom: 'Île de la Liberté',
+    titre: 'Ne plus jamais avoir de patron',
     situation:
-      "Aucun capitaine n'a conquis le Nouveau Monde seul. Ici, on recrute ceux qui rendent le navire plus fort.",
-    quete: 'Trouver un mentor et déléguer une première tâche.',
+      "L'île que tout pirate rêve d'atteindre : le business rapporte plus que le SMIC, le job devient un choix et plus une obligation.",
+    quete: 'Atteindre 50 clients (2 000 € par mois, environ 1 500 € après cotisations), 3 mois d’affilée.',
     pourquoi:
-      'S’entourer, c’est multiplier sa force. Déléguer libère ton temps pour ce que toi seul peux faire.',
+      'C’est ta ligne d’arrivée : au-delà de 1 500 € par mois, tu ne retravailles plus jamais pour quelqu’un d’autre.',
     etapesSuggerees: [
-      { texte: "Rejoindre un groupe d'entrepreneurs", difficulte: 1 },
-      { texte: 'Trouver un mentor', difficulte: 2 },
-      { texte: 'Déléguer une tâche payée à quelqu’un', difficulte: 3 },
+      { texte: 'Atteindre 38 clients, soit 1 500 € par mois avant cotisations', difficulte: 2 },
+      { texte: 'Atteindre 50 clients, soit 1 500 € par mois après cotisations', difficulte: 3 },
+      { texte: 'Tenir ce niveau 3 mois d’affilée', difficulte: 3 },
+      { texte: 'Quitter le job pour de bon', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#2A1E2C',
+    couleurFallback: '#2C241E',
   },
   {
     id: 5,
     numero: 13,
     arc: 'Nouveau Monde',
-    nom: 'Forteresse des Rouages',
-    titre: 'Faire tourner le business sans moi',
+    nom: "Île de l'Équipage",
+    titre: 'Une vraie équipe de démarcheurs sur toute la Côte',
     situation:
-      'Une forteresse d’engrenages : chaque tâche répétée devient une mécanique qui tourne seule.',
-    quete: 'Automatiser et documenter pour faire grandir le business.',
+      'Nice et Cannes ne suffisent plus. Antibes, Monaco, Menton, Grasse : il faut un équipage capable de couvrir toute la Côte d’Azur.',
+    quete: 'Avoir 10 démarcheurs actifs et 100 clients (4 000 € par mois).',
     pourquoi:
-      'Un business qui dépend de chacune de tes heures plafonne vite. Les systèmes permettent de grandir sans s’épuiser.',
+      'Un capitaine seul plafonne. Un équipage bien formé fait grandir l’entreprise même les jours où tu ne sors pas.',
     etapesSuggerees: [
-      { texte: 'Documenter mes 3 tâches principales', difficulte: 1 },
-      { texte: 'Automatiser une tâche répétitive', difficulte: 2 },
-      { texte: "Doubler mon chiffre d'affaires", difficulte: 3 },
+      { texte: 'Écrire la méthode de démarchage que chaque recrue apprend', difficulte: 1 },
+      { texte: 'Avoir 10 démarcheurs actifs', difficulte: 2 },
+      { texte: 'Ouvrir une nouvelle ville au-delà de Nice-Cannes', difficulte: 2 },
+      { texte: 'Atteindre 100 clients', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#1E242C',
+    couleurFallback: '#2A1E2C',
   },
   {
     id: 14,
     numero: 14,
     arc: 'Nouveau Monde',
-    nom: 'Île de la Liberté',
-    titre: 'Vivre de mon business',
+    nom: 'Forteresse des Rouages',
+    titre: "Faire tourner l'entreprise sans moi",
     situation:
-      "L'île que tout pirate rêve d'atteindre : ici, le business paie le voyage, plus besoin du salaire.",
-    quete: 'Gagner avec le business autant que mon salaire.',
+      'Une forteresse d’engrenages : recrutement, formation, suivi des clients. Chaque rouage tourne, même quand le capitaine est à terre.',
+    quete: 'Passer un mois sans démarcher moi-même tout en gagnant des clients.',
     pourquoi:
-      'C’est le moment où l’on choisit son temps. Tout le voyage jusqu’ici mène à cette liberté.',
+      'Une entreprise qui tourne sans toi a de la valeur : elle te rapporte, et elle te libère pour la suivante.',
     etapesSuggerees: [
-      { texte: 'Atteindre la moitié de mon salaire avec le business', difficulte: 2 },
-      { texte: "Égaler mon salaire 3 mois d'affilée", difficulte: 3 },
-      { texte: 'Choisir librement mon temps de travail', difficulte: 3 },
+      { texte: 'Confier le suivi des clients à quelqu’un', difficulte: 2 },
+      { texte: 'Nommer un chef d’équipe des démarcheurs', difficulte: 2 },
+      { texte: 'Un mois sans démarcher et plus de clients qu’avant', difficulte: 3 },
+      { texte: 'Atteindre 250 clients, soit 10 000 € par mois', difficulte: 3 },
     ],
     backgroundImage: FOND,
-    couleurFallback: '#2C241E',
+    couleurFallback: '#1E242C',
   },
   {
     id: 15,
     numero: 15,
     arc: 'Nouveau Monde',
     nom: 'Laugh Tale',
-    titre: 'Bâtir mon empire',
+    titre: "Lancer l'entreprise suivante",
     situation:
-      "La dernière île, celle dont on parle à voix basse dans les tavernes. Le trésor attend ceux qui ont tenu le cap jusqu'au bout.",
-    quete: 'Construire un patrimoine qui me rend libre pour de bon.',
+      "La dernière île, celle dont on parle à voix basse dans les tavernes. Le premier navire tourne seul : le capitaine peut en armer un deuxième.",
+    quete: 'Lancer une deuxième entreprise financée par la première, et faire fructifier le reste.',
     pourquoi:
-      'Le vrai One Piece, c’est la liberté totale : choisir ses projets, aider les siens et ne plus jamais dépendre de personne.',
+      'Le vrai One Piece, c’est de pouvoir recommencer quand tu veux, avec l’argent, la méthode et l’audience déjà en main.',
     etapesSuggerees: [
-      { texte: 'Investir chaque mois une part de mes revenus', difficulte: 2 },
-      { texte: "Atteindre 100 000 € de chiffre d'affaires annuel", difficulte: 3 },
-      { texte: 'Être libre financièrement', difficulte: 3 },
+      { texte: 'Investir chaque mois une part de ce que je gagne', difficulte: 2 },
+      { texte: 'Choisir l’idée de la deuxième entreprise', difficulte: 2 },
+      { texte: 'La lancer avec l’argent de la première', difficulte: 3 },
     ],
     backgroundImage: FOND,
     couleurFallback: '#2C1E12',

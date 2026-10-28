@@ -12,24 +12,49 @@ import { CarteMarine } from './components/CarteMarine';
 import { ProgrammeDuJourCard } from './components/ProgrammeDuJourCard';
 import { HabitudesDuJourCard } from './components/HabitudesDuJourCard';
 import { BottomBar } from './components/BottomBar';
-import { PlanningPage } from './components/Planning';
-import { HabitudesPage } from './components/Habitudes';
-import { BudgetPage } from './components/Budget';
-import { CourrierPage } from './components/Courrier';
-import { RecapPage } from './components/Recap';
-import { SecondCerveau } from './components/Cerveau';
-import { Ascension, type Onglet } from './components/Ascension';
-import { IleConquise } from './components/IleConquise';
-import { NouvelleRecrue, RapportVigie } from './components/Vigie';
+import type { Onglet } from './components/Ascension';
+import { paresseux, prechargerAuRepos } from './components/paresseux';
 import { carnetDeBord } from './data/carnet';
 import { decalerIso, isoDeDate } from './data/bilanJournee';
 import { EQUIPAGE, equipageRecrute, prochaineRecrue, type Membre } from './data/equipage';
-import { Ceremonie } from './components/Ceremonie';
 import { Atmosphere } from './components/Atmosphere';
 import { iles } from './data/iles';
 import { PALIERS, indexPalier } from './data/paliers';
 import type { Vue } from './types';
 import styles from './App.module.css';
+
+// Pages et grandes fenêtres : chargées à la demande pour alléger l'ouverture,
+// puis préchargées au repos pour que les changements d'onglet restent instantanés.
+const PlanningPage = paresseux(() => import('./components/Planning').then((m) => m.PlanningPage));
+const HabitudesPage = paresseux(() => import('./components/Habitudes').then((m) => m.HabitudesPage));
+const BudgetPage = paresseux(() => import('./components/Budget').then((m) => m.BudgetPage));
+const CourrierPage = paresseux(() => import('./components/Courrier').then((m) => m.CourrierPage));
+const RecapPage = paresseux(() => import('./components/Recap').then((m) => m.RecapPage));
+const ReseauxPage = paresseux(() => import('./components/Reseaux').then((m) => m.ReseauxPage));
+const SecondCerveau = paresseux(() => import('./components/Cerveau').then((m) => m.SecondCerveau));
+const Ascension = paresseux(() => import('./components/Ascension').then((m) => m.Ascension));
+const IleConquise = paresseux(() => import('./components/IleConquise').then((m) => m.IleConquise));
+const RapportVigie = paresseux(() => import('./components/Vigie').then((m) => m.RapportVigie));
+const NouvelleRecrue = paresseux(() => import('./components/Vigie').then((m) => m.NouvelleRecrue));
+const Ceremonie = paresseux(() => import('./components/Ceremonie').then((m) => m.Ceremonie));
+
+const PAGES: Partial<Record<Vue, { precharger: () => Promise<void> }>> = {
+  recap: RecapPage,
+  planning: PlanningPage,
+  habitudes: HabitudesPage,
+  budget: BudgetPage,
+  courrier: CourrierPage,
+  reseaux: ReseauxPage,
+  'going-merry': SecondCerveau,
+};
+prechargerAuRepos([
+  ...Object.values(PAGES),
+  Ascension,
+  IleConquise,
+  RapportVigie,
+  NouvelleRecrue,
+  Ceremonie,
+]);
 
 const NOM_JOUEUR = 'Louis Borrelli';
 
@@ -37,14 +62,32 @@ const NOM_JOUEUR = 'Louis Borrelli';
 const CLE_RAPPORT_VU = 'log-pose-rapport-vu';
 const CLE_EQUIPAGE_VU = 'log-pose-equipage-vu';
 
+// Accès au stockage local sans planter s'il est indisponible.
+function lireLocal(cle: string): string | null {
+  try {
+    return localStorage.getItem(cle);
+  } catch {
+    return null;
+  }
+}
+function ecrireLocal(cle: string, valeur: string) {
+  try {
+    localStorage.setItem(cle, valeur);
+  } catch {
+    /* rien */
+  }
+}
+
 function App() {
   const [vue, setVue] = useState<Vue>('carte');
 
   // Changement de page avec transition : l'ancienne page s'efface en glissant
   // d'un côté, la nouvelle arrive de l'autre (sens = ordre des onglets).
   // Navigateur sans View Transitions, ou animations réduites : changement net.
-  function changerVue(nouvelle: Vue, sens: 1 | -1) {
+  async function changerVue(nouvelle: Vue, sens: 1 | -1) {
     if (nouvelle === vue) return;
+    // Code de la page récupéré avant la transition (déjà là s'il a été préchargé).
+    await PAGES[nouvelle]?.precharger().catch(() => {});
     const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!document.startViewTransition || reduit) {
       setVue(nouvelle);
@@ -179,42 +222,25 @@ function App() {
   // Nouvelle recrue : dès que le nombre de jours en mer en fait rejoindre une.
   const [recrue, setRecrue] = useState<Membre | null>(null);
   useEffect(() => {
-    let vus = 0;
-    try {
-      vus = Number(localStorage.getItem(CLE_EQUIPAGE_VU) ?? 0);
-    } catch {
-      /* stockage indisponible : on fête quand même */
-    }
+    // Stockage indisponible : on fête quand même.
+    const vus = Number(lireLocal(CLE_EQUIPAGE_VU) ?? 0);
     if (recrues > vus) {
       setRecrue(EQUIPAGE[recrues - 1]);
-      try {
-        localStorage.setItem(CLE_EQUIPAGE_VU, String(recrues));
-      } catch {
-        /* rien */
-      }
+      ecrireLocal(CLE_EQUIPAGE_VU, String(recrues));
     }
   }, [recrues]);
 
   // Rapport de la vigie : une fois par jour, s'il y a un passé à raconter.
+  // Une seule vérification à l'ouverture (et au changement de jour).
   const [rapport, setRapport] = useState(false);
-  useEffect(() => {
-    let vu: string | null = null;
-    try {
-      vu = localStorage.getItem(CLE_RAPPORT_VU);
-    } catch {
-      /* rien */
-    }
-    if (vu !== aujourdhui && [...carnet.jours.keys()].some((d) => d < aujourdhui)) setRapport(true);
-    // Une seule vérification à l'ouverture (et au changement de jour).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aujourdhui]);
+  const [rapportVerifiePour, setRapportVerifiePour] = useState<string | null>(null);
+  if (rapportVerifiePour !== aujourdhui) {
+    setRapportVerifiePour(aujourdhui);
+    if (lireLocal(CLE_RAPPORT_VU) !== aujourdhui && [...carnet.jours.keys()].some((d) => d < aujourdhui)) setRapport(true);
+  }
   function fermerRapport() {
     setRapport(false);
-    try {
-      localStorage.setItem(CLE_RAPPORT_VU, aujourdhui);
-    } catch {
-      /* rien */
-    }
+    ecrireLocal(CLE_RAPPORT_VU, aujourdhui);
   }
   const hier = carnet.jours.get(decalerIso(aujourdhui, -1)) ?? null;
   const derniereSortie =
@@ -433,6 +459,8 @@ function App() {
           )}
 
           {vue === 'courrier' && <CourrierPage />}
+
+          {vue === 'reseaux' && <ReseauxPage />}
 
           {vue === 'going-merry' && <SecondCerveau cerveau={cerveau} />}
         </div>

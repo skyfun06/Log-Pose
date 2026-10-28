@@ -9,6 +9,9 @@ Le projet a deux parties : le front Vite et un petit serveur relais (`server/`) 
 3. **Front** : `npm run dev` dans un autre terminal (http://localhost:5173). Il tape sur le serveur via `VITE_API_URL` (défaut `http://localhost:3001`).
 4. **Courrier** (optionnel) : l'onglet « Courrier » affiche les mails importants de tes boîtes Gmail, triés en local par Ollama (qui doit être lancé). Renseigne `GMAIL_COMPTES` dans `.env` (voir `.env.example`). L'onglet « Récap » prépare un récap chaque matin et chaque soir (heures réglables en haut de `server/recaps.js`) : le serveur relais doit tourner.
 5. **Second cerveau** (page « Going Merry ») : dépose n'importe quel fichier (bouton, glisser-déposer ou Ctrl+V), remplis la petite fiche, puis retrouve-le en le demandant. Les fichiers restent sur ta machine dans `server/cerveau/` (non commité). Ollama lit chaque fichier en arrière-plan (texte des PDF, description des images) pour qu'on le retrouve aussi par son contenu ; sans carte graphique, compte quelques minutes par image.
+6. **Réseaux** (optionnel) : l'onglet « Réseaux » envoie une vidéo déposée sur les comptes reliés, et rassemble les stats du compte et de chaque vidéo. Pour l'instant : TikTok (en brouillon : une notification dans l'appli permet de publier) et Instagram (Reel publié tout de suite : il faut un compte professionnel, et Tailscale Funnel pour qu'Instagram vienne chercher la vidéo). Les étapes s'affichent dans l'onglet, et les variables sont décrites dans `.env.example`. Pour ajouter une plateforme (Instagram, YouTube…), voir `server/reseaux/index.js`.
+
+**Version rapide (usage au quotidien)** : `npm start` compile le site puis lance le serveur relais, qui sert aussi le site sur http://localhost:3001 (ou l'adresse Tailscale du PC, port 3001, depuis le téléphone). Bien plus rapide à ouvrir que `npm run dev`, qui reste pour développer. Après une modification du code, relance `npm start`.
 
 ---
 

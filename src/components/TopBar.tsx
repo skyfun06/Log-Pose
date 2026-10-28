@@ -97,6 +97,16 @@ const ONGLETS: { vue: Vue; label: string; icone: ReactNode }[] = [
     ),
   },
   {
+    vue: 'reseaux',
+    label: 'Réseaux',
+    icone: (
+      <Icone>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="m10 8.5 5.5 3.5-5.5 3.5z" />
+      </Icone>
+    ),
+  },
+  {
     vue: 'going-merry',
     label: 'Going Merry',
     icone: (
