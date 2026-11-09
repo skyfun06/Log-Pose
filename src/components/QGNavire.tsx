@@ -398,6 +398,18 @@ function choisirHabitude(liste: Habitude[], avant: Habitude | null) {
 
 export type VieQG = { fait: string; pense: string };
 
+// Bulles rares : une seule à la fois sur tout le navire, et seulement quand
+// c'est intéressant (une nouvelle action en mission, une mission finie ou
+// ratée, de temps en temps une pensée).
+let bulleOccupeeJusqua = 0;
+const DUREE_BULLE = 5000;
+const prendreLaParole = (duree: number, prioritaire = false) => {
+  const maintenant = performance.now();
+  if (!prioritaire && maintenant < bulleOccupeeJusqua) return false;
+  bulleOccupeeJusqua = maintenant + duree + 1500;
+  return true;
+};
+
 // Un membre à bord : il travaille à son poste pendant une mission (dans sa
 // pose de travail), et le reste du temps il suit ses habitudes : il marche
 // d'un endroit à l'autre (par les échelles), s'occupe, dort. Ce qu'il fait et
@@ -441,7 +453,7 @@ function Perso({
     let reste = 0; // secondes à passer sur place
     let sens = -1;
     let dernier = performance.now();
-    let prochainePensee = performance.now() + 3000 + Math.random() * 6000;
+    let prochainePensee = performance.now() + 15000 + Math.random() * 45000;
     let finPensee = 0;
     let fait = '';
     let pense = auHasard(fiche.pensees[statut]);
@@ -517,15 +529,17 @@ function Perso({
       if (travaille && saut === 0 && Math.floor(t * 2) % 5 === 0) saut = 1;
       if (squash === 0 && saut === 0 && Math.floor(t * 1.4) % 2) squash = -1; // respiration
 
-      // Une pensée de temps en temps (générique : rien de privé).
+      // Une pensée de temps en temps (générique : rien de privé). Elle va
+      // toujours dans sa fiche ; en bulle, seulement s'il est réveillé, posé
+      // (pas en marche) et que personne d'autre ne parle.
       if (ms > prochainePensee) {
         pense = auHasard(fiche.pensees[statut]);
         onVieRef.current(id, { fait, pense });
-        if (statut === 'pause' && habitude?.action !== 'dort') {
+        if (statut === 'pause' && habitude?.action !== 'dort' && !route.length && prendreLaParole(4500)) {
           setPensee(pense);
           finPensee = ms + 4500;
         }
-        prochainePensee = ms + 11000 + Math.random() * 9000;
+        prochainePensee = ms + 50000 + Math.random() * 70000;
       }
       if (finPensee && ms > finPensee) {
         setPensee(null);
@@ -543,8 +557,22 @@ function Perso({
     return () => cancelAnimationFrame(anim);
   }, [statut, poste, id]);
 
+  // Bulle de mission, quelques secondes seulement : au début, à chaque nouvelle
+  // action (« Robin cherche sur le web… »), puis à la fin (terminé / souci).
   // En tournage (prive), jamais le contenu d'une mission : le verbe du poste.
-  const bulle = statut === 'travail' ? `${membre.nom} ${!prive && membre.activite ? court(membre.activite) : poste.verbe}…` : FIN_DE_TRAVAIL[statut];
+  const [bulle, setBulle] = useState<string | null>(null);
+  const activite = statut === 'travail' ? (prive ? null : membre.activite) : null;
+  useEffect(() => {
+    const texte =
+      statut === 'travail' ? `${membre.nom} ${activite ? court(activite) : poste.verbe}…` : FIN_DE_TRAVAIL[statut];
+    if (!texte) return setBulle(null);
+    const duree = statut === 'travail' ? DUREE_BULLE : 8000;
+    // Fin de mission : prioritaire. Action en cours : seulement si personne ne parle.
+    if (!prendreLaParole(duree, statut !== 'travail')) return;
+    setBulle(texte);
+    const minuteur = setTimeout(() => setBulle(null), duree);
+    return () => clearTimeout(minuteur);
+  }, [statut, activite, membre.nom, poste.verbe]);
 
   return (
     <span
@@ -625,13 +653,13 @@ const BARRE = 120;
 const demi = (z: number) => Math.max(1, Math.floor(z * 2) / 2);
 // Zoom minimal : à droite, la vue s'arrête au bord de l'image (la proue y est
 // coupée) ; à gauche, on peut voir un peu de ciel et de mer derrière la poupe.
-const MARGE_GAUCHE = 200;
+const MARGE_GAUCHE = 400;
 const zoomMin = (l: number) => Math.max(1, Math.ceil((l / (BATEAU.l + MARGE_GAUCHE)) * 2) / 2);
 // Vue générale : du haut des têtes sur le pont arrière (y ≈ 26) au plancher
-// des pièces du bas, 15 % plus large qu'un cadrage serré.
+// des pièces du bas, bien plus large qu'un cadrage serré (tout le bateau et la mer).
 function visee(choisi: IdQG | null, l: number, h: number, marge: number) {
   if (!choisi) {
-    const z = Math.max(zoomMin(l), Math.min(8, demi(Math.min(l / 600, (h - BARRE) / 320) * 0.87)));
+    const z = Math.max(zoomMin(l), Math.min(8, demi(Math.min(l / 600, (h - BARRE) / 320) * 0.7)));
     return { z, cx: 336, cy: 26 + h / z / 2 };
   }
   const poste = POSTES[choisi];
