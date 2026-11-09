@@ -1,0 +1,213 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* La scène remplit tout le QG. Ciel et mer : canvas à la taille de l'écran ;
+   le monde (bateau, persos) est agrandi d'un nombre entier de pixels écran. */
+.cadre {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #100c26;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.cadre:active {
+  cursor: grabbing;
+}
+
+.calque {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.monde {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  image-rendering: pixelated;
+  --zoom: 1;
+}
+
+.monde img {
+  image-rendering: pixelated;
+}
+
+/* Le bateau (monté et descendu d'un pixel par le code). */
+.bateau {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* La coque s'assombrit la nuit (--nuit : 0 = jour, 1 = nuit). */
+.coque {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: brightness(calc(1 - var(--nuit) * 0.32)) saturate(calc(1 - var(--nuit) * 0.15));
+  pointer-events: none;
+}
+
+/* Le nom du navire, peint à l'or sur la coque. */
+.nom {
+  position: absolute;
+  font-family: 'VT323', monospace;
+  font-size: 17px;
+  line-height: 1;
+  letter-spacing: 1px;
+  color: #e7c57a;
+  text-shadow: 0 2px 0 #3b2208;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: calc(1 - var(--nuit) * 0.25);
+}
+
+/* ===== Persos : ancrés au centre des pieds (le code les place) ===== */
+.perso {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  cursor: pointer;
+  --sens: -1;
+  --squash: 0px;
+}
+
+.silhouette {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: block;
+  transform: translateX(-50%) scaleX(var(--sens));
+}
+
+.silhouette img {
+  display: block;
+  /* Respiration (1 pixel) et assis (abaissé, bas coupé) : décalages entiers,
+     jamais de redimensionnement. */
+  transform: translateY(var(--squash, 0px));
+  clip-path: inset(0 0 max(0px, var(--squash, 0px)) 0);
+  filter: brightness(calc(1 - var(--nuit) * 0.15));
+}
+
+.perso:hover .silhouette img,
+.persoChoisi .silhouette img {
+  filter: drop-shadow(1px 0 0 #fbeaa8) drop-shadow(-1px 0 0 #fbeaa8) drop-shadow(0 1px 0 #fbeaa8) drop-shadow(0 -1px 0 #fbeaa8);
+}
+
+/* Bulle : toujours de la même taille à l'écran, quel que soit le zoom. */
+.bulle {
+  position: absolute;
+  left: 0;
+  bottom: 70px;
+  translate: -50% 0;
+  padding: calc(4px / var(--zoom)) calc(8px / var(--zoom)) calc(5px / var(--zoom));
+  width: max-content;
+  max-width: calc(240px / var(--zoom));
+  background: #f6ead0;
+  color: #2c1e12;
+  border: calc(2px / var(--zoom)) solid #2c1e12;
+  box-shadow: calc(2px / var(--zoom)) calc(2px / var(--zoom)) 0 #2c1e12;
+  font-family: 'VT323', monospace;
+  font-weight: 500;
+  font-size: calc(19px / var(--zoom));
+  font-size-adjust: 0.6;
+  line-height: 1.05;
+  text-align: center;
+  pointer-events: none;
+  animation: apparait 0.25s steps(3) both;
+}
+
+.bulle[data-statut='fini'] {
+  background: #d9f2d2;
+}
+.bulle[data-statut='erreur'] {
+  background: #f6c9c2;
+}
+
+@keyframes apparait {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Effet de travail de Robin : des pages qui s'envolent. */
+.effetPages i {
+  position: absolute;
+  left: 6px;
+  bottom: 36px;
+  width: 4px;
+  height: 3px;
+  background: #fff8e8;
+  box-shadow: 0 0 0 1px #b99b5e;
+  animation: page 1.8s steps(9) infinite;
+}
+.effetPages i:nth-child(2) {
+  animation-delay: -0.6s;
+  left: -4px;
+}
+.effetPages i:nth-child(3) {
+  animation-delay: -1.2s;
+  left: 14px;
+}
+
+@keyframes page {
+  0% { transform: translate(0, 0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(10px, -26px) rotate(90deg); opacity: 0; }
+}
+
+/* Pause : assis, endormi. */
+.zzz i {
+  position: absolute;
+  left: 8px;
+  bottom: 50px;
+  font-family: 'VT323', monospace;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 12px;
+  color: #f6ead0;
+  text-shadow: 0 2px 0 #2c1e12;
+  animation: zzz 2.4s steps(8) infinite;
+}
+.zzz i:nth-child(2) { animation-delay: -0.8s; }
+.zzz i:nth-child(3) { animation-delay: -1.6s; font-size: 16px; }
+
+@keyframes zzz {
+  0% { transform: translate(0, 0); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: translate(14px, -24px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .effetPages i,
+  .zzz i {
+    animation: none;
+  }
+}
+
+/* Passation : le parchemin roulé que porte le messager. */
+.rouleau {
+  position: absolute;
+  left: 4px;
+  bottom: 30px;
+  width: 12px;
+  height: 5px;
+  background: #f6ead0;
+  border: 1px solid #5a3a16;
+  box-shadow: inset -3px 0 0 #d9c090;
+}
+
+/* Pensée : bulle en pointillés, plus discrète. */
+.pensee {
+  background: rgba(246, 234, 208, 0.92);
+  border-style: dashed;
+  font-style: italic;
+}

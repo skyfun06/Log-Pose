@@ -182,6 +182,7 @@ export type Vue =
   | 'budget'
   | 'courrier'
   | 'reseaux'
+  | 'qg'
   | 'going-merry';
 
 // --- Réseaux ---------------------------------------------------------------
@@ -265,4 +266,95 @@ export interface MessageCerveau {
   role: 'user' | 'assistant';
   content: string;
   ids?: string[];
+}
+
+// --- QG ----------------------------------------------------------------------
+
+// Membres de l'équipage à qui le QG confie des missions (voir server/qg/index.js).
+export type IdMembreQG = 'nami' | 'robin' | 'franky' | 'brook' | 'zoro';
+export type StatutMembreQG = 'pause' | 'travail' | 'fini' | 'erreur';
+export type StatutMissionQG = 'travail' | 'fini' | 'erreur' | 'annulee';
+
+export interface MembreQG {
+  id: IdMembreQG;
+  nom: string;
+  poste: string;
+  statut: StatutMembreQG;
+  missionId: string | null; // mission en cours, sinon la dernière
+  activite: string | null; // ce qu'il fait en ce moment (« lit CAPITAINE.md »)
+  depuis: string | null; // ISO, début de la mission en cours
+}
+
+export interface EtatQG {
+  membres: MembreQG[];
+  auTravail: number;
+  max: number;
+  // Quota de l'abonnement Claude, tel que remonté par la dernière mission.
+  quota: { utilisation: number | null; periode: string | null; statut: string | null; reprise: number | null } | null;
+  // Ordres automatiques en cours, et passation à animer dans la scène.
+  parcours?: { id: string; etape: number; etapes: { membre: IdMembreQG; statut: string }[] }[];
+  passation?: { de: IdMembreQG; vers: IdMembreQG; a: number } | null;
+}
+
+// Ordre automatique : le second propose, le capitaine lance (server/qg/parcours.js).
+export interface EtapeParcoursQG {
+  membre: IdMembreQG;
+  consigne: string;
+  statut?: string;
+  resultat?: string;
+}
+export interface PropositionParcoursQG {
+  texte: string;
+  type: string;
+  raison: string;
+  etapes: EtapeParcoursQG[];
+}
+export interface ParcoursQG {
+  id: string;
+  texte: string;
+  type: string;
+  debut: string;
+  fin?: string;
+  statut: 'travail' | 'fini' | 'erreur' | 'annule';
+  etape: number;
+  etapes: EtapeParcoursQG[];
+  resultat?: string;
+  erreur?: string;
+}
+
+export interface CompteProposeQG {
+  plateforme: PlateformeCompteQG;
+  pseudo: string;
+  note: string;
+  decision: 'ajoute' | 'ignore' | null;
+}
+
+export interface MissionQG {
+  id: string;
+  membre: IdMembreQG;
+  texte: string;
+  debut: string;
+  fin?: string;
+  statut: StatutMissionQG;
+  modele: string | null;
+  activites: { a: string; texte: string }[];
+  resultat?: string;
+  erreur?: string;
+  duree?: number | null;
+  refus?: number;
+  vue?: boolean;
+  comptesProposes?: CompteProposeQG[];
+  parcoursId?: string; // étape d'un ordre automatique
+}
+
+// Comptes suivis par Robin (fichiers lus par ses skills de recherche).
+export type PlateformeCompteQG = 'tiktok' | 'instagram';
+export interface CompteSuiviQG {
+  pseudo: string;
+  niche: string;
+  note: string;
+}
+export interface ComptesQG {
+  comptes: Record<PlateformeCompteQG, CompteSuiviQG[]>;
+  propositions: (Omit<CompteProposeQG, 'decision'> & { index: number; missionId: string })[];
 }

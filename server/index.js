@@ -45,6 +45,21 @@ import {
   etatReseaux,
   plateforme,
 } from './reseaux/index.js';
+import {
+  ErreurQG,
+  annulerMission,
+  arreterTout,
+  deciderProposition,
+  etatQG,
+  lancerMission,
+  marquerVue,
+  mission,
+  missions,
+  propositionsEnAttente,
+  suivre,
+} from './qg/index.js';
+import { ajouterCompte, lireComptes, retirerCompte } from './qg/comptes.js';
+import { annulerParcours, lancerParcours, listeParcours, proposerParcours } from './qg/parcours.js';
 
 // --- Réglages faciles à changer -------------------------------------------
 
@@ -443,6 +458,138 @@ app.get('/api/reseaux/:plateforme/stats', origineLocale, async (req, res) => {
   }
 });
 
+// QG (voir server/qg/index.js) : missions confiées à l'équipage, lancées avec
+// Claude Code sur ce PC (abonnement Claude, jamais l'API payante).
+function erreurQG(res, err, contexte) {
+  if (err instanceof ErreurQG) return res.status(err.statut).json({ error: err.message });
+  console.error(`[Log Pose] Erreur QG (${contexte}):`, err?.message ?? err);
+  res.status(500).json({ error: `${contexte} : ${err?.message ?? 'erreur inconnue'}` });
+}
+
+// Flux en direct : l'état des membres à chaque changement.
+app.get('/api/qg/flux', origineLocale, (req, res) => {
+  suivre(req, res).catch((err) => erreurQG(res, err, 'Impossible de suivre le QG'));
+});
+
+app.get('/api/qg', origineLocale, async (_req, res) => {
+  try {
+    res.json(await etatQG());
+  } catch (err) {
+    erreurQG(res, err, "Impossible de lire l'état du QG");
+  }
+});
+
+app.get('/api/qg/missions', origineLocale, async (req, res) => {
+  try {
+    res.json(await missions(req.query.membre ? String(req.query.membre) : null));
+  } catch (err) {
+    erreurQG(res, err, "Impossible de lire l'historique");
+  }
+});
+
+app.get('/api/qg/missions/:id', origineLocale, async (req, res) => {
+  try {
+    res.json(await mission(req.params.id));
+  } catch (err) {
+    erreurQG(res, err, 'Impossible de lire la mission');
+  }
+});
+
+app.post('/api/qg/missions/:id/vue', origineLocale, async (req, res) => {
+  try {
+    res.json(await marquerVue(req.params.id));
+  } catch (err) {
+    erreurQG(res, err, 'Impossible de marquer la mission');
+  }
+});
+
+app.post('/api/qg/:membre/mission', origineLocale, async (req, res) => {
+  try {
+    res.json(await lancerMission(req.params.membre, req.body?.texte));
+  } catch (err) {
+    erreurQG(res, err, 'Impossible de lancer la mission');
+  }
+});
+
+app.delete('/api/qg/:membre/mission', origineLocale, async (req, res) => {
+  try {
+    res.json(await annulerMission(req.params.membre));
+  } catch (err) {
+    erreurQG(res, err, "Impossible d'annuler la mission");
+  }
+});
+
+// Ordres automatiques : le second propose un parcours, le capitaine le lance.
+app.post('/api/qg/parcours/proposer', origineLocale, async (req, res) => {
+  try {
+    res.json(await proposerParcours(req.body?.texte));
+  } catch (err) {
+    erreurQG(res, err, 'Impossible de proposer un parcours');
+  }
+});
+
+app.get('/api/qg/parcours', origineLocale, async (_req, res) => {
+  try {
+    res.json(await listeParcours());
+  } catch (err) {
+    erreurQG(res, err, 'Impossible de lire les parcours');
+  }
+});
+
+app.post('/api/qg/parcours', origineLocale, async (req, res) => {
+  try {
+    const { texte, etapes, type } = req.body ?? {};
+    res.json(await lancerParcours(texte, etapes, type));
+  } catch (err) {
+    erreurQG(res, err, 'Impossible de lancer le parcours');
+  }
+});
+
+app.delete('/api/qg/parcours/:id', origineLocale, async (req, res) => {
+  try {
+    res.json(await annulerParcours(req.params.id));
+  } catch (err) {
+    erreurQG(res, err, "Impossible d'annuler le parcours");
+  }
+});
+
+// Comptes suivis par Robin (fichiers lus par ses skills de recherche).
+app.get('/api/qg/comptes', origineLocale, async (_req, res) => {
+  try {
+    res.json({ comptes: await lireComptes(), propositions: await propositionsEnAttente() });
+  } catch (err) {
+    erreurQG(res, err, 'Impossible de lire les comptes suivis');
+  }
+});
+
+app.post('/api/qg/comptes', origineLocale, async (req, res) => {
+  try {
+    const { plateforme, pseudo, note, proposition } = req.body ?? {};
+    const comptes = await ajouterCompte(String(plateforme ?? ''), pseudo, note);
+    if (proposition) await deciderProposition(String(proposition.missionId), Number(proposition.index), 'ajoute');
+    res.json({ comptes, propositions: await propositionsEnAttente() });
+  } catch (err) {
+    erreurQG(res, err, "Impossible d'ajouter le compte");
+  }
+});
+
+app.delete('/api/qg/comptes/:plateforme/:pseudo', origineLocale, async (req, res) => {
+  try {
+    res.json({ comptes: await retirerCompte(req.params.plateforme, req.params.pseudo), propositions: await propositionsEnAttente() });
+  } catch (err) {
+    erreurQG(res, err, 'Impossible de retirer le compte');
+  }
+});
+
+app.post('/api/qg/propositions/:missionId/:index/ignorer', origineLocale, async (req, res) => {
+  try {
+    await deciderProposition(req.params.missionId, Number(req.params.index), 'ignore');
+    res.json({ comptes: await lireComptes(), propositions: await propositionsEnAttente() });
+  } catch (err) {
+    erreurQG(res, err, 'Impossible d’ignorer le compte');
+  }
+});
+
 // --- Site compilé ----------------------------------------------------------
 // Après « npm run build », le serveur sert aussi le site (dossier dist/) : bien
 // plus rapide à ouvrir que le mode dev de Vite, surtout depuis le téléphone.
@@ -468,6 +615,15 @@ if (existsSync(DIST)) {
     if (req.method !== 'GET' || req.path.startsWith('/api')) return next();
     res.setHeader('Cache-Control', 'no-cache');
     res.sendFile(DIST + 'index.html');
+  });
+}
+
+// Fermeture du serveur (Ctrl+C dans le terminal) : les missions du QG
+// s'arrêtent avec lui, pour ne pas laisser tourner Claude Code en arrière-plan.
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  process.on(signal, () => {
+    arreterTout();
+    setTimeout(() => process.exit(0), 300);
   });
 }
 

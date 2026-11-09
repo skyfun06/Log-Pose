@@ -31,6 +31,7 @@ const BudgetPage = paresseux(() => import('./components/Budget').then((m) => m.B
 const CourrierPage = paresseux(() => import('./components/Courrier').then((m) => m.CourrierPage));
 const RecapPage = paresseux(() => import('./components/Recap').then((m) => m.RecapPage));
 const ReseauxPage = paresseux(() => import('./components/Reseaux').then((m) => m.ReseauxPage));
+const QGPage = paresseux(() => import('./components/QG').then((m) => m.QGPage));
 const SecondCerveau = paresseux(() => import('./components/Cerveau').then((m) => m.SecondCerveau));
 const Ascension = paresseux(() => import('./components/Ascension').then((m) => m.Ascension));
 const IleConquise = paresseux(() => import('./components/IleConquise').then((m) => m.IleConquise));
@@ -45,6 +46,7 @@ const PAGES: Partial<Record<Vue, { precharger: () => Promise<void> }>> = {
   budget: BudgetPage,
   courrier: CourrierPage,
   reseaux: ReseauxPage,
+  qg: QGPage,
   'going-merry': SecondCerveau,
 };
 prechargerAuRepos([
@@ -462,12 +464,14 @@ function App() {
 
           {vue === 'reseaux' && <ReseauxPage />}
 
+          {vue === 'qg' && <QGPage />}
+
           {vue === 'going-merry' && <SecondCerveau cerveau={cerveau} />}
         </div>
 
         {/* L'objectif « Roi des pirates » est masqué sur la page Going Merry
           (second cerveau) pour lui laisser toute la hauteur. */}
-        {vue !== 'going-merry' && (
+        {vue !== 'going-merry' && vue !== 'qg' && (
           <BottomBar prime={prime} onOuvrirAscension={() => setAscension('route')} />
         )}
       </div>
