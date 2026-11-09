@@ -42,3 +42,11 @@ server/.donnees.json*
 
 # Comptes reliés de l'onglet Réseaux (jetons d'accès TikTok, YouTube…)
 server/.reseau-*.json*
+
+# Appli de bureau : installeur fabriqué et chemin du projet (propre à ce PC)
+release/
+electron/projet.json
+
+# QG : historique des missions de l'équipage (reste sur ce PC)
+server/.qg-historique.json*
+server/.qg-parcours.json*

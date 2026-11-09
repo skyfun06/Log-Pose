@@ -1,10 +1,15 @@
 // Plateforme Instagram de l'onglet « Réseaux » : publication de Reels et
 // statistiques du compte. Suit l'interface décrite dans ./index.js.
 //
-// Passe par l'API officielle « Instagram API with Instagram Login » (compte
-// professionnel : Créateur ou Entreprise, sans page Facebook) :
-//   - connexion OAuth une fois ; le jeton dure 60 jours et le serveur le
-//     renouvelle tout seul (server/.reseau-instagram.json, non commité) ;
+// Passe par l'API officielle « Instagram API with Unified Login » : c'est la
+// seule méthode que Meta propose aux applis créées depuis octobre 2026
+// (l'ancienne « connexion Instagram » n'y est plus disponible). Compte
+// professionnel (Créateur ou Entreprise), sans page Facebook.
+//   - connexion une fois via « Facebook Login for Business » (identifiant de
+//     configuration INSTAGRAM_CONFIG_ID) ; on peut s'y connecter avec Instagram
+//     ou Facebook. Le jeton obtenu (utilisateur système) n'expire pas : il est
+//     gardé dans server/.reseau-instagram.json (non commité) ;
+//   - appels sur graph.facebook.com, signés avec appsecret_proof ;
 //   - publication : Instagram ne reçoit pas le fichier, il vient le chercher
 //     sur une adresse publique. Un mini-serveur séparé (port
 //     INSTAGRAM_PORT_PUBLIC, rendu public par Tailscale Funnel) sert donc
@@ -13,10 +18,11 @@
 //     La vidéo est publiée tout de suite, en public : l'API n'a pas de brouillon ;
 //   - stats : abonnés, puis vues (insights), likes et commentaires par post.
 //
-// Réglages dans .env : INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET,
-// INSTAGRAM_REDIRECT_URI et INSTAGRAM_URL_PUBLIQUE (voir .env.example).
+// Réglages dans .env : INSTAGRAM_APP_ID et INSTAGRAM_APP_SECRET (ceux de l'app
+// Meta), INSTAGRAM_CONFIG_ID, INSTAGRAM_REDIRECT_URI et INSTAGRAM_URL_PUBLIQUE
+// (voir .env.example).
 
-import { randomBytes } from 'node:crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 import { copyFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -27,13 +33,11 @@ export const id = 'instagram';
 export const nom = 'Instagram';
 export const typesVideo = ['video/mp4', 'video/quicktime'];
 
-const HOTE = 'https://graph.instagram.com';
-const API = `${HOTE}/v26.0`;
-const SCOPES = [
-  'instagram_business_basic',
-  'instagram_business_content_publish',
-  'instagram_business_manage_insights',
-];
+const VERSION = 'v26.0';
+const API = `https://graph.facebook.com/${VERSION}`;
+const DIALOGUE = `https://www.facebook.com/${VERSION}/dialog/oauth`;
+// Autorisations à cocher dans la configuration Meta (vérifiées après connexion).
+const PERMISSIONS = ['instagram_basic', 'instagram_content_publish', 'instagram_manage_insights'];
 
 // Les stats sont gardées un moment : l'API limite le nombre d'appels.
 const DUREE_CACHE_STATS = 10 * 60 * 1000;
@@ -43,90 +47,93 @@ const MAX_POSTS = 60;
 const INTERVALLE_SUIVI = 15 * 1000;
 const DUREE_MAX_SUIVI = 20 * 60 * 1000;
 
-const JOUR = 24 * 60 * 60 * 1000;
-
 function reglages() {
   const {
     INSTAGRAM_APP_ID: appId,
     INSTAGRAM_APP_SECRET: secret,
+    INSTAGRAM_CONFIG_ID: configId,
     INSTAGRAM_REDIRECT_URI: retour,
     INSTAGRAM_URL_PUBLIQUE: publique,
   } = process.env;
-  return appId && secret && retour && publique
-    ? { appId, secret, retour, publique: publique.replace(/\/+$/, '') }
+  return appId && secret && configId && retour && publique
+    ? { appId, secret, configId, retour, publique: publique.replace(/\/+$/, '') }
     : null;
 }
 
 const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// --- Jeton ------------------------------------------------------------------
+// --- Appels à l'API ------------------------------------------------------------
 
-const jeton = stockageJeton(id);
-
-// Le jeton long dure 60 jours : renouvelé quand il lui en reste moins de 10
-// (Instagram exige qu'il ait au moins 24 h).
-async function jetonValide() {
-  if (!reglages()) throw new ErreurReseau(503, 'Instagram n’est pas configuré dans .env.');
-  const actuel = await jeton.lire();
-  if (!actuel) throw new ErreurReseau(401, "Aucun compte Instagram n'est relié.");
-  const maintenant = Date.now();
-  if (actuel.expireLe < maintenant) {
-    await deconnecter();
-    throw new ErreurReseau(401, 'La connexion Instagram a expiré : relie le compte à nouveau.');
-  }
-  if (actuel.expireLe - maintenant < 10 * JOUR && maintenant - actuel.obtenuLe > JOUR) {
-    try {
-      const data = await lireJson(
-        `${HOTE}/refresh_access_token?` +
-          new URLSearchParams({ grant_type: 'ig_refresh_token', access_token: actuel.accessToken }),
-      );
-      const nouveau = {
-        ...actuel,
-        accessToken: data.access_token,
-        obtenuLe: maintenant,
-        expireLe: maintenant + data.expires_in * 1000,
-      };
-      await jeton.sauver(nouveau);
-      return nouveau;
-    } catch (err) {
-      // Le jeton actuel reste valable quelques jours : on réessaiera.
-      console.error('[Log Pose] Renouvellement Instagram raté :', err?.message ?? err);
-    }
-  }
-  return actuel;
+// Ajoute le jeton et sa signature (appsecret_proof) à une adresse de l'API.
+// Sert aussi pour les pages suivantes renvoyées par Meta.
+function signer(url, accessToken) {
+  const adresse = new URL(url);
+  adresse.searchParams.set('access_token', accessToken);
+  adresse.searchParams.set(
+    'appsecret_proof',
+    createHmac('sha256', reglages().secret).update(accessToken).digest('hex'),
+  );
+  return adresse.toString();
 }
 
 async function lireJson(url, init) {
   const reponse = await fetch(url, init);
   const data = await reponse.json().catch(() => ({}));
-  if (!reponse.ok || data.error || data.error_type) {
+  if (!reponse.ok || data.error) {
     const erreur = data.error ?? {};
-    if (erreur.code === 190) await deconnecter();
     throw new ErreurReseau(
       reponse.status >= 400 && reponse.status < 500 ? reponse.status : 502,
-      messageErreur(erreur, data),
+      messageErreur(erreur),
     );
   }
   return data;
 }
 
-function messageErreur(erreur, data) {
+function messageErreur(erreur) {
   if (erreur.code === 190) return 'La connexion Instagram n’est plus valable : relie le compte à nouveau.';
   if (erreur.code === 10 || erreur.code === 200) {
-    return 'Une autorisation manque : délie puis relie le compte Instagram en acceptant tout.';
+    return 'Une autorisation manque : vérifie la configuration Meta, puis délie et relie le compte Instagram.';
+  }
+  if (erreur.code === 100 && erreur.error_subcode === 33) {
+    return 'Meta refuse l’accès à ce compte Instagram : délie puis relie-le en cochant bien ton compte.';
   }
   if (erreur.code === 4 || erreur.code === 17 || erreur.code === 32) {
     return 'Trop de demandes à Instagram : réessaie dans quelques minutes.';
   }
-  return `Instagram a répondu : ${erreur.error_user_msg || erreur.message || data.error_message || 'erreur inconnue'}`;
+  return `Instagram a répondu : ${erreur.error_user_msg || erreur.message || 'erreur inconnue'}`;
 }
 
-// Appel à l'API avec le jeton du compte (paramètres dans l'adresse, comme
-// dans la documentation de Meta).
+// --- Jeton ------------------------------------------------------------------
+
+const jeton = stockageJeton(id);
+
+// Le jeton d'utilisateur système n'expire pas : pas de renouvellement.
+async function jetonValide() {
+  if (!reglages()) throw new ErreurReseau(503, 'Instagram n’est pas configuré dans .env.');
+  const actuel = await jeton.lire();
+  if (!actuel?.igId) throw new ErreurReseau(401, "Aucun compte Instagram n'est relié.");
+  if (actuel.expireLe && actuel.expireLe < Date.now()) {
+    await deconnecter();
+    throw new ErreurReseau(401, 'La connexion Instagram a expiré : relie le compte à nouveau.');
+  }
+  return actuel;
+}
+
+// Appel à l'API avec le jeton du compte (paramètres dans l'adresse).
 async function appeler(chemin, { methode = 'GET', params = {} } = {}) {
   const { accessToken } = await jetonValide();
-  const url = `${API}${chemin}?${new URLSearchParams({ ...params, access_token: accessToken })}`;
-  return lireJson(url, { method: methode });
+  return appelerAvec(accessToken, `${API}${chemin}?${new URLSearchParams(params)}`, methode);
+}
+
+async function appelerAvec(accessToken, url, methode = 'GET') {
+  try {
+    return await lireJson(signer(url, accessToken), { method: methode });
+  } catch (err) {
+    if (err instanceof ErreurReseau && err.message.startsWith('La connexion Instagram n’est plus valable')) {
+      await deconnecter();
+    }
+    throw err;
+  }
 }
 
 // --- Connexion --------------------------------------------------------------
@@ -135,13 +142,14 @@ const etats = etatsOAuth();
 
 export async function etat() {
   const actuel = reglages() ? await jeton.lire() : null;
+  const relie = Boolean(actuel?.igId);
   return {
     id,
     nom,
     configure: Boolean(reglages()),
-    connecte: Boolean(actuel),
-    manque: actuel ? SCOPES.filter((s) => !actuel.scopes?.includes(s)) : [],
-    destination: 'Instagram en Reel public',
+    connecte: relie,
+    manque: relie && Array.isArray(actuel.scopes) ? PERMISSIONS.filter((s) => !actuel.scopes.includes(s)) : [],
+    destination: actuel?.username ? `@${actuel.username} en Reel public` : 'Instagram en Reel public',
     conseil: null,
     publique: true,
     legende: true,
@@ -154,11 +162,71 @@ export function lienConnexion() {
   const params = new URLSearchParams({
     client_id: r.appId,
     redirect_uri: r.retour,
+    config_id: r.configId,
     response_type: 'code',
-    scope: SCOPES.join(','),
+    // Propose de se connecter avec Instagram OU Facebook. Sans ça, Meta
+    // utilise d'office la session Facebook et ne liste que les comptes
+    // Instagram rangés dans un portefeuille business de ce compte Facebook.
+    prompt: 'login',
     state: etats.creer(randomBytes(16).toString('hex')),
   });
-  return `https://www.instagram.com/oauth/authorize?${params}`;
+  return `${DIALOGUE}?${params}`;
+}
+
+// Code → jeton. La doc de Meta n'envoie que client_id, client_secret et code ;
+// si Meta réclame quand même l'adresse de retour, on réessaie avec.
+async function echangerCode(r, code) {
+  const base = { client_id: r.appId, client_secret: r.secret, code };
+  try {
+    return await lireJson(`${API}/oauth/access_token?${new URLSearchParams(base)}`);
+  } catch (err) {
+    if (!/redirect_uri/i.test(err?.message ?? '')) throw err;
+    return lireJson(`${API}/oauth/access_token?${new URLSearchParams({ ...base, redirect_uri: r.retour })}`);
+  }
+}
+
+// Compte Instagram attribué à la connexion. Meta met parfois quelques secondes
+// à le rendre visible : on réessaie, puis on regarde dans le portefeuille business.
+async function trouverCompte(accessToken, idBusiness) {
+  let derniereErreur;
+  for (let essai = 0; essai < 4; essai++) {
+    if (essai > 0) await attendre(2500);
+    try {
+      const { data = [] } = await appelerAvec(
+        accessToken,
+        `${API}/me/assigned_instagram_accounts?${new URLSearchParams({ fields: 'id,username' })}`,
+      );
+      if (data.length > 0) return data[0];
+    } catch (err) {
+      derniereErreur = err;
+    }
+  }
+  if (idBusiness) {
+    try {
+      const { data = [] } = await appelerAvec(
+        accessToken,
+        `${API}/${idBusiness}/owned_instagram_accounts?${new URLSearchParams({ fields: 'id,username' })}`,
+      );
+      if (data.length > 0) return data[0];
+    } catch (err) {
+      derniereErreur = err;
+    }
+  }
+  if (derniereErreur) console.error('[Log Pose] Recherche du compte Instagram :', derniereErreur.message);
+  throw new ErreurReseau(
+    400,
+    "Aucun compte Instagram n'est rattaché à cette connexion : relance « Relier » et coche bien ton compte Instagram.",
+  );
+}
+
+// Autorisations réellement accordées (null si Meta ne les donne pas).
+async function lirePermissions(accessToken) {
+  try {
+    const { data = [] } = await appelerAvec(accessToken, `${API}/me/permissions`);
+    return data.filter((p) => p.status === 'granted').map((p) => p.permission);
+  } catch {
+    return null;
+  }
 }
 
 export async function terminerConnexion({ code, state, error, error_description, error_reason }) {
@@ -166,47 +234,31 @@ export async function terminerConnexion({ code, state, error, error_description,
   etats.verifier(state);
   if (!code) throw new ErreurReseau(400, 'Code de connexion manquant.');
   const r = reglages();
+  if (!r) throw new ErreurReseau(503, 'Instagram n’est pas configuré dans .env.');
 
-  // 1. Code → jeton court (1 h). La réponse est parfois enveloppée dans « data ».
-  const reponse = await lireJson('https://api.instagram.com/oauth/access_token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: r.appId,
-      client_secret: r.secret,
-      grant_type: 'authorization_code',
-      redirect_uri: r.retour,
-      code: String(code).replace(/#_$/, ''),
-    }),
-  });
-  const court = reponse.data?.[0] ?? reponse;
-  const permissions = Array.isArray(court.permissions)
-    ? court.permissions
-    : String(court.permissions ?? '').split(',');
+  const reponse = await echangerCode(r, String(code).replace(/#_$/, ''));
+  const accessToken = reponse.access_token;
+  if (!accessToken) throw new ErreurReseau(502, 'Meta n’a pas renvoyé de jeton de connexion.');
 
-  // 2. Jeton court → jeton long (60 jours).
-  const long = await lireJson(
-    `${HOTE}/access_token?` +
-      new URLSearchParams({
-        grant_type: 'ig_exchange_token',
-        client_secret: r.secret,
-        access_token: court.access_token,
-      }),
-  );
+  let idBusiness = reponse.client_business_id ?? null;
+  if (!idBusiness) {
+    try {
+      idBusiness = (await appelerAvec(accessToken, `${API}/me?fields=client_business_id`)).client_business_id ?? null;
+    } catch {
+      idBusiness = null;
+    }
+  }
 
-  // 3. Identifiant du compte professionnel, pour publier.
-  const moi = await lireJson(
-    `${API}/me?${new URLSearchParams({ fields: 'user_id,username', access_token: long.access_token })}`,
-  );
-
+  const compte = await trouverCompte(accessToken, idBusiness);
   const maintenant = Date.now();
   await jeton.sauver({
-    accessToken: long.access_token,
+    accessToken,
     obtenuLe: maintenant,
-    expireLe: maintenant + long.expires_in * 1000,
-    igId: moi.user_id ?? moi.id,
-    username: moi.username,
-    scopes: permissions,
+    expireLe: reponse.expires_in ? maintenant + reponse.expires_in * 1000 : null,
+    igId: compte.id,
+    username: compte.username ?? null,
+    idBusiness,
+    scopes: await lirePermissions(accessToken),
   });
   cacheStats = null;
 }
@@ -338,17 +390,18 @@ async function insightsPost(idPost) {
 export async function stats({ forcer = false } = {}) {
   if (!forcer && cacheStats && Date.now() - cacheStats.le < DUREE_CACHE_STATS) return cacheStats.stats;
 
-  const moi = await appeler('/me', {
-    params: { fields: 'user_id,username,name,profile_picture_url,followers_count,media_count' },
+  const { igId, accessToken } = await jetonValide();
+  const moi = await appeler(`/${igId}`, {
+    params: { fields: 'id,username,name,profile_picture_url,followers_count,media_count' },
   });
 
   const posts = [];
-  let page = await appeler('/me/media', { params: { fields: CHAMPS_POST, limit: '25' } });
+  let page = await appeler(`/${igId}/media`, { params: { fields: CHAMPS_POST, limit: '25' } });
   for (;;) {
     posts.push(...(page.data ?? []));
     const suivante = page.paging?.next;
     if (!suivante || posts.length >= MAX_POSTS) break;
-    page = await lireJson(suivante);
+    page = await appelerAvec(accessToken, suivante);
   }
   posts.splice(MAX_POSTS);
 

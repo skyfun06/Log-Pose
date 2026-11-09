@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="verre" cx="40%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#9ff0e6"/>
+      <stop offset="0.55" stop-color="#2fb5ad"/>
+      <stop offset="1" stop-color="#0d6f7a"/>
+    </radialGradient>
+    <linearGradient id="bois" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2a861"/>
+      <stop offset="1" stop-color="#a8692e"/>
+    </linearGradient>
+  </defs>
+  <!-- Socle en bois -->
+  <ellipse cx="256" cy="420" rx="170" ry="58" fill="#6e4219"/>
+  <path d="M86 380 h340 v40 a170 58 0 0 1 -340 0 z" fill="url(#bois)"/>
+  <ellipse cx="256" cy="380" rx="170" ry="52" fill="#f0bd78"/>
+  <!-- Bulle de verre -->
+  <circle cx="256" cy="230" r="190" fill="url(#verre)" stroke="#0a3d47" stroke-width="10"/>
+  <!-- Aiguille : pointe rouge vers la prochaine île, queue blanche -->
+  <g transform="rotate(40 256 240)" stroke="#0a3d47" stroke-width="7" stroke-linejoin="round">
+    <path d="M256 70 L292 240 L220 240 Z" fill="#d7262e"/>
+    <path d="M256 410 L292 240 L220 240 Z" fill="#fbf6ea"/>
+  </g>
+  <circle cx="256" cy="240" r="16" fill="#f4d27a" stroke="#0a3d47" stroke-width="7"/>
+  <!-- Reflet -->
+  <ellipse cx="180" cy="120" rx="62" ry="34" fill="#fff" opacity="0.75" transform="rotate(-30 180 120)"/>
+</svg>

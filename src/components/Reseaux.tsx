@@ -662,15 +662,19 @@ function AideInstagram() {
           <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">
             developers.facebook.com/apps
           </a>
-          , crée une appli avec le cas d'usage Instagram (« API Instagram avec connexion
-          Instagram »). Elle peut rester en mode <strong>Développement</strong>.
+          , crée une appli avec le cas d'usage « Gérer les messages et les contenus sur Instagram »
+          et associe-lui un <strong>portefeuille business</strong>. Elle peut rester en mode{' '}
+          <strong>Développement</strong>.
         </li>
         <li>
           Dans « Rôles de l'app », ajoute ton compte comme <strong>Testeur Instagram</strong>, puis
           accepte l'invitation sur instagram.com (Paramètres → Apps et sites web).
         </li>
         <li>
-          Dans « Configurer la connexion professionnelle Instagram », déclare l'URL de redirection{' '}
+          Dans « API setup with Unified login » : crée une configuration (jeton d'utilisateur
+          système, expiration « Jamais », ton compte Instagram, autorisations{' '}
+          <code>instagram_basic</code>, <code>instagram_content_publish</code>,{' '}
+          <code>instagram_manage_insights</code>) et enregistre l'URL de redirection{' '}
           <code>https://ton-pc.ton-reseau.ts.net/api/reseaux/instagram/retour</code>.
         </li>
         <li>
@@ -679,12 +683,14 @@ function AideInstagram() {
         </li>
         <li>
           Dans le fichier <code>.env</code> : <code>INSTAGRAM_APP_ID=…</code> et{' '}
-          <code>INSTAGRAM_APP_SECRET=…</code> (ceux de l'app <strong>Instagram</strong>, pas de
-          l'app Facebook), <code>INSTAGRAM_REDIRECT_URI=…</code> (l'adresse de l'étape 4) et{' '}
+          <code>INSTAGRAM_APP_SECRET=…</code> (ceux de l'app <strong>Meta</strong>, dans Paramètres
+          → Général), <code>INSTAGRAM_CONFIG_ID=…</code> (l'ID de la configuration),{' '}
+          <code>INSTAGRAM_REDIRECT_URI=…</code> (l'adresse de l'étape 4) et{' '}
           <code>INSTAGRAM_URL_PUBLIQUE=https://ton-pc.ton-reseau.ts.net:8443</code>.
         </li>
         <li>
-          Relance <code>npm run server</code> et reviens ici.
+          Quitte Log Pose (clic droit sur la boussole près de l'horloge → Quitter), rouvre-le et
+          reviens ici.
         </li>
       </ol>
     </div>
