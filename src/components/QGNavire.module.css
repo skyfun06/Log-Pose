@@ -45,11 +45,10 @@
 }
 
 /* La coque s'assombrit la nuit (--nuit : 0 = jour, 1 = nuit). */
+/* Placée par le code : elle dépasse au-dessus du pont (mâts). */
 .coque {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: 0;
   filter: brightness(calc(1 - var(--nuit) * 0.32)) saturate(calc(1 - var(--nuit) * 0.15));
   pointer-events: none;
 }
