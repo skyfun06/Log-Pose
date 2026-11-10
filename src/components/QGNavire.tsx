@@ -6,21 +6,22 @@ import styles from './QGNavire.module.css';
 // Le QG en pixel art, plein écran : L'Obstiné vu de profil, coupé en deux,
 // et une caméra qu'on déplace (glisser) et qu'on zoome (molette).
 //
-// Netteté : tout vit dans un « monde » en vrais pixels. La caméra affiche ce
-// monde avec un zoom ENTIER en pixels de l'écran (échelle Windows comprise)
-// et se déplace par pas d'un pixel du monde : rien n'est jamais agrandi à
-// virgule ni lissé. Le ciel et la mer sont dessinés à la taille de l'écran
+// Netteté : tout vit dans un « monde » en vrais pixels. Une fois arrêtée, la
+// caméra affiche ce monde par demi-crans de zoom en pixels de l'écran (échelle
+// Windows comprise), calée au pixel d'écran près : rien n'est jamais lissé. Le ciel et la mer sont dessinés à la taille de l'écran
 // (ils couvrent tout, quel que soit le zoom), le bateau et les persos sont des
 // images (public/qg/, préparées par scripts/qg-images.mjs).
 
 // --- Le bateau ------------------------------------------------------------------
 
-// Bateau HD (scripts/qg-images.mjs) : 688 × 384 vrais pixels, sans agrandissement.
-// L'image est coupée en haut et à droite : la caméra ne montre jamais au-delà.
-const IMAGE_BATEAU = '/qg/bateau-hd.png';
-const BATEAU = { l: 688, h: 384 };
+// Bateau avec sa proue (scripts/qg-images.mjs) : 963 × 383 vrais pixels, sans
+// agrandissement, à la même échelle que l'ancien bateau HD (mêmes coordonnées).
+// L'image est coupée en haut (les voiles) : la caméra ne montre jamais au-dessus.
+const IMAGE_BATEAU = '/qg/bateau-proue.png';
+const BATEAU = { l: 963, h: 383 };
+const CENTRE_BATEAU = 470; // milieu du dessin, du tableau arrière au bout du beaupré
 const FLOTTAISON = 350; // y au ras de l'eau (sous le plancher des pièces du bas)
-const PROUE = 596; // x où la coque touche l'eau (mesuré sur l'image)
+const PROUE = 597; // x où la coque touche l'eau (mesuré sur l'image)
 const IPS_MER = 10; // images par seconde de l'eau (saccadé exprès, façon pixel art)
 
 // Lanternes et fenêtres : halo le soir, reflet doré dans l'eau.
@@ -648,27 +649,42 @@ function Messager({ de, vers }: { de: IdMembreQG; vers: IdMembreQG }) {
 
 // Barre d'ordres : le bas de l'écran (~120 pixels écran) en laisse voir la mer.
 const BARRE = 120;
-// Zoom par demi-crans (x2, x2,5, x3…) : chaque pixel du bateau fait 2 ou 3
-// pixels d'écran, en alternance régulière, jamais flou.
+// Zoom par demi-crans (x2, x2,5, x3…) : une fois arrêté, chaque pixel du
+// bateau fait 2 ou 3 pixels d'écran, en alternance régulière, jamais flou.
 const demi = (z: number) => Math.max(1, Math.floor(z * 2) / 2);
-// Zoom minimal : à droite, la vue s'arrête au bord de l'image (la proue y est
-// coupée) ; à gauche, on peut voir un peu de ciel et de mer derrière la poupe.
-const MARGE_GAUCHE = 400;
-const zoomMin = (l: number) => Math.max(1, Math.ceil((l / (BATEAU.l + MARGE_GAUCHE)) * 2) / 2);
-// Vue générale : du haut des têtes sur le pont arrière (y ≈ 26) au plancher
-// des pièces du bas, bien plus large qu'un cadrage serré (tout le bateau et la mer).
+// Zoom minimal : tout le bateau, avec un peu de mer de chaque côté.
+const MARGE_COTES = 200;
+const zoomMin = (l: number) => Math.max(1, Math.ceil((l / (BATEAU.l + 2 * MARGE_COTES)) * 2) / 2);
+// Zoom maximal : on voit toujours au moins ~420 pixels du monde en largeur
+// (deux pièces), jamais un perso en gros plan.
+const LARGEUR_MIN = 420;
+const zoomMax = (l: number) => Math.max(zoomMin(l), demi(l / LARGEUR_MIN));
+const bornerZoom = (z: number, l: number) => Math.max(zoomMin(l), Math.min(zoomMax(l), z));
+// Vue générale : tout le bateau centré à l'écran (au-dessus de la barre d'ordres).
 function visee(choisi: IdQG | null, l: number, h: number, marge: number) {
   if (!choisi) {
-    const z = Math.max(zoomMin(l), Math.min(8, demi(Math.min(l / 600, (h - BARRE) / 320) * 0.7)));
-    return { z, cx: 336, cy: 26 + h / z / 2 };
+    const z = bornerZoom(Math.ceil((l / (BATEAU.l + 60)) * 2) / 2, l);
+    return { z, cx: CENTRE_BATEAU, cy: BATEAU.h / 2 + BARRE / z / 2 };
   }
   const poste = POSTES[choisi];
-  const z = Math.max(zoomMin(l), Math.min(8, demi(Math.min((l - marge) / 250, (h - BARRE) / 190))));
+  const z = bornerZoom(demi(Math.min((l - marge) / 250, (h - BARRE) / 190)), l);
   // Centré dans la partie visible, à gauche du parchemin.
   return { z, cx: poste.camera.x + marge / z / 2, cy: poste.camera.y + BARRE / z / 2 };
 }
 
-const CAPITAINE: MembreQG = { id: 'capitaine' as IdMembreQG, nom: 'Capitaine', poste: 'Capitaine', statut: 'pause', missionId: null, activite: null, depuis: null };
+// Bornes du centre de la caméra pour un zoom donné : un peu de mer de chaque
+// côté, jamais au-dessus du haut de l'image ; la mer reste visible au-dessus
+// de la barre d'ordres.
+function borner(p: { cx: number; cy: number }, z: number, L: number, H: number) {
+  const lv = L / z;
+  const hv = H / z;
+  p.cx = Math.min(BATEAU.l + MARGE_COTES - lv / 2, Math.max(lv / 2 - MARGE_COTES, p.cx));
+  p.cy = Math.max(hv / 2, Math.min(FLOTTAISON + 40 + BARRE / z - hv / 2, p.cy));
+}
+
+type Ancre = { wx: number; wy: number; mx: number; my: number };
+
+const CAPITAINE: MembreQG ={ id: 'capitaine' as IdMembreQG, nom: 'Capitaine', poste: 'Capitaine', statut: 'pause', missionId: null, activite: null, depuis: null };
 
 export function QGNavire({
   membres,
@@ -699,8 +715,10 @@ export function QGNavire({
     etat.current = { ambiance, heure, onChoisir };
   });
 
-  // Caméra : centre (pixels du monde) et zoom (par demi-crans), avec leur cible.
-  const camera = useRef({ cx: 0, cy: 0, z: 1, vise: { cx: 0, cy: 0, z: 1 }, pret: false });
+  // Caméra : centre (pixels du monde) et zoom, avec leur cible (zoom par
+  // demi-crans). ancre : le point du monde qui reste sous la souris pendant un
+  // zoom à la molette.
+  const camera = useRef({ cx: 0, cy: 0, z: 1, vise: { cx: 0, cy: 0, z: 1 }, ancre: null as Ancre | null, pret: false });
 
   // La caméra va sur le membre choisi (zoom sur sa pièce), ou revient à la vue générale.
   useEffect(() => {
@@ -708,6 +726,7 @@ export function QGNavire({
     if (!el) return;
     const dpr = window.devicePixelRatio || 1;
     camera.current.vise = visee(choisi, el.clientWidth * dpr, el.clientHeight * dpr, marge * dpr);
+    camera.current.ancre = null;
   }, [choisi, marge]);
 
   // Glisser pour se déplacer, molette pour zoomer (d'un demi-cran).
@@ -719,7 +738,7 @@ export function QGNavire({
     const bas = (e: PointerEvent) => {
       if (e.button !== 0) return;
       const c = camera.current;
-      depart = { x: e.clientX, y: e.clientY, cx: c.vise.cx, cy: c.vise.cy, bouge: false };
+      depart = { x: e.clientX, y: e.clientY, cx: c.cx, cy: c.cy, bouge: false };
     };
     const bouge = (e: PointerEvent) => {
       if (!depart) return;
@@ -728,10 +747,12 @@ export function QGNavire({
       if (!depart.bouge && Math.hypot(dx, dy) < 5) return;
       if (!depart.bouge) el.setPointerCapture(e.pointerId);
       depart.bouge = true;
+      // La cible suit la souris ; la caméra la rattrape en douceur (boucle).
       const c = camera.current;
       const dpr = window.devicePixelRatio || 1;
-      c.vise.cx = c.cx = depart.cx - (dx * dpr) / c.z;
-      c.vise.cy = c.cy = depart.cy - (dy * dpr) / c.z;
+      c.ancre = null;
+      c.vise.cx = depart.cx - (dx * dpr) / c.z;
+      c.vise.cy = depart.cy - (dy * dpr) / c.z;
     };
     const haut = (e: PointerEvent) => {
       if (!depart) return;
@@ -741,21 +762,24 @@ export function QGNavire({
       const perso = (e.target as HTMLElement).closest('[data-perso]')?.getAttribute('data-perso');
       etat.current.onChoisir((perso as IdQG | null) ?? null);
     };
+    let derniereMolette = 0;
     const molette = (e: WheelEvent) => {
       e.preventDefault();
+      // Un demi-cran à la fois (un pavé tactile envoie des rafales d'événements).
+      if (e.timeStamp - derniereMolette < 90 || e.deltaY === 0) return;
+      derniereMolette = e.timeStamp;
       const c = camera.current;
       const dpr = window.devicePixelRatio || 1;
-      const z = Math.max(zoomMin(el.clientWidth * dpr), Math.min(8, c.vise.z + (e.deltaY < 0 ? 0.5 : -0.5)));
+      const L = el.clientWidth * dpr;
+      const H = el.clientHeight * dpr;
+      const z = bornerZoom(c.vise.z + (e.deltaY < 0 ? 0.5 : -0.5), L);
       if (z === c.vise.z) return;
-      // Le point sous la souris reste sous la souris.
+      // Le point sous la souris reste sous la souris pendant tout le zoom.
       const rect = el.getBoundingClientRect();
       const mx = (e.clientX - rect.left) * dpr;
       const my = (e.clientY - rect.top) * dpr;
-      const L = el.clientWidth * dpr;
-      const H = el.clientHeight * dpr;
-      const wx = c.cx - L / (2 * c.z) + mx / c.z;
-      const wy = c.cy - H / (2 * c.z) + my / c.z;
-      c.vise = { z, cx: wx - mx / z + L / (2 * z), cy: wy - my / z + H / (2 * z) };
+      c.ancre = { mx, my, wx: c.cx - L / (2 * c.z) + mx / c.z, wy: c.cy - H / (2 * c.z) + my / c.z };
+      c.vise.z = z;
     };
     el.addEventListener('pointerdown', bas);
     el.addEventListener('pointermove', bouge);
@@ -784,33 +808,48 @@ export function QGNavire({
     img.src = IMAGE_BATEAU;
     const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let id = 0;
-    let dernierPasZoom = 0;
     let derniereCle = '';
+    let avant = 0;
 
     const boucle = (ms: number) => {
       const c = camera.current;
       const dpr = window.devicePixelRatio || 1;
       const L = el.clientWidth * dpr;
       const H = el.clientHeight * dpr;
+      const dt = Math.min(0.05, avant ? (ms - avant) / 1000 : 0);
+      avant = ms;
       if (!c.pret && L > 0 && H > 0) {
         c.vise = visee(null, L, H, 0);
-        Object.assign(c, { ...c.vise, pret: true });
+        Object.assign(c, { cx: c.vise.cx, cy: c.vise.cy, z: c.vise.z, pret: true });
       }
-      // Zoom : un demi-cran à la fois, en douceur ; déplacement amorti.
-      if (c.z !== c.vise.z && ms - dernierPasZoom > 70) {
-        c.z += Math.sign(c.vise.z - c.z) * 0.5;
-        dernierPasZoom = ms;
+      // Mouvements amortis, au même rythme quelle que soit la fréquence de
+      // l'écran. Le zoom glisse en continu et s'arrête net sur son demi-cran.
+      c.vise.z = bornerZoom(c.vise.z, L);
+      const amorti = (vitesse: number) => (reduit ? 1 : 1 - Math.exp(-dt * vitesse));
+      c.z += (c.vise.z - c.z) * amorti(16);
+      if (Math.abs(c.vise.z - c.z) < 0.01) c.z = c.vise.z;
+      if (c.ancre) {
+        // Zoom à la molette : le point visé reste sous la souris.
+        const a = c.ancre;
+        c.cx = c.vise.cx = a.wx - a.mx / c.z + L / (2 * c.z);
+        c.cy = c.vise.cy = a.wy - a.my / c.z + H / (2 * c.z);
+        if (c.z === c.vise.z) c.ancre = null;
+      } else {
+        borner(c.vise, c.vise.z, L, H);
+        const k = amorti(14);
+        c.cx += (c.vise.cx - c.cx) * k;
+        c.cy += (c.vise.cy - c.cy) * k;
       }
-      c.cx += (c.vise.cx - c.cx) * 0.14;
-      c.cy += (c.vise.cy - c.cy) * 0.14;
-      // Bornes : jamais au-delà du bord droit de l'image ni de son haut ; la
-      // mer reste visible au-dessus de la barre d'ordres.
-      if (c.z < zoomMin(L)) c.z = c.vise.z = zoomMin(L);
-      const lv = Math.ceil(L / c.z);
-      const hv = Math.ceil(H / c.z);
-      c.cx = Math.min(BATEAU.l - lv / 2, Math.max(lv / 2 - MARGE_GAUCHE, c.cx));
-      c.cy = Math.max(hv / 2, Math.min(FLOTTAISON + 40 + BARRE / c.z - hv / 2, c.cy));
-      const v: Vue = { ox: Math.round(c.cx - lv / 2), oy: Math.round(c.cy - hv / 2), l: lv, h: hv };
+      borner(c, c.z, L, H);
+
+      // Le coin de la vue, calé au pixel d'ÉCRAN près (pas au pixel du monde) :
+      // les déplacements sont fluides et l'image reste nette. Le ciel et la mer
+      // sont dessinés au pixel du monde (v.ox, v.oy) puis décalés du reste.
+      const lv = Math.ceil(L / c.z) + 1;
+      const hv = Math.ceil(H / c.z) + 1;
+      const ox = Math.round((c.cx - L / (2 * c.z)) * c.z) / c.z;
+      const oy = Math.round((c.cy - H / (2 * c.z)) * c.z) / c.z;
+      const v: Vue = { ox: Math.floor(ox), oy: Math.floor(oy), l: lv, h: hv };
       const echelle = c.z / dpr; // pixels CSS par pixel du monde
 
       if (cvCiel.width !== lv || cvCiel.height !== hv || cvCiel.dataset.z !== String(c.z)) {
@@ -823,7 +862,9 @@ export function QGNavire({
         }
         derniereCle = '';
       }
-      monde.current!.style.transform = `scale(${echelle}) translate(${-v.ox}px, ${-v.oy}px)`;
+      const reste = `translate(${-(ox - v.ox) * echelle}px, ${-(oy - v.oy) * echelle}px)`;
+      cvCiel.style.transform = cvMer.style.transform = reste;
+      monde.current!.style.transform = `scale(${echelle}) translate(${-ox}px, ${-oy}px)`;
       monde.current!.style.setProperty('--zoom', String(echelle));
 
       const image = reduit ? 0 : Math.floor((ms / 1000) * IPS_MER);

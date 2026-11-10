@@ -97,7 +97,7 @@ export const FICHES: Record<IdQG, FicheQG> = {
   },
 };
 
-// --- À bord : coordonnées sur l'image du bateau HD (public/qg/bateau-hd.png) ---
+// --- À bord : coordonnées sur l'image du bateau (public/qg/bateau-proue.png) ---
 
 // Sols (y sous les pieds) : le pont, les pièces du haut, les pièces du bas.
 // Deux échelles relient les niveaux.

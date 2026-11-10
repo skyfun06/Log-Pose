@@ -11,7 +11,7 @@
 //   node scripts/qg-images.mjs bateau robin   (seulement ceux-là)
 
 import sharp from 'sharp';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, unlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const SOURCE = process.env.QG_ASSETS ?? 'C:/Users/Borrelli/Desktop/dev/business/equipage/qg-assets';
@@ -96,6 +96,17 @@ if (!existsSync(SORTIE)) mkdirSync(SORTIE, { recursive: true });
 // maximum de détail qui reste du vrai pixel art.
 if (veut('bateau-hd') && existsSync(`${SOURCE}/bateau-hd.jpg`)) {
   await pixeliser(await detourer(`${SOURCE}/bateau-hd.jpg`, { toutVert: true, rogner: false }), { width: 688 }, 160, 'bateau-hd');
+}
+// Bateau avec sa proue entière (1024 × 408) : réduit à 963 px de large, ses
+// pièces tombent pile sur celles du bateau HD (même échelle), à 1 pixel près
+// en hauteur, retiré en haut : les coordonnées de equipageQG.ts restent bonnes.
+if (veut('bateau-proue') && existsSync(`${SOURCE}/bateau-proue.jpg`)) {
+  await pixeliser(await detourer(`${SOURCE}/bateau-proue.jpg`, { toutVert: true, rogner: false }), { width: 963 }, 160, 'bateau-proue-brut');
+  const brut = `${SORTIE}bateau-proue-brut.png`;
+  const { width, height } = await sharp(brut).metadata();
+  await sharp(brut).extract({ left: 0, top: 1, width, height: height - 1 }).png({ palette: true, colors: 160, dither: 0, compressionLevel: 9 }).toFile(`${SORTIE}bateau-proue.png`);
+  unlinkSync(brut);
+  console.log(`✓ bateau-proue.png  ${width}×${height - 1}`);
 }
 if (veut('bateau')) {
   await pixeliser(await detourer(`${SOURCE}/bateau.jpg`, { toutVert: true }), { width: LARGEUR_BATEAU }, 64, 'bateau');
